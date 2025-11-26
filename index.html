@@ -521,8 +521,27 @@ Use Ctrl+Enter to execute"></textarea>
       createStickers(faceElement, true);
     });
 
-    // ==================== CAMADA 2: ESTADO E PERSISTÊNCIA ====================
-
+    // ==================== CAMADA 2: ESTADO INTERNO UNIFICADO ====================
+    
+    // Estado interno do cubo - armazena dados completos dos stickers
+    let cubeState = {
+      U: [], L: [], F: [], R: [], B: [], D: []
+    };
+    
+    // Inicializar estado vazio
+    function initializeCubeState() {
+      CubeConfig.faces.forEach(face => {
+        cubeState[face] = Array(9).fill(null).map(() => ({
+          mode: CubeConfig.mode,
+          stickerIndex: 0,
+          faceTexture: face,
+          spritePosition: 0,
+          rotation: 0
+        }));
+      });
+    }
+    
+    // Compatibilidade com sistema antigo
     const colorMap = {
       'white': 0, 'orange': 1, 'green': 2, 'red': 3, 'blue': 4, 'yellow': 5
     };
@@ -579,27 +598,35 @@ Use Ctrl+Enter to execute"></textarea>
     }
 
     function solveCube() {
+      // Inicializar estado interno
+      initializeCubeState();
+      
       CubeConfig.faces.forEach(face => {
         for (let i = 0; i < 9; i++) {
           if (CubeConfig.mode === 'standard') {
+            // Modo compatibilidade: aplicar cor diretamente
             const color = CubeConfig.standardColors[face];
             setStickerStyle(face, i, color);
             
           } else if (CubeConfig.mode === 'custom_indices') {
-            // No modo custom, usar índice baseado na face (0-5)
+            // Atualizar estado interno
             const faceIndex = CubeConfig.faces.indexOf(face);
-            setStickerStyle(face, i, {
+            cubeState[face][i] = {
+              mode: 'custom_indices',
               stickerIndex: faceIndex,
               rotation: 0
-            });
+            };
+            setStickerStyle(face, i, cubeState[face][i]);
             
           } else if (CubeConfig.mode === 'face_textures') {
-            // No modo texturas, cada sticker usa a textura da face diretamente
-            setStickerStyle(face, i, {
+            // Atualizar estado interno
+            cubeState[face][i] = {
+              mode: 'face_textures',
               faceTexture: face,
               spritePosition: i,
               rotation: 0
-            });
+            };
+            setStickerStyle(face, i, cubeState[face][i]);
           }
         }
       });
@@ -614,6 +641,41 @@ Use Ctrl+Enter to execute"></textarea>
         faceArray[7], faceArray[4], faceArray[1],
         faceArray[8], faceArray[5], faceArray[2]
       ];
+    }
+    
+    // Funções para rotacionar dados completos dos stickers
+    function rotateFaceDataCW(faceData) {
+      return [
+        faceData[6], faceData[3], faceData[0],
+        faceData[7], faceData[4], faceData[1],
+        faceData[8], faceData[5], faceData[2]
+      ];
+    }
+    
+    function rotateFaceDataCCW(faceData) {
+      return [
+        faceData[2], faceData[5], faceData[8],
+        faceData[1], faceData[4], faceData[7],
+        faceData[0], faceData[3], faceData[6]
+      ];
+    }
+    
+    function rotateFaceData180(faceData) {
+      return [
+        faceData[8], faceData[7], faceData[6],
+        faceData[5], faceData[4], faceData[3],
+        faceData[2], faceData[1], faceData[0]
+      ];
+    }
+    
+    // Aplicar estado interno ao DOM
+    function applyCubeStateToDOM() {
+      CubeConfig.faces.forEach(face => {
+        for (let i = 0; i < 9; i++) {
+          setStickerStyle(face, i, cubeState[face][i]);
+        }
+      });
+      update3DView();
     }
 
     function rotateFaceCCW(faceArray) {
@@ -653,126 +715,206 @@ Use Ctrl+Enter to execute"></textarea>
     // ==================== CAMADA 5: MOVIMENTOS BÁSICOS ====================
 
     function moveR() {
-      const cube = JSON.parse(serializeCube());
-
-      // Rotaciona face R
-      cube.R = rotateFaceCW(cube.R);
-
-      // Ciclo dos stickers laterais
-      const temp = [cube.F[2], cube.F[5], cube.F[8]];
-      cube.F[2] = cube.D[2]; cube.F[5] = cube.D[5]; cube.F[8] = cube.D[8];
-      cube.D[2] = cube.B[6]; cube.D[5] = cube.B[3]; cube.D[8] = cube.B[0];
-      cube.B[6] = cube.U[2]; cube.B[3] = cube.U[5]; cube.B[0] = cube.U[8];
-      cube.U[2] = temp[0]; cube.U[5] = temp[1]; cube.U[8] = temp[2];
-
-      deserializeCube(JSON.stringify(cube));
+      if (CubeConfig.mode === 'standard') {
+        // Modo compatibilidade: usar sistema antigo
+        const cube = JSON.parse(serializeCube());
+        cube.R = rotateFaceCW(cube.R);
+        const temp = [cube.F[2], cube.F[5], cube.F[8]];
+        cube.F[2] = cube.D[2]; cube.F[5] = cube.D[5]; cube.F[8] = cube.D[8];
+        cube.D[2] = cube.B[6]; cube.D[5] = cube.B[3]; cube.D[8] = cube.B[0];
+        cube.B[6] = cube.U[2]; cube.B[3] = cube.U[5]; cube.B[0] = cube.U[8];
+        cube.U[2] = temp[0]; cube.U[5] = temp[1]; cube.U[8] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        // Novos modos: usar estado interno
+        // Rotacionar face R
+        cubeState.R = rotateFaceDataCW(cubeState.R);
+        
+        // Ciclo dos stickers laterais
+        const temp = [cubeState.F[2], cubeState.F[5], cubeState.F[8]];
+        cubeState.F[2] = cubeState.D[2]; cubeState.F[5] = cubeState.D[5]; cubeState.F[8] = cubeState.D[8];
+        cubeState.D[2] = cubeState.B[6]; cubeState.D[5] = cubeState.B[3]; cubeState.D[8] = cubeState.B[0];
+        cubeState.B[6] = cubeState.U[2]; cubeState.B[3] = cubeState.U[5]; cubeState.B[0] = cubeState.U[8];
+        cubeState.U[2] = temp[0]; cubeState.U[5] = temp[1]; cubeState.U[8] = temp[2];
+        
+        // Aplicar mudanças visuais
+        applyCubeStateToDOM();
+      }
     }
 
     function moveL() {
-      const cube = JSON.parse(serializeCube());
-
-      cube.L = rotateFaceCW(cube.L);
-
-      const temp = [cube.F[0], cube.F[3], cube.F[6]];
-      cube.F[0] = cube.U[0]; cube.F[3] = cube.U[3]; cube.F[6] = cube.U[6];
-      cube.U[0] = cube.B[8]; cube.U[3] = cube.B[5]; cube.U[6] = cube.B[2];
-      cube.B[8] = cube.D[0]; cube.B[5] = cube.D[3]; cube.B[2] = cube.D[6];
-      cube.D[0] = temp[0]; cube.D[3] = temp[1]; cube.D[6] = temp[2];
-
-      deserializeCube(JSON.stringify(cube));
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.L = rotateFaceCW(cube.L);
+        const temp = [cube.F[0], cube.F[3], cube.F[6]];
+        cube.F[0] = cube.U[0]; cube.F[3] = cube.U[3]; cube.F[6] = cube.U[6];
+        cube.U[0] = cube.B[8]; cube.U[3] = cube.B[5]; cube.U[6] = cube.B[2];
+        cube.B[8] = cube.D[0]; cube.B[5] = cube.D[3]; cube.B[2] = cube.D[6];
+        cube.D[0] = temp[0]; cube.D[3] = temp[1]; cube.D[6] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.L = rotateFaceDataCW(cubeState.L);
+        const temp = [cubeState.F[0], cubeState.F[3], cubeState.F[6]];
+        cubeState.F[0] = cubeState.U[0]; cubeState.F[3] = cubeState.U[3]; cubeState.F[6] = cubeState.U[6];
+        cubeState.U[0] = cubeState.B[8]; cubeState.U[3] = cubeState.B[5]; cubeState.U[6] = cubeState.B[2];
+        cubeState.B[8] = cubeState.D[0]; cubeState.B[5] = cubeState.D[3]; cubeState.B[2] = cubeState.D[6];
+        cubeState.D[0] = temp[0]; cubeState.D[3] = temp[1]; cubeState.D[6] = temp[2];
+        applyCubeStateToDOM();
+      }
     }
 
     function moveU() {
-      const cube = JSON.parse(serializeCube());
-
-      cube.U = rotateFaceCW(cube.U);
-
-      const temp = [cube.F[0], cube.F[1], cube.F[2]];
-      cube.F[0] = cube.R[0]; cube.F[1] = cube.R[1]; cube.F[2] = cube.R[2];
-      cube.R[0] = cube.B[0]; cube.R[1] = cube.B[1]; cube.R[2] = cube.B[2];
-      cube.B[0] = cube.L[0]; cube.B[1] = cube.L[1]; cube.B[2] = cube.L[2];
-      cube.L[0] = temp[0]; cube.L[1] = temp[1]; cube.L[2] = temp[2];
-
-      deserializeCube(JSON.stringify(cube));
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.U = rotateFaceCW(cube.U);
+        const temp = [cube.F[0], cube.F[1], cube.F[2]];
+        cube.F[0] = cube.R[0]; cube.F[1] = cube.R[1]; cube.F[2] = cube.R[2];
+        cube.R[0] = cube.B[0]; cube.R[1] = cube.B[1]; cube.R[2] = cube.B[2];
+        cube.B[0] = cube.L[0]; cube.B[1] = cube.L[1]; cube.B[2] = cube.L[2];
+        cube.L[0] = temp[0]; cube.L[1] = temp[1]; cube.L[2] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.U = rotateFaceDataCW(cubeState.U);
+        const temp = [cubeState.F[0], cubeState.F[1], cubeState.F[2]];
+        cubeState.F[0] = cubeState.R[0]; cubeState.F[1] = cubeState.R[1]; cubeState.F[2] = cubeState.R[2];
+        cubeState.R[0] = cubeState.B[0]; cubeState.R[1] = cubeState.B[1]; cubeState.R[2] = cubeState.B[2];
+        cubeState.B[0] = cubeState.L[0]; cubeState.B[1] = cubeState.L[1]; cubeState.B[2] = cubeState.L[2];
+        cubeState.L[0] = temp[0]; cubeState.L[1] = temp[1]; cubeState.L[2] = temp[2];
+        applyCubeStateToDOM();
+      }
     }
 
     function moveD() {
-      const cube = JSON.parse(serializeCube());
-
-      cube.D = rotateFaceCW(cube.D);
-
-      const temp = [cube.F[6], cube.F[7], cube.F[8]];
-      cube.F[6] = cube.L[6]; cube.F[7] = cube.L[7]; cube.F[8] = cube.L[8];
-      cube.L[6] = cube.B[6]; cube.L[7] = cube.B[7]; cube.L[8] = cube.B[8];
-      cube.B[6] = cube.R[6]; cube.B[7] = cube.R[7]; cube.B[8] = cube.R[8];
-      cube.R[6] = temp[0]; cube.R[7] = temp[1]; cube.R[8] = temp[2];
-
-      deserializeCube(JSON.stringify(cube));
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.D = rotateFaceCW(cube.D);
+        const temp = [cube.F[6], cube.F[7], cube.F[8]];
+        cube.F[6] = cube.L[6]; cube.F[7] = cube.L[7]; cube.F[8] = cube.L[8];
+        cube.L[6] = cube.B[6]; cube.L[7] = cube.B[7]; cube.L[8] = cube.B[8];
+        cube.B[6] = cube.R[6]; cube.B[7] = cube.R[7]; cube.B[8] = cube.R[8];
+        cube.R[6] = temp[0]; cube.R[7] = temp[1]; cube.R[8] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.D = rotateFaceDataCW(cubeState.D);
+        const temp = [cubeState.F[6], cubeState.F[7], cubeState.F[8]];
+        cubeState.F[6] = cubeState.L[6]; cubeState.F[7] = cubeState.L[7]; cubeState.F[8] = cubeState.L[8];
+        cubeState.L[6] = cubeState.B[6]; cubeState.L[7] = cubeState.B[7]; cubeState.L[8] = cubeState.B[8];
+        cubeState.B[6] = cubeState.R[6]; cubeState.B[7] = cubeState.R[7]; cubeState.B[8] = cubeState.R[8];
+        cubeState.R[6] = temp[0]; cubeState.R[7] = temp[1]; cubeState.R[8] = temp[2];
+        applyCubeStateToDOM();
+      }
     }
 
     function moveF() {
-      const cube = JSON.parse(serializeCube());
-
-      cube.F = rotateFaceCW(cube.F);
-
-      const temp = [cube.U[6], cube.U[7], cube.U[8]];
-      cube.U[6] = cube.L[8]; cube.U[7] = cube.L[5]; cube.U[8] = cube.L[2];
-      cube.L[2] = cube.D[0]; cube.L[5] = cube.D[1]; cube.L[8] = cube.D[2];
-      cube.D[0] = cube.R[6]; cube.D[1] = cube.R[3]; cube.D[2] = cube.R[0];
-      cube.R[0] = temp[0]; cube.R[3] = temp[1]; cube.R[6] = temp[2];
-
-      deserializeCube(JSON.stringify(cube));
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.F = rotateFaceCW(cube.F);
+        const temp = [cube.U[6], cube.U[7], cube.U[8]];
+        cube.U[6] = cube.L[8]; cube.U[7] = cube.L[5]; cube.U[8] = cube.L[2];
+        cube.L[2] = cube.D[0]; cube.L[5] = cube.D[1]; cube.L[8] = cube.D[2];
+        cube.D[0] = cube.R[6]; cube.D[1] = cube.R[3]; cube.D[2] = cube.R[0];
+        cube.R[0] = temp[0]; cube.R[3] = temp[1]; cube.R[6] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.F = rotateFaceDataCW(cubeState.F);
+        const temp = [cubeState.U[6], cubeState.U[7], cubeState.U[8]];
+        cubeState.U[6] = cubeState.L[8]; cubeState.U[7] = cubeState.L[5]; cubeState.U[8] = cubeState.L[2];
+        cubeState.L[2] = cubeState.D[0]; cubeState.L[5] = cubeState.D[1]; cubeState.L[8] = cubeState.D[2];
+        cubeState.D[0] = cubeState.R[6]; cubeState.D[1] = cubeState.R[3]; cubeState.D[2] = cubeState.R[0];
+        cubeState.R[0] = temp[0]; cubeState.R[3] = temp[1]; cubeState.R[6] = temp[2];
+        applyCubeStateToDOM();
+      }
     }
 
     function moveB() {
-      const cube = JSON.parse(serializeCube());
-
-      cube.B = rotateFaceCW(cube.B);
-
-      const temp = [cube.U[0], cube.U[1], cube.U[2]];
-      cube.U[0] = cube.R[2]; cube.U[1] = cube.R[5]; cube.U[2] = cube.R[8];
-      cube.R[2] = cube.D[8]; cube.R[5] = cube.D[7]; cube.R[8] = cube.D[6];
-      cube.D[6] = cube.L[0]; cube.D[7] = cube.L[3]; cube.D[8] = cube.L[6];
-      cube.L[0] = temp[2]; cube.L[3] = temp[1]; cube.L[6] = temp[0];
-
-      deserializeCube(JSON.stringify(cube));
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.B = rotateFaceCW(cube.B);
+        const temp = [cube.U[0], cube.U[1], cube.U[2]];
+        cube.U[0] = cube.R[2]; cube.U[1] = cube.R[5]; cube.U[2] = cube.R[8];
+        cube.R[2] = cube.D[8]; cube.R[5] = cube.D[7]; cube.R[8] = cube.D[6];
+        cube.D[6] = cube.L[0]; cube.D[7] = cube.L[3]; cube.D[8] = cube.L[6];
+        cube.L[0] = temp[2]; cube.L[3] = temp[1]; cube.L[6] = temp[0];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.B = rotateFaceDataCW(cubeState.B);
+        const temp = [cubeState.U[0], cubeState.U[1], cubeState.U[2]];
+        cubeState.U[0] = cubeState.R[2]; cubeState.U[1] = cubeState.R[5]; cubeState.U[2] = cubeState.R[8];
+        cubeState.R[2] = cubeState.D[8]; cubeState.R[5] = cubeState.D[7]; cubeState.R[8] = cubeState.D[6];
+        cubeState.D[6] = cubeState.L[0]; cubeState.D[7] = cubeState.L[3]; cubeState.D[8] = cubeState.L[6];
+        cubeState.L[0] = temp[2]; cubeState.L[3] = temp[1]; cubeState.L[6] = temp[0];
+        applyCubeStateToDOM();
+      }
     }
 
     // ==================== LAYER 6: CUBE ROTATIONS ====================
 
     const rotations = {
       x: () => {
-        const cube = JSON.parse(serializeCube());
-        const temp = cube.U;
-        cube.U = cube.F;
-        cube.F = cube.D;
-        cube.D = rotateFace180(cube.B);
-        cube.B = rotateFace180(temp);
-        cube.L = rotateFaceCCW(cube.L);
-        cube.R = rotateFaceCW(cube.R);
-        deserializeCube(JSON.stringify(cube));
+        if (CubeConfig.mode === 'standard') {
+          const cube = JSON.parse(serializeCube());
+          const temp = cube.U;
+          cube.U = cube.F;
+          cube.F = cube.D;
+          cube.D = rotateFace180(cube.B);
+          cube.B = rotateFace180(temp);
+          cube.L = rotateFaceCCW(cube.L);
+          cube.R = rotateFaceCW(cube.R);
+          deserializeCube(JSON.stringify(cube));
+        } else {
+          const temp = cubeState.U;
+          cubeState.U = cubeState.F;
+          cubeState.F = cubeState.D;
+          cubeState.D = rotateFaceData180(cubeState.B);
+          cubeState.B = rotateFaceData180(temp);
+          cubeState.L = rotateFaceDataCCW(cubeState.L);
+          cubeState.R = rotateFaceDataCW(cubeState.R);
+          applyCubeStateToDOM();
+        }
       },
       y: () => {
-        const cube = JSON.parse(serializeCube());
-        const temp = cube.F;
-        cube.F = cube.R;
-        cube.R = cube.B;
-        cube.B = cube.L;
-        cube.L = temp;
-        cube.U = rotateFaceCW(cube.U);
-        cube.D = rotateFaceCCW(cube.D);
-        deserializeCube(JSON.stringify(cube));
+        if (CubeConfig.mode === 'standard') {
+          const cube = JSON.parse(serializeCube());
+          const temp = cube.F;
+          cube.F = cube.R;
+          cube.R = cube.B;
+          cube.B = cube.L;
+          cube.L = temp;
+          cube.U = rotateFaceCW(cube.U);
+          cube.D = rotateFaceCCW(cube.D);
+          deserializeCube(JSON.stringify(cube));
+        } else {
+          const temp = cubeState.F;
+          cubeState.F = cubeState.R;
+          cubeState.R = cubeState.B;
+          cubeState.B = cubeState.L;
+          cubeState.L = temp;
+          cubeState.U = rotateFaceDataCW(cubeState.U);
+          cubeState.D = rotateFaceDataCCW(cubeState.D);
+          applyCubeStateToDOM();
+        }
       },
       z: () => {
-        const cube = JSON.parse(serializeCube());
-        const temp = cube.U;
-        cube.U = rotateFaceCCW(cube.L);
-        cube.L = rotateFaceCW(cube.D);
-        cube.D = rotateFaceCCW(cube.R);
-        cube.R = rotateFaceCW(temp);
-        cube.F = rotateFaceCW(cube.F);
-        cube.B = rotateFaceCCW(cube.B);
-        deserializeCube(JSON.stringify(cube));
+        if (CubeConfig.mode === 'standard') {
+          const cube = JSON.parse(serializeCube());
+          const temp = cube.U;
+          cube.U = rotateFaceCCW(cube.L);
+          cube.L = rotateFaceCW(cube.D);
+          cube.D = rotateFaceCCW(cube.R);
+          cube.R = rotateFaceCW(temp);
+          cube.F = rotateFaceCW(cube.F);
+          cube.B = rotateFaceCCW(cube.B);
+          deserializeCube(JSON.stringify(cube));
+        } else {
+          const temp = cubeState.U;
+          cubeState.U = rotateFaceDataCCW(cubeState.L);
+          cubeState.L = rotateFaceDataCW(cubeState.D);
+          cubeState.D = rotateFaceDataCCW(cubeState.R);
+          cubeState.R = rotateFaceDataCW(temp);
+          cubeState.F = rotateFaceDataCW(cubeState.F);
+          cubeState.B = rotateFaceDataCCW(cubeState.B);
+          applyCubeStateToDOM();
+        }
       }
     };
 
@@ -785,6 +927,10 @@ Use Ctrl+Enter to execute"></textarea>
 
     const MPrime = () => { prime(moveR)(); moveL(); rotations.x(); };
     const M = () => { moveR(); prime(moveL)(); prime(rotations.x)(); };
+    
+    // Slices E e S adaptados
+    const E = () => { prime(moveU)(); moveD(); rotations.y(); };
+    const S = () => { prime(moveF)(); moveB(); rotations.z(); };
     const RwMove = () => { MPrime(); moveR(); };
     const LwMove = () => { M(); moveL(); };
 
@@ -799,7 +945,7 @@ Use Ctrl+Enter to execute"></textarea>
       });
 
       const sliceMoves = {
-        'M': M, 'E': () => { prime(moveU)(); moveD(); rotations.y(); }, 'S': () => { prime(moveF)(); moveB(); rotations.z(); }
+        'M': M, 'E': E, 'S': S
       };
       Object.entries(sliceMoves).forEach(([key, fn]) => {
         moveMap[key] = fn;
