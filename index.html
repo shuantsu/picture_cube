@@ -634,7 +634,8 @@ Use Ctrl+Enter to execute"></textarea>
 
     function serializeCube() {
       const state = {
-        mode: CubeConfig.mode
+        mode: CubeConfig.mode,
+        rotations: stickerRotations
       };
       
       if (CubeConfig.mode === 'custom_indices') {
@@ -672,6 +673,15 @@ Use Ctrl+Enter to execute"></textarea>
         if (state.mode) {
           // Formato otimizado
           CubeConfig.mode = state.mode;
+          
+          // Restaurar rotações
+          if (state.rotations) {
+            stickerRotations = state.rotations;
+          } else {
+            CubeConfig.faces.forEach(face => {
+              stickerRotations[face] = Array(9).fill(0);
+            });
+          }
           
           if (state.mode === 'custom_indices') {
             CubeConfig.customStickers = state.stickers || {};
@@ -881,14 +891,21 @@ Use Ctrl+Enter to execute"></textarea>
         // Novos modos: usar estado interno
         cubeState.R = rotateFaceDataCW(cubeState.R);
         
-        // Ciclo dos stickers laterais
+        // Ciclo dos stickers laterais com rotações
         const temp = [cubeState.F[2], cubeState.F[5], cubeState.F[8]];
+        const tempRot = [stickerRotations.F[2], stickerRotations.F[5], stickerRotations.F[8]];
+        
         cubeState.F[2] = cubeState.D[2]; cubeState.F[5] = cubeState.D[5]; cubeState.F[8] = cubeState.D[8];
+        stickerRotations.F[2] = stickerRotations.D[2]; stickerRotations.F[5] = stickerRotations.D[5]; stickerRotations.F[8] = stickerRotations.D[8];
+        
         cubeState.D[2] = cubeState.B[6]; cubeState.D[5] = cubeState.B[3]; cubeState.D[8] = cubeState.B[0];
+        stickerRotations.D[2] = (stickerRotations.B[6] + 2) % 4; stickerRotations.D[5] = (stickerRotations.B[3] + 2) % 4; stickerRotations.D[8] = (stickerRotations.B[0] + 2) % 4;
+        
         cubeState.B[6] = cubeState.U[2]; cubeState.B[3] = cubeState.U[5]; cubeState.B[0] = cubeState.U[8];
+        stickerRotations.B[6] = (stickerRotations.U[2] + 2) % 4; stickerRotations.B[3] = (stickerRotations.U[5] + 2) % 4; stickerRotations.B[0] = (stickerRotations.U[8] + 2) % 4;
+        
         cubeState.U[2] = temp[0]; cubeState.U[5] = temp[1]; cubeState.U[8] = temp[2];
-
-
+        stickerRotations.U[2] = tempRot[0]; stickerRotations.U[5] = tempRot[1]; stickerRotations.U[8] = tempRot[2];
 
         applyCubeStateToDOM();
       }
@@ -910,12 +927,19 @@ Use Ctrl+Enter to execute"></textarea>
         cubeState.L = rotateFaceDataCW(cubeState.L);
 
         const temp = [cubeState.F[0], cubeState.F[3], cubeState.F[6]];
+        const tempRot = [stickerRotations.F[0], stickerRotations.F[3], stickerRotations.F[6]];
+        
         cubeState.F[0] = cubeState.U[0]; cubeState.F[3] = cubeState.U[3]; cubeState.F[6] = cubeState.U[6];
+        stickerRotations.F[0] = stickerRotations.U[0]; stickerRotations.F[3] = stickerRotations.U[3]; stickerRotations.F[6] = stickerRotations.U[6];
+        
         cubeState.U[0] = cubeState.B[8]; cubeState.U[3] = cubeState.B[5]; cubeState.U[6] = cubeState.B[2];
+        stickerRotations.U[0] = (stickerRotations.B[8] + 2) % 4; stickerRotations.U[3] = (stickerRotations.B[5] + 2) % 4; stickerRotations.U[6] = (stickerRotations.B[2] + 2) % 4;
+        
         cubeState.B[8] = cubeState.D[0]; cubeState.B[5] = cubeState.D[3]; cubeState.B[2] = cubeState.D[6];
+        stickerRotations.B[8] = (stickerRotations.D[0] + 2) % 4; stickerRotations.B[5] = (stickerRotations.D[3] + 2) % 4; stickerRotations.B[2] = (stickerRotations.D[6] + 2) % 4;
+        
         cubeState.D[0] = temp[0]; cubeState.D[3] = temp[1]; cubeState.D[6] = temp[2];
-
-
+        stickerRotations.D[0] = tempRot[0]; stickerRotations.D[3] = tempRot[1]; stickerRotations.D[6] = tempRot[2];
 
         applyCubeStateToDOM();
       }
@@ -973,7 +997,6 @@ Use Ctrl+Enter to execute"></textarea>
 
     function moveF() {
       rotateFaceStickers('F', true);
-      // Rotacionar stickers afetados pelo movimento F
       [['U',6], ['U',7], ['U',8], ['L',8], ['L',5], ['L',2], ['D',0], ['D',1], ['D',2], ['R',6], ['R',3], ['R',0]].forEach(([face, index]) => {
         stickerRotations[face][index] = (stickerRotations[face][index] + 1) % 4;
       });
@@ -1002,7 +1025,6 @@ Use Ctrl+Enter to execute"></textarea>
 
     function moveB() {
       rotateFaceStickers('B', true);
-      // Rotacionar stickers afetados pelo movimento B: face B +1, outros +3
       [['U',0], ['U',1], ['U',2], ['R',2], ['R',5], ['R',8], ['D',8], ['D',7], ['D',6], ['L',0], ['L',3], ['L',6]].forEach(([face, index]) => {
         stickerRotations[face][index] = (stickerRotations[face][index] + 3) % 4;
       });
