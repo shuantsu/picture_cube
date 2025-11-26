@@ -348,12 +348,69 @@ Use Ctrl+Enter to execute"></textarea>
 
     <h3>Custom Cube Configuration</h3>
     <textarea id="customConfig" placeholder='{
-      "mode": "face_textures",
-      "textures": {
-        "U": { "background": "linear-gradient(45deg, red, yellow)" },
-        "F": { "backgroundImage": "url(image.jpg)" }
-      }
-    }'></textarea>
+  "mode": "face_textures",
+  "textures": {
+    "U": { "background": "linear-gradient(45deg, red, yellow)" },
+    "L": { "background": "linear-gradient(90deg, orange, red)" },
+    "F": { "background": "linear-gradient(135deg, green, blue)" },
+    "R": { "background": "linear-gradient(180deg, red, purple)" },
+    "B": { "background": "linear-gradient(225deg, blue, cyan)" },
+    "D": { "background": "linear-gradient(270deg, yellow, orange)" }
+  }
+}'>{
+  "mode": "face_textures",
+  "textures": {
+    "U": { 
+      "backgroundImage": "radial-gradient(circle, white 50%, transparent 50%), conic-gradient(from -45deg at center, blue 0deg 90deg, red 90deg 180deg, green 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "U_center": {
+      "background": "radial-gradient(circle, white 50%, transparent 50%), conic-gradient(from -45deg at center, blue 0deg 90deg, red 90deg 180deg, green 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "L": { 
+      "backgroundImage": "radial-gradient(circle, orange 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, green 90deg 180deg, yellow 180deg 270deg, blue 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "L_center": {
+      "background": "radial-gradient(circle, orange 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, green 90deg 180deg, yellow 180deg 270deg, blue 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "F": { 
+      "backgroundImage": "radial-gradient(circle, green 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, red 90deg 180deg, yellow 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "F_center": {
+      "background": "radial-gradient(circle, green 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, red 90deg 180deg, yellow 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "R": { 
+      "backgroundImage": "radial-gradient(circle, red 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, blue 90deg 180deg, yellow 180deg 270deg, green 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "R_center": {
+      "background": "radial-gradient(circle, red 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, blue 90deg 180deg, yellow 180deg 270deg, green 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "B": { 
+      "backgroundImage": "radial-gradient(circle, blue 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, orange 90deg 180deg, yellow 180deg 270deg, red 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "B_center": {
+      "background": "radial-gradient(circle, blue 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, orange 90deg 180deg, yellow 180deg 270deg, red 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "D": { 
+      "backgroundImage": "radial-gradient(circle, yellow 50%, transparent 50%), conic-gradient(from -45deg at center, green 0deg 90deg, red 90deg 180deg, blue 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "D_center": {
+      "background": "radial-gradient(circle, yellow 50%, transparent 50%), conic-gradient(from -45deg at center, green 0deg 90deg, red 90deg 180deg, blue 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    }
+  }
+}
+</textarea>
     <button id="loadConfigBtn"><i class="fa-solid fa-magic-wand-sparkles"></i>Load Custom Cube</button>
 
     <h3>State Management</h3>
@@ -458,13 +515,13 @@ Use Ctrl+Enter to execute"></textarea>
         if (faceElement) {
           const sticker = faceElement.children[index];
           if (sticker) {
-            applyStickerToElement(sticker, stickerData);
+            applyStickerToElement(sticker, stickerData, face, index);
           }
         }
       });
     }
     
-    function applyStickerToElement(element, stickerData) {
+                        function applyStickerToElement(element, stickerData, face, index) {
       // Limpar estilos anteriores
       element.style.background = '';
       element.style.backgroundImage = '';
@@ -478,17 +535,14 @@ Use Ctrl+Enter to execute"></textarea>
         element.style.backgroundColor = stickerData;
         
       } else if (CubeConfig.mode === 'custom_indices') {
-        // FEATURE 1: Aplicar estilo do índice + rotação
+        // FEATURE 1: Aplicar estilo do índice
         const style = CubeConfig.customStickers[stickerData.stickerIndex];
         if (style) {
           Object.assign(element.style, style);
-          if (stickerData.rotation) {
-            element.style.transform = `rotate(${stickerData.rotation}deg)`;
-          }
         }
         
       } else if (CubeConfig.mode === 'face_textures') {
-        // FEATURE 2: Aplicar sprite da textura + rotação
+        // FEATURE 2: Aplicar sprite da textura
         const texture = CubeConfig.faceTextures[stickerData.faceTexture];
         if (texture) {
           // Para imagens, usar sistema de sprites
@@ -499,11 +553,17 @@ Use Ctrl+Enter to execute"></textarea>
             // Para gradientes/cores sólidas, aplicar diretamente
             element.style.background = texture.background;
           }
-          
-          if (stickerData.rotation) {
-            element.style.transform = `rotate(${stickerData.rotation}deg)`;
-          }
         }
+      }
+
+                        // Aplicar rotação individual do sticker
+                        let totalRotation = 0;
+                        if (face && index !== undefined && stickerRotations[face] && stickerRotations[face][index]) {
+                          totalRotation += stickerRotations[face][index] * 90;
+                        }
+
+                        if (totalRotation !== 0) {
+                          element.style.transform = `rotate(${totalRotation}deg)`;
       }
     }
     
@@ -544,6 +604,12 @@ Use Ctrl+Enter to execute"></textarea>
       U: [], L: [], F: [], R: [], B: [], D: []
     };
     
+                        // Array de rotações individuais dos stickers (0-3, mod 4)
+                        let stickerRotations = {
+                          U: Array(9).fill(0), L: Array(9).fill(0), F: Array(9).fill(0),
+                          R: Array(9).fill(0), B: Array(9).fill(0), D: Array(9).fill(0)
+                        };
+                      
     // Inicializar estado vazio
     function initializeCubeState() {
       CubeConfig.faces.forEach(face => {
@@ -554,6 +620,7 @@ Use Ctrl+Enter to execute"></textarea>
           spritePosition: 0,
           rotation: 0
         }));
+        stickerRotations[face] = Array(9).fill(0);
       });
     }
     
@@ -751,7 +818,6 @@ Use Ctrl+Enter to execute"></textarea>
           setStickerStyle(face, i, cubeState[face][i]);
         }
       });
-      update3DView();
     }
 
     function rotateFaceCCW(faceArray) {
@@ -790,7 +856,17 @@ Use Ctrl+Enter to execute"></textarea>
 
     // ==================== CAMADA 5: MOVIMENTOS BÁSICOS ====================
 
+                        // Rotacionar face no sentido horário (incrementa rotação dos stickers)
+                        function rotateFaceStickers(face, clockwise = true) {
+                          const increment = clockwise ? 1 : -1;
+                          for (let i = 0; i < 9; i++) {
+                            stickerRotations[face][i] = (stickerRotations[face][i] + increment + 4) % 4;
+                          }
+                        }
+
     function moveR() {
+      rotateFaceStickers('R', true);
+      
       if (CubeConfig.mode === 'standard') {
         // Modo compatibilidade: usar sistema antigo
         const cube = JSON.parse(serializeCube());
@@ -803,7 +879,6 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         // Novos modos: usar estado interno
-        // Rotacionar face R
         cubeState.R = rotateFaceDataCW(cubeState.R);
         
         // Ciclo dos stickers laterais
@@ -812,13 +887,16 @@ Use Ctrl+Enter to execute"></textarea>
         cubeState.D[2] = cubeState.B[6]; cubeState.D[5] = cubeState.B[3]; cubeState.D[8] = cubeState.B[0];
         cubeState.B[6] = cubeState.U[2]; cubeState.B[3] = cubeState.U[5]; cubeState.B[0] = cubeState.U[8];
         cubeState.U[2] = temp[0]; cubeState.U[5] = temp[1]; cubeState.U[8] = temp[2];
-        
-        // Aplicar mudanças visuais
+
+
+
         applyCubeStateToDOM();
       }
     }
 
     function moveL() {
+      rotateFaceStickers('L', true);
+      
       if (CubeConfig.mode === 'standard') {
         const cube = JSON.parse(serializeCube());
         cube.L = rotateFaceCW(cube.L);
@@ -830,16 +908,22 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         cubeState.L = rotateFaceDataCW(cubeState.L);
+
         const temp = [cubeState.F[0], cubeState.F[3], cubeState.F[6]];
         cubeState.F[0] = cubeState.U[0]; cubeState.F[3] = cubeState.U[3]; cubeState.F[6] = cubeState.U[6];
         cubeState.U[0] = cubeState.B[8]; cubeState.U[3] = cubeState.B[5]; cubeState.U[6] = cubeState.B[2];
         cubeState.B[8] = cubeState.D[0]; cubeState.B[5] = cubeState.D[3]; cubeState.B[2] = cubeState.D[6];
         cubeState.D[0] = temp[0]; cubeState.D[3] = temp[1]; cubeState.D[6] = temp[2];
+
+
+
         applyCubeStateToDOM();
       }
     }
 
     function moveU() {
+      rotateFaceStickers('U', true);
+      
       if (CubeConfig.mode === 'standard') {
         const cube = JSON.parse(serializeCube());
         cube.U = rotateFaceCW(cube.U);
@@ -851,16 +935,20 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         cubeState.U = rotateFaceDataCW(cubeState.U);
+
         const temp = [cubeState.F[0], cubeState.F[1], cubeState.F[2]];
         cubeState.F[0] = cubeState.R[0]; cubeState.F[1] = cubeState.R[1]; cubeState.F[2] = cubeState.R[2];
         cubeState.R[0] = cubeState.B[0]; cubeState.R[1] = cubeState.B[1]; cubeState.R[2] = cubeState.B[2];
         cubeState.B[0] = cubeState.L[0]; cubeState.B[1] = cubeState.L[1]; cubeState.B[2] = cubeState.L[2];
         cubeState.L[0] = temp[0]; cubeState.L[1] = temp[1]; cubeState.L[2] = temp[2];
+
         applyCubeStateToDOM();
       }
     }
 
     function moveD() {
+      rotateFaceStickers('D', true);
+      
       if (CubeConfig.mode === 'standard') {
         const cube = JSON.parse(serializeCube());
         cube.D = rotateFaceCW(cube.D);
@@ -872,16 +960,24 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         cubeState.D = rotateFaceDataCW(cubeState.D);
+
         const temp = [cubeState.F[6], cubeState.F[7], cubeState.F[8]];
         cubeState.F[6] = cubeState.L[6]; cubeState.F[7] = cubeState.L[7]; cubeState.F[8] = cubeState.L[8];
         cubeState.L[6] = cubeState.B[6]; cubeState.L[7] = cubeState.B[7]; cubeState.L[8] = cubeState.B[8];
         cubeState.B[6] = cubeState.R[6]; cubeState.B[7] = cubeState.R[7]; cubeState.B[8] = cubeState.R[8];
         cubeState.R[6] = temp[0]; cubeState.R[7] = temp[1]; cubeState.R[8] = temp[2];
+
         applyCubeStateToDOM();
       }
     }
 
     function moveF() {
+      rotateFaceStickers('F', true);
+      // Rotacionar stickers afetados pelo movimento F
+      [['U',6], ['U',7], ['U',8], ['L',8], ['L',5], ['L',2], ['D',0], ['D',1], ['D',2], ['R',6], ['R',3], ['R',0]].forEach(([face, index]) => {
+        stickerRotations[face][index] = (stickerRotations[face][index] + 1) % 4;
+      });
+      
       if (CubeConfig.mode === 'standard') {
         const cube = JSON.parse(serializeCube());
         cube.F = rotateFaceCW(cube.F);
@@ -893,16 +989,24 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         cubeState.F = rotateFaceDataCW(cubeState.F);
+
         const temp = [cubeState.U[6], cubeState.U[7], cubeState.U[8]];
         cubeState.U[6] = cubeState.L[8]; cubeState.U[7] = cubeState.L[5]; cubeState.U[8] = cubeState.L[2];
         cubeState.L[2] = cubeState.D[0]; cubeState.L[5] = cubeState.D[1]; cubeState.L[8] = cubeState.D[2];
         cubeState.D[0] = cubeState.R[6]; cubeState.D[1] = cubeState.R[3]; cubeState.D[2] = cubeState.R[0];
         cubeState.R[0] = temp[0]; cubeState.R[3] = temp[1]; cubeState.R[6] = temp[2];
+
         applyCubeStateToDOM();
       }
     }
 
     function moveB() {
+      rotateFaceStickers('B', true);
+      // Rotacionar stickers afetados pelo movimento B
+      [['U',0], ['U',1], ['U',2], ['R',2], ['R',5], ['R',8], ['D',8], ['D',7], ['D',6], ['L',0], ['L',3], ['L',6]].forEach(([face, index]) => {
+        stickerRotations[face][index] = (stickerRotations[face][index] + 1) % 4;
+      });
+      
       if (CubeConfig.mode === 'standard') {
         const cube = JSON.parse(serializeCube());
         cube.B = rotateFaceCW(cube.B);
@@ -914,11 +1018,13 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         cubeState.B = rotateFaceDataCW(cubeState.B);
+
         const temp = [cubeState.U[0], cubeState.U[1], cubeState.U[2]];
         cubeState.U[0] = cubeState.R[2]; cubeState.U[1] = cubeState.R[5]; cubeState.U[2] = cubeState.R[8];
         cubeState.R[2] = cubeState.D[8]; cubeState.R[5] = cubeState.D[7]; cubeState.R[8] = cubeState.D[6];
         cubeState.D[6] = cubeState.L[0]; cubeState.D[7] = cubeState.L[3]; cubeState.D[8] = cubeState.L[6];
         cubeState.L[0] = temp[2]; cubeState.L[3] = temp[1]; cubeState.L[6] = temp[0];
+
         applyCubeStateToDOM();
       }
     }
@@ -927,6 +1033,9 @@ Use Ctrl+Enter to execute"></textarea>
 
     const rotations = {
       x: () => {
+        rotateFaceStickers('L', false);
+        rotateFaceStickers('R', true);
+        
         if (CubeConfig.mode === 'standard') {
           const cube = JSON.parse(serializeCube());
           const temp = cube.U;
@@ -939,16 +1048,30 @@ Use Ctrl+Enter to execute"></textarea>
           deserializeCube(JSON.stringify(cube));
         } else {
           const temp = cubeState.U;
+          const tempRot = [...stickerRotations.U];
+          
           cubeState.U = cubeState.F;
+          stickerRotations.U = [...stickerRotations.F];
+          
           cubeState.F = cubeState.D;
+          stickerRotations.F = [...stickerRotations.D];
+          
           cubeState.D = rotateFaceData180(cubeState.B);
+          stickerRotations.D = rotateFaceData180(stickerRotations.B).map(r => (r + 2) % 4);
+          
           cubeState.B = rotateFaceData180(temp);
+          stickerRotations.B = rotateFaceData180(tempRot).map(r => (r + 2) % 4);
+          
           cubeState.L = rotateFaceDataCCW(cubeState.L);
           cubeState.R = rotateFaceDataCW(cubeState.R);
+
           applyCubeStateToDOM();
         }
       },
       y: () => {
+        rotateFaceStickers('U', true);
+        rotateFaceStickers('D', false);
+        
         if (CubeConfig.mode === 'standard') {
           const cube = JSON.parse(serializeCube());
           const temp = cube.F;
@@ -961,16 +1084,30 @@ Use Ctrl+Enter to execute"></textarea>
           deserializeCube(JSON.stringify(cube));
         } else {
           const temp = cubeState.F;
+          const tempRot = [...stickerRotations.F];
+          
           cubeState.F = cubeState.R;
+          stickerRotations.F = [...stickerRotations.R];
+          
           cubeState.R = cubeState.B;
+          stickerRotations.R = [...stickerRotations.B];
+          
           cubeState.B = cubeState.L;
+          stickerRotations.B = [...stickerRotations.L];
+          
           cubeState.L = temp;
+          stickerRotations.L = tempRot;
+          
           cubeState.U = rotateFaceDataCW(cubeState.U);
           cubeState.D = rotateFaceDataCCW(cubeState.D);
+
           applyCubeStateToDOM();
         }
       },
       z: () => {
+        rotateFaceStickers('F', true);
+        rotateFaceStickers('B', false);
+        
         if (CubeConfig.mode === 'standard') {
           const cube = JSON.parse(serializeCube());
           const temp = cube.U;
@@ -983,12 +1120,23 @@ Use Ctrl+Enter to execute"></textarea>
           deserializeCube(JSON.stringify(cube));
         } else {
           const temp = cubeState.U;
+          const tempRot = [...stickerRotations.U];
+          
           cubeState.U = rotateFaceDataCCW(cubeState.L);
+          stickerRotations.U = rotateFaceDataCCW(stickerRotations.L).map(r => (r + 1) % 4);
+          
           cubeState.L = rotateFaceDataCW(cubeState.D);
+          stickerRotations.L = rotateFaceDataCW(stickerRotations.D).map(r => (r + 1) % 4);
+          
           cubeState.D = rotateFaceDataCCW(cubeState.R);
+          stickerRotations.D = rotateFaceDataCCW(stickerRotations.R).map(r => (r + 1) % 4);
+          
           cubeState.R = rotateFaceDataCW(temp);
+          stickerRotations.R = rotateFaceDataCW(tempRot).map(r => (r + 1) % 4);
+          
           cubeState.F = rotateFaceDataCW(cubeState.F);
           cubeState.B = rotateFaceDataCCW(cubeState.B);
+
           applyCubeStateToDOM();
         }
       }
@@ -1070,7 +1218,7 @@ Use Ctrl+Enter to execute"></textarea>
 
     // Estados salvos para cada modo
     let savedStates = {
-      cubenet: { zoom: 1 },
+      cubenet: { zoom: 2.5 },
       free3d: { rotation: { x: -25, y: -45 }, size: 300 },
       isometric: { rotation: { x: -35.264, y: -45 }, size: 150 }
     };
@@ -1338,7 +1486,8 @@ Use Ctrl+Enter to execute"></textarea>
     // ==================== INICIALIZAÇÃO ====================
 
     solveCube();
-    setViewMode('perspective'); // Inicia em 3D perspective
+                  setViewMode('cubenet'); // Inicia em 3D perspective
+                  document.getElementById('loadConfigBtn').onclick();
   </script>
 </body>
 
