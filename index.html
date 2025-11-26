@@ -276,6 +276,12 @@
       resize: vertical;
     }
 
+    #customConfig {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+    }
+
     button {
       background-color: #4285f4;
       color: white;
@@ -339,6 +345,16 @@ Use Ctrl+Enter to execute"></textarea>
       <option value="lastLoaded">Start from Last Loaded State</option>
     </select>
     <button id="applyAlgBtn"><i class="fa-solid fa-play"></i>Apply Algorithm</button>
+
+    <h3>Custom Cube Configuration</h3>
+    <textarea id="customConfig" placeholder='{
+      "mode": "face_textures",
+      "textures": {
+        "U": { "background": "linear-gradient(45deg, red, yellow)" },
+        "F": { "backgroundImage": "url(image.jpg)" }
+      }
+    }'></textarea>
+    <button id="loadConfigBtn"><i class="fa-solid fa-magic-wand-sparkles"></i>Load Custom Cube</button>
 
     <h3>State Management</h3>
     <textarea id="stateOutput" placeholder="Cube state in JSON"></textarea>
@@ -550,33 +566,100 @@ Use Ctrl+Enter to execute"></textarea>
     );
 
     function serializeCube() {
-      const state = {};
-      CubeConfig.faces.forEach(face => {
-        const faceElement = document.querySelector(`.face-2d[data-face="${face}"]`);
-        state[face] = Array.from(faceElement.children).map(sticker => {
-          const color = sticker.style.backgroundColor || 'white';
-          return colorMap[color] ?? 0;
+      const state = {
+        mode: CubeConfig.mode
+      };
+      
+      if (CubeConfig.mode === 'custom_indices') {
+        state.stickers = CubeConfig.customStickers;
+        // Apenas salvar posições que diferem do padrão
+        state.positions = {};
+        CubeConfig.faces.forEach(face => {
+          const positions = cubeState[face].map(s => s.stickerIndex);
+          const defaultIndex = CubeConfig.faces.indexOf(face);
+          if (!positions.every(p => p === defaultIndex)) {
+            state.positions[face] = positions;
+          }
         });
-      });
-      return JSON.stringify(state);
+      } else if (CubeConfig.mode === 'face_textures') {
+        state.textures = CubeConfig.faceTextures;
+        // Para texturas, só salvar se houve movimentos
+        const hasMovements = CubeConfig.faces.some(face => 
+          cubeState[face].some((s, i) => s.faceTexture !== face || s.spritePosition !== i)
+        );
+        if (hasMovements) {
+          state.positions = {};
+          CubeConfig.faces.forEach(face => {
+            state.positions[face] = cubeState[face].map(s => `${s.faceTexture}:${s.spritePosition}`);
+          });
+        }
+      }
+      
+      return JSON.stringify(state, null, 2);
     }
 
     function deserializeCube(jsonString) {
-      const state = JSON.parse(jsonString);
-      CubeConfig.faces.forEach(face => {
-        if (state[face]) {
-          state[face].forEach((colorCode, index) => {
-            const color = reverseColorMap[colorCode] || 'white';
-            setColor(face, index, color);
+      try {
+        const state = JSON.parse(jsonString);
+        
+        if (state.mode) {
+          // Formato otimizado
+          CubeConfig.mode = state.mode;
+          
+          if (state.mode === 'custom_indices') {
+            CubeConfig.customStickers = state.stickers || {};
+            initializeCubeState();
+            
+            // Aplicar posições customizadas
+            CubeConfig.faces.forEach(face => {
+              const positions = state.positions?.[face] || Array(9).fill(CubeConfig.faces.indexOf(face));
+              for (let i = 0; i < 9; i++) {
+                cubeState[face][i].stickerIndex = positions[i];
+              }
+            });
+            
+          } else if (state.mode === 'face_textures') {
+            CubeConfig.faceTextures = state.textures || {};
+            initializeCubeState();
+            
+            // Aplicar posições se houver
+            if (state.positions) {
+              CubeConfig.faces.forEach(face => {
+                const positions = state.positions[face] || [];
+                for (let i = 0; i < 9; i++) {
+                  if (positions[i]) {
+                    const [faceTexture, spritePosition] = positions[i].split(':');
+                    cubeState[face][i].faceTexture = faceTexture;
+                    cubeState[face][i].spritePosition = parseInt(spritePosition);
+                  }
+                }
+              });
+            }
+          }
+          
+          applyCubeStateToDOM();
+          
+        } else {
+          // Formato antigo: compatibilidade
+          CubeConfig.mode = 'standard';
+          CubeConfig.faces.forEach(face => {
+            if (state[face]) {
+              state[face].forEach((colorCode, index) => {
+                const color = reverseColorMap[colorCode] || 'white';
+                setColor(face, index, color);
+              });
+            }
           });
         }
-      });
+      } catch (error) {
+        alert('Erro ao carregar estado: ' + error.message);
+      }
     }
 
     let lastState = null;
 
     function printState() {
-      document.getElementById('stateOutput').value = JSON.stringify(JSON.parse(serializeCube()), null, 2);
+      document.getElementById('stateOutput').value = serializeCube();
     }
 
     function loadState() {
@@ -598,36 +681,29 @@ Use Ctrl+Enter to execute"></textarea>
     }
 
     function solveCube() {
+      // Usar esquema Rubik padrão com nova notação
+      CubeConfig.mode = 'custom_indices';
+      CubeConfig.customStickers = {
+        0: { background: 'white' },   // U
+        1: { background: 'orange' },  // L  
+        2: { background: 'green' },   // F
+        3: { background: 'red' },     // R
+        4: { background: 'blue' },    // B
+        5: { background: 'yellow' }   // D
+      };
+      
       // Inicializar estado interno
       initializeCubeState();
       
       CubeConfig.faces.forEach(face => {
+        const faceIndex = CubeConfig.faces.indexOf(face);
         for (let i = 0; i < 9; i++) {
-          if (CubeConfig.mode === 'standard') {
-            // Modo compatibilidade: aplicar cor diretamente
-            const color = CubeConfig.standardColors[face];
-            setStickerStyle(face, i, color);
-            
-          } else if (CubeConfig.mode === 'custom_indices') {
-            // Atualizar estado interno
-            const faceIndex = CubeConfig.faces.indexOf(face);
-            cubeState[face][i] = {
-              mode: 'custom_indices',
-              stickerIndex: faceIndex,
-              rotation: 0
-            };
-            setStickerStyle(face, i, cubeState[face][i]);
-            
-          } else if (CubeConfig.mode === 'face_textures') {
-            // Atualizar estado interno
-            cubeState[face][i] = {
-              mode: 'face_textures',
-              faceTexture: face,
-              spritePosition: i,
-              rotation: 0
-            };
-            setStickerStyle(face, i, cubeState[face][i]);
-          }
+          cubeState[face][i] = {
+            mode: 'custom_indices',
+            stickerIndex: faceIndex,
+            rotation: 0
+          };
+          setStickerStyle(face, i, cubeState[face][i]);
         }
       });
       update3DView();
@@ -1165,6 +1241,59 @@ Use Ctrl+Enter to execute"></textarea>
     document.getElementById('saveBtn').onclick = printState;
     document.getElementById('loadBtn').onclick = loadState;
     document.getElementById('solveBtn').onclick = solveCube;
+      document.getElementById('loadConfigBtn').onclick = loadCustomConfig;
+
+      function loadCustomConfig() {
+        try {
+          const config = JSON.parse(document.getElementById('customConfig').value);
+
+          if (config.mode === 'face_textures') {
+            // Modo texturas por face
+            CubeConfig.mode = 'face_textures';
+            CubeConfig.faceTextures = config.textures || {};
+
+            // Aplicar texturas
+            initializeCubeState();
+            CubeConfig.faces.forEach(face => {
+              for (let i = 0; i < 9; i++) {
+                cubeState[face][i] = {
+                  mode: 'face_textures',
+                  faceTexture: face,
+                  spritePosition: i,
+                  rotation: 0
+                };
+                setStickerStyle(face, i, cubeState[face][i]);
+              }
+            });
+
+          } else if (config.mode === 'custom_indices') {
+            // Modo índices customizados
+            CubeConfig.mode = 'custom_indices';
+            CubeConfig.customStickers = config.stickers || {};
+
+            // Aplicar estado inicial se fornecido
+            initializeCubeState();
+            const initialState = config.initialState || {};
+
+            CubeConfig.faces.forEach(face => {
+              const faceState = initialState[face] || Array(9).fill(CubeConfig.faces.indexOf(face));
+              for (let i = 0; i < 9; i++) {
+                cubeState[face][i] = {
+                  mode: 'custom_indices',
+                  stickerIndex: faceState[i],
+                  rotation: 0
+                };
+                setStickerStyle(face, i, cubeState[face][i]);
+              }
+            });
+          }
+
+          update3DView();
+
+        } catch (error) {
+          alert('Erro no JSON: ' + error.message);
+        }
+      }
     function setActiveButton(activeId) {
       document.querySelectorAll('.view-btn').forEach(btn => btn.disabled = false);
       document.getElementById(activeId).disabled = true;
@@ -1177,7 +1306,15 @@ Use Ctrl+Enter to execute"></textarea>
 
     document.getElementById('applyAlgBtn').onclick = () => {
       const mode = document.getElementById('algMode').value;
-      if (mode === 'solved') solveCube();
+      if (mode === 'solved') {
+        // Usar configuração customizada se houver, senão Rubik padrão
+        const customConfig = document.getElementById('customConfig').value.trim();
+        if (customConfig) {
+          loadCustomConfig();
+        } else {
+          solveCube();
+        }
+      }
       if (mode === 'lastLoaded') loadLastState();
 
       const alg = document.getElementById('algInput').value;
