@@ -388,16 +388,38 @@ Use Ctrl+Enter to execute"></textarea>
   <script>
     // ==================== CAMADA 1: REPRESENTAÇÃO VISUAL ====================
 
-    const config = {
-      faces: ['U', 'L', 'F', 'R', 'B', 'D'],
-      colors: {
-        'U': 'white',
-        'L': 'orange',
-        'F': 'green',
-        'R': 'red',
-        'B': 'blue',
-        'D': 'yellow'
-      }
+    // ==================== CONFIGURAÇÃO DUAL ====================
+    
+    const CubeConfig = {
+      mode: 'standard', // 'standard', 'custom_indices', 'face_textures'
+      
+      // Modo padrão (compatibilidade)
+      standardColors: {
+        'U': 'white', 'L': 'orange', 'F': 'green',
+        'R': 'red', 'B': 'blue', 'D': 'yellow'
+      },
+      
+      // FEATURE 1: Índices customizados
+      customStickers: {
+        0: { background: 'white' },
+        1: { background: 'orange' },
+        2: { background: 'green' },
+        3: { background: 'red' },
+        4: { background: 'blue' },
+        5: { background: 'yellow' }
+      },
+      
+      // FEATURE 2: Texturas por face
+      faceTextures: {
+        'U': { background: 'white' },
+        'L': { background: 'orange' },
+        'F': { background: 'green' },
+        'R': { background: 'red' },
+        'B': { background: 'blue' },
+        'D': { background: 'yellow' }
+      },
+      
+      faces: ['U', 'L', 'F', 'R', 'B', 'D']
     };
 
     function createStickers(faceElement, is3D = false) {
@@ -410,7 +432,9 @@ Use Ctrl+Enter to execute"></textarea>
       }
     }
 
-    function setColor(face, index, color) {
+    // ==================== SISTEMA DE STICKERS UNIFICADO ====================
+    
+    function setStickerStyle(face, index, stickerData) {
       const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
       const face3D = document.querySelector(`.face-3d[data-face="${face}"]`);
 
@@ -418,20 +442,81 @@ Use Ctrl+Enter to execute"></textarea>
         if (faceElement) {
           const sticker = faceElement.children[index];
           if (sticker) {
-            sticker.style.backgroundColor = color;
+            applyStickerToElement(sticker, stickerData);
           }
         }
       });
     }
+    
+    function applyStickerToElement(element, stickerData) {
+      // Limpar estilos anteriores
+      element.style.background = '';
+      element.style.backgroundImage = '';
+      element.style.backgroundSize = '';
+      element.style.backgroundPosition = '';
+      element.style.backgroundRepeat = '';
+      element.style.transform = '';
+      
+      if (CubeConfig.mode === 'standard') {
+        // Modo compatibilidade: stickerData é uma cor simples
+        element.style.backgroundColor = stickerData;
+        
+      } else if (CubeConfig.mode === 'custom_indices') {
+        // FEATURE 1: Aplicar estilo do índice + rotação
+        const style = CubeConfig.customStickers[stickerData.stickerIndex];
+        if (style) {
+          Object.assign(element.style, style);
+          if (stickerData.rotation) {
+            element.style.transform = `rotate(${stickerData.rotation}deg)`;
+          }
+        }
+        
+      } else if (CubeConfig.mode === 'face_textures') {
+        // FEATURE 2: Aplicar sprite da textura + rotação
+        const texture = CubeConfig.faceTextures[stickerData.faceTexture];
+        if (texture) {
+          // Para imagens, usar sistema de sprites
+          if (texture.backgroundImage) {
+            const sprite = generateSprite(stickerData.spritePosition, texture);
+            Object.assign(element.style, sprite);
+          } else {
+            // Para gradientes/cores sólidas, aplicar diretamente
+            element.style.background = texture.background;
+          }
+          
+          if (stickerData.rotation) {
+            element.style.transform = `rotate(${stickerData.rotation}deg)`;
+          }
+        }
+      }
+    }
+    
+    function generateSprite(position, texture) {
+      const row = Math.floor(position / 3);
+      const col = position % 3;
+      
+      // Corrigir: usar posições positivas e ordem correta
+      return {
+        backgroundImage: texture.backgroundImage || '',
+        backgroundPosition: `${col * 50}% ${row * 50}%`,
+        backgroundSize: '300% 300%',
+        backgroundRepeat: 'no-repeat'
+      };
+    }
+    
+    // Função de compatibilidade
+    function setColor(face, index, color) {
+      setStickerStyle(face, index, color);
+    }
 
     // Inicializa faces 2D
-    config.faces.forEach(face => {
+    CubeConfig.faces.forEach(face => {
       const faceElement = document.querySelector(`.face-2d[data-face="${face}"]`);
       createStickers(faceElement, false);
     });
 
     // Inicializa faces 3D
-    config.faces.forEach(face => {
+    CubeConfig.faces.forEach(face => {
       const faceElement = document.querySelector(`.face-3d[data-face="${face}"]`);
       createStickers(faceElement, true);
     });
@@ -447,7 +532,7 @@ Use Ctrl+Enter to execute"></textarea>
 
     function serializeCube() {
       const state = {};
-      config.faces.forEach(face => {
+      CubeConfig.faces.forEach(face => {
         const faceElement = document.querySelector(`.face-2d[data-face="${face}"]`);
         state[face] = Array.from(faceElement.children).map(sticker => {
           const color = sticker.style.backgroundColor || 'white';
@@ -459,7 +544,7 @@ Use Ctrl+Enter to execute"></textarea>
 
     function deserializeCube(jsonString) {
       const state = JSON.parse(jsonString);
-      config.faces.forEach(face => {
+      CubeConfig.faces.forEach(face => {
         if (state[face]) {
           state[face].forEach((colorCode, index) => {
             const color = reverseColorMap[colorCode] || 'white';
@@ -494,10 +579,28 @@ Use Ctrl+Enter to execute"></textarea>
     }
 
     function solveCube() {
-      config.faces.forEach(face => {
-        const color = config.colors[face];
+      CubeConfig.faces.forEach(face => {
         for (let i = 0; i < 9; i++) {
-          setColor(face, i, color);
+          if (CubeConfig.mode === 'standard') {
+            const color = CubeConfig.standardColors[face];
+            setStickerStyle(face, i, color);
+            
+          } else if (CubeConfig.mode === 'custom_indices') {
+            // No modo custom, usar índice baseado na face (0-5)
+            const faceIndex = CubeConfig.faces.indexOf(face);
+            setStickerStyle(face, i, {
+              stickerIndex: faceIndex,
+              rotation: 0
+            });
+            
+          } else if (CubeConfig.mode === 'face_textures') {
+            // No modo texturas, cada sticker usa a textura da face diretamente
+            setStickerStyle(face, i, {
+              faceTexture: face,
+              spritePosition: i,
+              rotation: 0
+            });
+          }
         }
       });
       update3DView();
@@ -741,7 +844,7 @@ Use Ctrl+Enter to execute"></textarea>
     let cubeSize = 150;
     let zoom2D = 1;
     let panOffset = { x: 0, y: 0 };
-    let currentViewMode = 'cubenet';
+    let currentViewMode = 'perspective'; // Inicializar com valor padrão
 
     // Estados salvos para cada modo
     let savedStates = {
@@ -751,15 +854,25 @@ Use Ctrl+Enter to execute"></textarea>
     };
 
     function update3DView() {
-      if (currentViewMode === 'cubenet') return;
+      if (typeof currentViewMode !== 'undefined' && currentViewMode === 'cubenet') return;
 
-      config.faces.forEach(face => {
+      CubeConfig.faces.forEach(face => {
         const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
         const face3D = document.querySelector(`.face-3d[data-face="${face}"]`);
 
-        Array.from(face2D.children).forEach((sticker, i) => {
-          face3D.children[i].style.backgroundColor = sticker.style.backgroundColor;
-        });
+        if (face2D && face3D) {
+          Array.from(face2D.children).forEach((sticker, i) => {
+            if (face3D.children[i]) {
+              // Copiar todos os estilos de background
+              face3D.children[i].style.background = sticker.style.background;
+              face3D.children[i].style.backgroundImage = sticker.style.backgroundImage;
+              face3D.children[i].style.backgroundSize = sticker.style.backgroundSize;
+              face3D.children[i].style.backgroundPosition = sticker.style.backgroundPosition;
+              face3D.children[i].style.backgroundRepeat = sticker.style.backgroundRepeat;
+              face3D.children[i].style.transform = sticker.style.transform;
+            }
+          });
+        }
       });
     }
 
