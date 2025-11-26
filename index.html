@@ -1002,9 +1002,9 @@ Use Ctrl+Enter to execute"></textarea>
 
     function moveB() {
       rotateFaceStickers('B', true);
-      // Rotacionar stickers afetados pelo movimento B
+      // Rotacionar stickers afetados pelo movimento B: face B +1, outros +3
       [['U',0], ['U',1], ['U',2], ['R',2], ['R',5], ['R',8], ['D',8], ['D',7], ['D',6], ['L',0], ['L',3], ['L',6]].forEach(([face, index]) => {
-        stickerRotations[face][index] = (stickerRotations[face][index] + 1) % 4;
+        stickerRotations[face][index] = (stickerRotations[face][index] + 3) % 4;
       });
       
       if (CubeConfig.mode === 'standard') {
