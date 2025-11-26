@@ -544,14 +544,27 @@ Use Ctrl+Enter to execute"></textarea>
       } else if (CubeConfig.mode === 'face_textures') {
         // FEATURE 2: Aplicar sprite da textura
         const texture = CubeConfig.faceTextures[stickerData.faceTexture];
-        if (texture) {
+        const centerTexture = CubeConfig.faceTextures[stickerData.faceTexture + '_center'];
+        
+        // Se for o centro (índice 4) e existir textura específica para centro
+        if (index === 4 && centerTexture) {
+          if (centerTexture.background) {
+            element.style.background = centerTexture.background;
+          }
+          if (centerTexture.backgroundSize) {
+            element.style.backgroundSize = centerTexture.backgroundSize;
+          }
+        } else if (texture) {
           // Para imagens, usar sistema de sprites
           if (texture.backgroundImage) {
             const sprite = generateSprite(stickerData.spritePosition, texture);
             Object.assign(element.style, sprite);
-          } else {
+          } else if (texture.background) {
             // Para gradientes/cores sólidas, aplicar diretamente
             element.style.background = texture.background;
+            if (texture.backgroundSize) {
+              element.style.backgroundSize = texture.backgroundSize;
+            }
           }
         }
       }
@@ -912,6 +925,8 @@ Use Ctrl+Enter to execute"></textarea>
     }
 
     function moveL() {
+      console.log('=== MOVIMENTO L ===');
+      console.log('ANTES - Face L rotações:', JSON.stringify(stickerRotations.L));
       rotateFaceStickers('L', true);
       
       if (CubeConfig.mode === 'standard') {
@@ -943,6 +958,7 @@ Use Ctrl+Enter to execute"></textarea>
 
         applyCubeStateToDOM();
       }
+      console.log('DEPOIS - Face L rotações:', JSON.stringify(stickerRotations.L));
     }
 
     function moveU() {
@@ -996,6 +1012,8 @@ Use Ctrl+Enter to execute"></textarea>
     }
 
     function moveF() {
+      console.log('=== MOVIMENTO F ===');
+      console.log('ANTES - Face L rotações:', JSON.stringify(stickerRotations.L));
       rotateFaceStickers('F', true);
       [['U',6], ['U',7], ['U',8], ['L',8], ['L',5], ['L',2], ['D',0], ['D',1], ['D',2], ['R',6], ['R',3], ['R',0]].forEach(([face, index]) => {
         stickerRotations[face][index] = (stickerRotations[face][index] + 1) % 4;
@@ -1021,6 +1039,7 @@ Use Ctrl+Enter to execute"></textarea>
 
         applyCubeStateToDOM();
       }
+      console.log('DEPOIS - Face L rotações:', JSON.stringify(stickerRotations.L));
     }
 
     function moveB() {
