@@ -7,19 +7,30 @@ The Custom Textures system allows you to apply CSS backgrounds to cube stickers 
 Apply textures to entire faces or individual stickers within faces.
 
 ### Basic Face Texture
+[Try this →](#try-example)
 ```json
 {
   "mode": "face_textures",
   "textures": {
-    "U": {"background": "linear-gradient(45deg, red, yellow)"},
-    "F": {"background": "radial-gradient(circle, blue, white)"},
-    "R": {"background": "conic-gradient(red, yellow, green, blue)"}
+    "U": {"background": "radial-gradient(#ffffff 90%, black 95%)"},
+    "L": {"background": "radial-gradient(#ff5800 90%, black 95%)"},
+    "F": {"background": "radial-gradient(#009b48 90%, black 95%)"},
+    "R": {"background": "radial-gradient(#c41e3a 90%, black 95%)"},
+    "B": {"background": "radial-gradient(#0045ad 90%, black 95%)"},
+    "D": {"background": "radial-gradient(#ffd500 90%, black 95%)"},
+    "U_center": {
+      "background": "url('https://filipeteixeira.com.br/rubiksim/moyulogo.svg'), radial-gradient(#ffffff 90%, black 95%)",
+      "backgroundSize": "100%",
+      "backgroundRepeat": "no-repeat",
+      "backgroundPosition": "center"
+    }
   }
 }
 ```
 
 ### Sprite Sheet Textures
 For image-based textures that use sprite positioning:
+[Try this →](#try-example)
 ```json
 {
   "mode": "face_textures", 
@@ -34,6 +45,7 @@ For image-based textures that use sprite positioning:
 
 ### Center-Specific Textures
 Apply different textures to center stickers:
+[Try this →](#try-example)
 ```json
 {
   "mode": "face_textures",
@@ -47,6 +59,7 @@ Apply different textures to center stickers:
 ## Mode 2: Custom Indices (`custom_indices`)
 Apply textures to specific sticker IDs regardless of position.
 
+[Try this →](#try-example)
 ```json
 {
   "mode": "custom_indices",
@@ -68,6 +81,7 @@ Apply textures to specific sticker IDs regardless of position.
 ## Examples
 
 ### Rainbow Cube
+[Try this →](#try-example)
 ```json
 {
   "mode": "face_textures",
@@ -83,6 +97,7 @@ Apply textures to specific sticker IDs regardless of position.
 ```
 
 ### Picture Cube (Complex Sprite Design)
+[Try this →](#try-example)
 ```json
 {
   "mode": "face_textures",
@@ -140,6 +155,7 @@ Apply textures to specific sticker IDs regardless of position.
 ```
 
 ### Metallic Cube
+[Try this →](#try-example)
 ```json
 {
   "mode": "face_textures",

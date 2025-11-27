@@ -1,7 +1,12 @@
 {
   "dist\\index.html": {
-    "mtime": "2025-11-26T23:03:44.113807",
-    "hash": "bca80be1eba41d59fd7bcc233c6e7e13",
-    "uploaded_at": "2025-11-26T23:05:53.859620"
+    "mtime": "2025-11-27T14:22:04.017606",
+    "hash": "5a088878e0bc6e2afa59cf4cb603e707",
+    "uploaded_at": "2025-11-27T14:23:14.752752"
+  },
+  "dist\\texture-instructions.md": {
+    "mtime": "2025-11-27T13:58:23.775115",
+    "hash": "5a368bab6c58fc54c7dc44b5ccb73d96",
+    "uploaded_at": "2025-11-27T14:23:14.947399"
   }
 }
