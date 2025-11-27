@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cubo Mínimo - X, Y, U</title>
+  <title>Minimal Cube - X, Y, U</title>
   <style>
     body {
       margin: 0;
@@ -179,13 +179,48 @@
       height: 100px;
       margin: 10px 0;
     }
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 800px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close:hover {
+      color: black;
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body>
   <div id="container">
     <div id="controls">
-      <h3>Fundamentos: X, Y, U, Z</h3>
+      <h3>Fundamentals: X, Y, U, Z</h3>
       <button onclick="moveU()">U</button>
       <button onclick="rotationX()">X</button>
       <button onclick="rotationY()">Y</button>
@@ -201,7 +236,7 @@
       <button onclick="double(rotationY)()">Y2</button>
       <button onclick="double(rotationZ)()">Z2</button>
 
-      <h3>Derivados</h3>
+      <h3>Derived</h3>
       <button onclick="moveD()">D</button>
       <button onclick="moveR()">R</button>
       <button onclick="moveL()">L</button>
@@ -214,20 +249,21 @@
       <button onclick="prime(moveF)()">F'</button>
       <button onclick="prime(moveB)()">B'</button>
 
-      <h3>Algoritmo</h3>
-      <textarea id="alg" placeholder="Digite algoritmo (ex: R U R' U')"
+      <h3>Algorithm</h3>
+      <textarea id="alg" placeholder="Enter algorithm (ex: R U R' U')"
         onkeydown="if(event.ctrlKey && event.key==='Enter') applyAlgorithm()"></textarea>
-      <button onclick="applyAlgorithm()">Executar</button>
+      <button onclick="applyAlgorithm()">Execute</button>
+      <small style="color: #666; font-style: italic;">Tip: Press Ctrl+Enter to execute</small>
 
-      <h3>Estado</h3>
+      <h3>State</h3>
       <button onclick="solveCube()">Reset</button>
-      <button onclick="printRotations()">Ver Rotações</button>
+      <button onclick="printRotations()">View Rotations</button>
 
-      <h3>Texturas Customizadas</h3>
+      <h3>Custom Textures <a href="#" onclick="openInstructionsModal()" style="font-size: 14px; margin-left: 10px;">[Instructions]</a></h3>
       <textarea id="customConfig" placeholder='{"mode": "face_textures", "textures": {"U": {"background": "linear-gradient(45deg, red, yellow)"}}}'></textarea>
-      <button onclick="loadCustomConfig()">Aplicar Texturas</button>
+      <button onclick="loadCustomConfig()">Apply Textures</button>
 
-      <h3>Visualização</h3>
+      <h3>Visualization</h3>
       <button id="cubenetBtn" onclick="setViewMode('cubenet')" disabled>Cube Net</button>
       <button id="orthographicBtn" onclick="setViewMode('orthographic')">3D Orthographic</button>
     </div>
@@ -252,6 +288,14 @@
           <div class="face-3d face-R" data-face="R"></div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Instructions Modal -->
+  <div id="instructionsModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeInstructionsModal()">&times;</span>
+      <div id="instructionsContent">Loading...</div>
     </div>
   </div>
 
@@ -356,7 +400,13 @@
         sticker.style.backgroundColor = colors[colorIndex];
       }
       
-      sticker.innerHTML = `<u>${stickerId}</u>`;
+      // Hide indices when custom textures are active
+      if (textureMode === 'face_textures' || textureMode === 'custom_indices') {
+        sticker.innerHTML = '';
+      } else {
+        sticker.innerHTML = `<u>${stickerId}</u>`;
+      }
+      
       const rotation = stickerRotations[face][index] * 90;
       sticker.style.transform = rotation ? `rotate(${rotation}deg)` : '';
     }
@@ -636,7 +686,7 @@
         if (config.mode === 'face_textures') {
           textureMode = 'face_textures';
           faceTextures = config.textures || {};
-          // Reinicializar texturas se necessário
+          // Reinitialize textures if needed
           if (!stickerTextures.U || stickerTextures.U.length === 0) {
             faces.forEach((face, faceIndex) => {
               stickerTextures[face] = Array(9).fill(0).map((_, i) => ({ face, index: i }));
@@ -649,7 +699,7 @@
         
         updateDOM();
       } catch (error) {
-        alert('Erro no JSON: ' + error.message);
+        alert('JSON Error: ' + error.message);
       }
     }
 
@@ -658,8 +708,8 @@
       faces.forEach(face => {
         stickerRotations[face].forEach(rot => total += rot);
       });
-      console.log('Total de rotações:', total);
-      console.log('Rotações por face:', JSON.stringify(stickerRotations, null, 2));
+      console.log('Total rotations:', total);
+      console.log('Rotations per face:', JSON.stringify(stickerRotations, null, 2));
     }
 
     // Event listeners
@@ -668,6 +718,31 @@
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     rightPanel.addEventListener('wheel', handleWheel, { passive: false });
+
+    // Modal functions
+    function openInstructionsModal() {
+      document.getElementById('instructionsModal').style.display = 'block';
+      fetch('texture-instructions.md')
+        .then(response => response.text())
+        .then(markdown => {
+          document.getElementById('instructionsContent').innerHTML = marked.parse(markdown);
+        })
+        .catch(error => {
+          document.getElementById('instructionsContent').innerHTML = '<p>Error loading instructions.</p>';
+        });
+    }
+    
+    function closeInstructionsModal() {
+      document.getElementById('instructionsModal').style.display = 'none';
+    }
+    
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('instructionsModal');
+      if (event.target === modal) {
+        closeInstructionsModal();
+      }
+    }
 
     // Inicializar
     initCube();
