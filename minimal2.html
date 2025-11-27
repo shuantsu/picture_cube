@@ -20,6 +20,7 @@
       width: 300px;
       padding: 20px;
       background: #f0f0f0;
+      overflow-y: auto;
     }
 
     :root {
@@ -222,6 +223,10 @@
       <button onclick="solveCube()">Reset</button>
       <button onclick="printRotations()">Ver Rotações</button>
 
+      <h3>Texturas Customizadas</h3>
+      <textarea id="customConfig" placeholder='{"mode": "face_textures", "textures": {"U": {"background": "linear-gradient(45deg, red, yellow)"}}}'></textarea>
+      <button onclick="loadCustomConfig()">Aplicar Texturas</button>
+
       <h3>Visualização</h3>
       <button id="cubenetBtn" onclick="setViewMode('cubenet')" disabled>Cube Net</button>
       <button id="orthographicBtn" onclick="setViewMode('orthographic')">3D Orthographic</button>
@@ -259,6 +264,12 @@
     let cubeState = { U: [], L: [], F: [], R: [], B: [], D: [] };
     let stickerRotations = { U: [], L: [], F: [], R: [], B: [], D: [] };
     let stickerIds = { U: [], L: [], F: [], R: [], B: [], D: [] };
+    let stickerTextures = { U: [], L: [], F: [], R: [], B: [], D: [] };
+    
+    // Sistema de texturas
+    let textureMode = 'standard';
+    let faceTextures = {};
+    let customStickers = {};
 
     let currentViewMode = 'cubenet';
     let cubeRotation = { x: -25, y: -45 };
@@ -282,6 +293,7 @@
         cubeState[face] = Array(9).fill(0).map((_, i) => faceIndex * 9 + i);
         stickerRotations[face] = Array(9).fill(0);
         stickerIds[face] = Array(9).fill(0).map((_, i) => faceIndex * 9 + i);
+        stickerTextures[face] = Array(9).fill(0).map((_, i) => ({ face, index: i }));
 
         // Inicializar faces 2D e 3D
         const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
@@ -305,6 +317,50 @@
         (facesUDF.includes(fromFace) && toFace === faceB);
     }
 
+    function applyStickerStyle(sticker, face, index, stickerId) {
+      // Limpar estilos
+      sticker.style.background = '';
+      sticker.style.backgroundImage = '';
+      sticker.style.backgroundSize = '';
+      sticker.style.backgroundPosition = '';
+      
+      if (textureMode === 'face_textures' && stickerTextures[face] && stickerTextures[face][index]) {
+        const textureInfo = stickerTextures[face][index];
+        const originalFace = textureInfo.face;
+        const originalIndex = textureInfo.index;
+        
+
+        
+        const texture = faceTextures[originalFace];
+        const centerTexture = faceTextures[originalFace + '_center'];
+        
+        if (originalIndex === 4 && centerTexture) {
+          Object.assign(sticker.style, centerTexture);
+        } else if (texture) {
+          if (texture.backgroundImage) {
+            const row = Math.floor(originalIndex / 3);
+            const col = originalIndex % 3;
+            sticker.style.backgroundImage = texture.backgroundImage;
+            sticker.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
+            sticker.style.backgroundSize = '300% 300%';
+            sticker.style.backgroundRepeat = 'no-repeat';
+          } else {
+            Object.assign(sticker.style, texture);
+          }
+        }
+      } else if (textureMode === 'custom_indices') {
+        const style = customStickers[stickerId];
+        if (style) Object.assign(sticker.style, style);
+      } else {
+        const colorIndex = Math.floor(stickerId / 9);
+        sticker.style.backgroundColor = colors[colorIndex];
+      }
+      
+      sticker.innerHTML = `<u>${stickerId}</u>`;
+      const rotation = stickerRotations[face][index] * 90;
+      sticker.style.transform = rotation ? `rotate(${rotation}deg)` : '';
+    }
+
     function updateDOM() {
       faces.forEach((face, faceIndex) => {
         const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
@@ -315,11 +371,7 @@
             for (let i = 0; i < 9; i++) {
               const sticker = faceElement.children[i];
               const stickerId = cubeState[face][i];
-              const colorIndex = Math.floor(stickerId / 9);
-              sticker.style.backgroundColor = colors[colorIndex];
-              sticker.innerHTML = `<u>${stickerId}</u>`;
-              const rotation = stickerRotations[face][i] * 90;
-              sticker.style.transform = rotation ? `rotate(${rotation}deg)` : '';
+              applyStickerStyle(sticker, face, i, stickerId);
             }
           }
         });
@@ -434,26 +486,32 @@
     function moveU() {
       cubeState.U = rotateFaceDataCW(cubeState.U);
       stickerRotations.U = rotateFaceDataCW(stickerRotations.U);
+      stickerTextures.U = rotateFaceDataCW(stickerTextures.U); // Rotacionar texturas da face U
       for (let i = 0; i < 9; i++) applyStickerRotation('U', i, 1);
 
       const temp = [cubeState.F[0], cubeState.F[1], cubeState.F[2]];
       const tempRot = [stickerRotations.F[0], stickerRotations.F[1], stickerRotations.F[2]];
+      const tempTex = [stickerTextures.F[0], stickerTextures.F[1], stickerTextures.F[2]];
 
       // F ← R (sem flip)
       cubeState.F[0] = cubeState.R[0]; cubeState.F[1] = cubeState.R[1]; cubeState.F[2] = cubeState.R[2];
       stickerRotations.F[0] = stickerRotations.R[0]; stickerRotations.F[1] = stickerRotations.R[1]; stickerRotations.F[2] = stickerRotations.R[2];
+      stickerTextures.F[0] = stickerTextures.R[0]; stickerTextures.F[1] = stickerTextures.R[1]; stickerTextures.F[2] = stickerTextures.R[2];
 
       // R ← B (sem flip - B para R não precisa)
       cubeState.R[0] = cubeState.B[0]; cubeState.R[1] = cubeState.B[1]; cubeState.R[2] = cubeState.B[2];
       stickerRotations.R[0] = stickerRotations.B[0]; stickerRotations.R[1] = stickerRotations.B[1]; stickerRotations.R[2] = stickerRotations.B[2];
+      stickerTextures.R[0] = stickerTextures.B[0]; stickerTextures.R[1] = stickerTextures.B[1]; stickerTextures.R[2] = stickerTextures.B[2];
 
       // B ← L (sem flip - L para B não precisa)
       cubeState.B[0] = cubeState.L[0]; cubeState.B[1] = cubeState.L[1]; cubeState.B[2] = cubeState.L[2];
       stickerRotations.B[0] = stickerRotations.L[0]; stickerRotations.B[1] = stickerRotations.L[1]; stickerRotations.B[2] = stickerRotations.L[2];
+      stickerTextures.B[0] = stickerTextures.L[0]; stickerTextures.B[1] = stickerTextures.L[1]; stickerTextures.B[2] = stickerTextures.L[2];
 
       // L ← F (sem flip)
       cubeState.L[0] = temp[0]; cubeState.L[1] = temp[1]; cubeState.L[2] = temp[2];
       stickerRotations.L[0] = tempRot[0]; stickerRotations.L[1] = tempRot[1]; stickerRotations.L[2] = tempRot[2];
+      stickerTextures.L[0] = tempTex[0]; stickerTextures.L[1] = tempTex[1]; stickerTextures.L[2] = tempTex[2];
 
       updateDOM();
     }
@@ -462,27 +520,34 @@
     function rotationX() {
       const temp = cubeState.U;
       const tempRot = [...stickerRotations.U];
+      const tempTex = [...stickerTextures.U];
 
       cubeState.U = cubeState.F;
       stickerRotations.U = [...stickerRotations.F];
+      stickerTextures.U = [...stickerTextures.F];
 
       cubeState.F = cubeState.D;
       stickerRotations.F = [...stickerRotations.D];
+      stickerTextures.F = [...stickerTextures.D];
 
       cubeState.D = rotateFaceData180(cubeState.B);
       stickerRotations.D = rotateFaceData180(stickerRotations.B);
+      stickerTextures.D = rotateFaceData180(stickerTextures.B);
       for (let i = 0; i < 9; i++) applyStickerRotation('D', i, 2);
 
       cubeState.B = rotateFaceData180(temp);
       stickerRotations.B = rotateFaceData180(tempRot);
+      stickerTextures.B = rotateFaceData180(tempTex);
       for (let i = 0; i < 9; i++) applyStickerRotation('B', i, 2);
 
       cubeState.L = rotateFaceDataCCW(cubeState.L);
       stickerRotations.L = rotateFaceDataCCW(stickerRotations.L);
+      stickerTextures.L = rotateFaceDataCCW(stickerTextures.L);
       for (let i = 0; i < 9; i++) applyStickerRotation('L', i, -1);
 
       cubeState.R = rotateFaceDataCW(cubeState.R);
       stickerRotations.R = rotateFaceDataCW(stickerRotations.R);
+      stickerTextures.R = rotateFaceDataCW(stickerTextures.R);
       for (let i = 0; i < 9; i++) applyStickerRotation('R', i, 1);
 
       updateDOM();
@@ -492,25 +557,32 @@
     function rotationY() {
       const temp = cubeState.F;
       const tempRot = [...stickerRotations.F];
+      const tempTex = [...stickerTextures.F];
 
       cubeState.F = cubeState.R;
       stickerRotations.F = [...stickerRotations.R];
+      stickerTextures.F = [...stickerTextures.R];
 
       cubeState.R = cubeState.B;
       stickerRotations.R = [...stickerRotations.B];
+      stickerTextures.R = [...stickerTextures.B];
 
       cubeState.B = cubeState.L;
       stickerRotations.B = [...stickerRotations.L];
+      stickerTextures.B = [...stickerTextures.L];
 
       cubeState.L = temp;
       stickerRotations.L = tempRot;
+      stickerTextures.L = tempTex;
 
       cubeState.U = rotateFaceDataCW(cubeState.U);
       stickerRotations.U = rotateFaceDataCW(stickerRotations.U);
+      stickerTextures.U = rotateFaceDataCW(stickerTextures.U);
       for (let i = 0; i < 9; i++) applyStickerRotation('U', i, 1);
 
       cubeState.D = rotateFaceDataCCW(cubeState.D);
       stickerRotations.D = rotateFaceDataCCW(stickerRotations.D);
+      stickerTextures.D = rotateFaceDataCCW(stickerTextures.D);
       for (let i = 0; i < 9; i++) applyStickerRotation('D', i, -1);
 
       updateDOM();
@@ -553,7 +625,32 @@
     }
 
     function solveCube() {
+      textureMode = 'standard';
       initCube();
+    }
+
+    function loadCustomConfig() {
+      try {
+        const config = JSON.parse(document.getElementById('customConfig').value);
+        
+        if (config.mode === 'face_textures') {
+          textureMode = 'face_textures';
+          faceTextures = config.textures || {};
+          // Reinicializar texturas se necessário
+          if (!stickerTextures.U || stickerTextures.U.length === 0) {
+            faces.forEach((face, faceIndex) => {
+              stickerTextures[face] = Array(9).fill(0).map((_, i) => ({ face, index: i }));
+            });
+          }
+        } else if (config.mode === 'custom_indices') {
+          textureMode = 'custom_indices';
+          customStickers = config.stickers || {};
+        }
+        
+        updateDOM();
+      } catch (error) {
+        alert('Erro no JSON: ' + error.message);
+      }
     }
 
     function printRotations() {
