@@ -879,6 +879,14 @@ Use Ctrl+Enter to execute"></textarea>
 
     // ==================== CAMADA 5: MOVIMENTOS BÁSICOS ====================
 
+      // Detectar se sticker precisa de rotação 180° ao mudar de face
+      function needsFlip(fromFace, toFace) {
+        const faceB = 'B';
+        const facesUDF = ['U', 'D', 'F'];
+        return (fromFace === faceB && facesUDF.includes(toFace)) || 
+               (facesUDF.includes(fromFace) && toFace === faceB);
+      }
+
       // Aplicar rotação individual a um sticker específico
       function applyStickerRotation(face, index, rotationIncrement) {
         if (!stickerRotations[face] || stickerRotations[face][index] === undefined) {
@@ -915,24 +923,16 @@ Use Ctrl+Enter to execute"></textarea>
         const tempRot = [stickerRotations.F[2], stickerRotations.F[5], stickerRotations.F[8]];
         
         cubeState.F[2] = cubeState.D[2]; cubeState.F[5] = cubeState.D[5]; cubeState.F[8] = cubeState.D[8];
-        applyStickerRotation('F', 2, stickerRotations.D[2] - stickerRotations.F[2]);
-        applyStickerRotation('F', 5, stickerRotations.D[5] - stickerRotations.F[5]);
-        applyStickerRotation('F', 8, stickerRotations.D[8] - stickerRotations.F[8]);
+        stickerRotations.F[2] = stickerRotations.D[2]; stickerRotations.F[5] = stickerRotations.D[5]; stickerRotations.F[8] = stickerRotations.D[8];
         
         cubeState.D[2] = cubeState.B[6]; cubeState.D[5] = cubeState.B[3]; cubeState.D[8] = cubeState.B[0];
-        applyStickerRotation('D', 2, (stickerRotations.B[6] + 2) - stickerRotations.D[2]);
-        applyStickerRotation('D', 5, (stickerRotations.B[3] + 2) - stickerRotations.D[5]);
-        applyStickerRotation('D', 8, (stickerRotations.B[0] + 2) - stickerRotations.D[8]);
+        stickerRotations.D[2] = (stickerRotations.B[6] + 2) % 4; stickerRotations.D[5] = (stickerRotations.B[3] + 2) % 4; stickerRotations.D[8] = (stickerRotations.B[0] + 2) % 4;
         
         cubeState.B[6] = cubeState.U[2]; cubeState.B[3] = cubeState.U[5]; cubeState.B[0] = cubeState.U[8];
-        applyStickerRotation('B', 6, (stickerRotations.U[2] + 2) - stickerRotations.B[6]);
-        applyStickerRotation('B', 3, (stickerRotations.U[5] + 2) - stickerRotations.B[3]);
-        applyStickerRotation('B', 0, (stickerRotations.U[8] + 2) - stickerRotations.B[0]);
+        stickerRotations.B[6] = (stickerRotations.U[2] + 2) % 4; stickerRotations.B[3] = (stickerRotations.U[5] + 2) % 4; stickerRotations.B[0] = (stickerRotations.U[8] + 2) % 4;
         
         cubeState.U[2] = temp[0]; cubeState.U[5] = temp[1]; cubeState.U[8] = temp[2];
-        applyStickerRotation('U', 2, tempRot[0] - stickerRotations.U[2]);
-        applyStickerRotation('U', 5, tempRot[1] - stickerRotations.U[5]);
-        applyStickerRotation('U', 8, tempRot[2] - stickerRotations.U[8]);
+        stickerRotations.U[2] = tempRot[0]; stickerRotations.U[5] = tempRot[1]; stickerRotations.U[8] = tempRot[2];
 
         applyCubeStateToDOM();
       }
@@ -957,24 +957,16 @@ Use Ctrl+Enter to execute"></textarea>
         const tempRot = [stickerRotations.F[0], stickerRotations.F[3], stickerRotations.F[6]];
         
         cubeState.F[0] = cubeState.U[0]; cubeState.F[3] = cubeState.U[3]; cubeState.F[6] = cubeState.U[6];
-        applyStickerRotation('F', 0, stickerRotations.U[0] - stickerRotations.F[0]);
-        applyStickerRotation('F', 3, stickerRotations.U[3] - stickerRotations.F[3]);
-        applyStickerRotation('F', 6, stickerRotations.U[6] - stickerRotations.F[6]);
+        stickerRotations.F[0] = stickerRotations.U[0]; stickerRotations.F[3] = stickerRotations.U[3]; stickerRotations.F[6] = stickerRotations.U[6];
         
         cubeState.U[0] = cubeState.B[8]; cubeState.U[3] = cubeState.B[5]; cubeState.U[6] = cubeState.B[2];
-        applyStickerRotation('U', 0, (stickerRotations.B[8] + 2) - stickerRotations.U[0]);
-        applyStickerRotation('U', 3, (stickerRotations.B[5] + 2) - stickerRotations.U[3]);
-        applyStickerRotation('U', 6, (stickerRotations.B[2] + 2) - stickerRotations.U[6]);
+        stickerRotations.U[0] = (stickerRotations.B[8] + 2) % 4; stickerRotations.U[3] = (stickerRotations.B[5] + 2) % 4; stickerRotations.U[6] = (stickerRotations.B[2] + 2) % 4;
         
         cubeState.B[8] = cubeState.D[0]; cubeState.B[5] = cubeState.D[3]; cubeState.B[2] = cubeState.D[6];
-        applyStickerRotation('B', 8, (stickerRotations.D[0] + 2) - stickerRotations.B[8]);
-        applyStickerRotation('B', 5, (stickerRotations.D[3] + 2) - stickerRotations.B[5]);
-        applyStickerRotation('B', 2, (stickerRotations.D[6] + 2) - stickerRotations.B[2]);
+        stickerRotations.B[8] = (stickerRotations.D[0] + 2) % 4; stickerRotations.B[5] = (stickerRotations.D[3] + 2) % 4; stickerRotations.B[2] = (stickerRotations.D[6] + 2) % 4;
         
         cubeState.D[0] = temp[0]; cubeState.D[3] = temp[1]; cubeState.D[6] = temp[2];
-        applyStickerRotation('D', 0, tempRot[0] - stickerRotations.D[0]);
-        applyStickerRotation('D', 3, tempRot[1] - stickerRotations.D[3]);
-        applyStickerRotation('D', 6, tempRot[2] - stickerRotations.D[6]);
+        stickerRotations.D[0] = tempRot[0]; stickerRotations.D[3] = tempRot[1]; stickerRotations.D[6] = tempRot[2];
 
         applyCubeStateToDOM();
       }
@@ -999,24 +991,16 @@ Use Ctrl+Enter to execute"></textarea>
         const tempRot = [stickerRotations.F[0], stickerRotations.F[1], stickerRotations.F[2]];
         
         cubeState.F[0] = cubeState.R[0]; cubeState.F[1] = cubeState.R[1]; cubeState.F[2] = cubeState.R[2];
-        applyStickerRotation('F', 0, stickerRotations.R[0] - stickerRotations.F[0]);
-        applyStickerRotation('F', 1, stickerRotations.R[1] - stickerRotations.F[1]);
-        applyStickerRotation('F', 2, stickerRotations.R[2] - stickerRotations.F[2]);
+        stickerRotations.F[0] = stickerRotations.R[0]; stickerRotations.F[1] = stickerRotations.R[1]; stickerRotations.F[2] = stickerRotations.R[2];
         
         cubeState.R[0] = cubeState.B[0]; cubeState.R[1] = cubeState.B[1]; cubeState.R[2] = cubeState.B[2];
-        applyStickerRotation('R', 0, stickerRotations.B[0] - stickerRotations.R[0]);
-        applyStickerRotation('R', 1, stickerRotations.B[1] - stickerRotations.R[1]);
-        applyStickerRotation('R', 2, stickerRotations.B[2] - stickerRotations.R[2]);
+        stickerRotations.R[0] = stickerRotations.B[0]; stickerRotations.R[1] = stickerRotations.B[1]; stickerRotations.R[2] = stickerRotations.B[2];
         
         cubeState.B[0] = cubeState.L[0]; cubeState.B[1] = cubeState.L[1]; cubeState.B[2] = cubeState.L[2];
-        applyStickerRotation('B', 0, stickerRotations.L[0] - stickerRotations.B[0]);
-        applyStickerRotation('B', 1, stickerRotations.L[1] - stickerRotations.B[1]);
-        applyStickerRotation('B', 2, stickerRotations.L[2] - stickerRotations.B[2]);
+        stickerRotations.B[0] = stickerRotations.L[0]; stickerRotations.B[1] = stickerRotations.L[1]; stickerRotations.B[2] = stickerRotations.L[2];
         
         cubeState.L[0] = temp[0]; cubeState.L[1] = temp[1]; cubeState.L[2] = temp[2];
-        applyStickerRotation('L', 0, tempRot[0] - stickerRotations.L[0]);
-        applyStickerRotation('L', 1, tempRot[1] - stickerRotations.L[1]);
-        applyStickerRotation('L', 2, tempRot[2] - stickerRotations.L[2]);
+        stickerRotations.L[0] = tempRot[0]; stickerRotations.L[1] = tempRot[1]; stickerRotations.L[2] = tempRot[2];
 
         applyCubeStateToDOM();
       }
@@ -1041,24 +1025,16 @@ Use Ctrl+Enter to execute"></textarea>
         const tempRot = [stickerRotations.F[6], stickerRotations.F[7], stickerRotations.F[8]];
         
         cubeState.F[6] = cubeState.L[6]; cubeState.F[7] = cubeState.L[7]; cubeState.F[8] = cubeState.L[8];
-        applyStickerRotation('F', 6, stickerRotations.L[6] - stickerRotations.F[6]);
-        applyStickerRotation('F', 7, stickerRotations.L[7] - stickerRotations.F[7]);
-        applyStickerRotation('F', 8, stickerRotations.L[8] - stickerRotations.F[8]);
+        stickerRotations.F[6] = stickerRotations.L[6]; stickerRotations.F[7] = stickerRotations.L[7]; stickerRotations.F[8] = stickerRotations.L[8];
         
         cubeState.L[6] = cubeState.B[6]; cubeState.L[7] = cubeState.B[7]; cubeState.L[8] = cubeState.B[8];
-        applyStickerRotation('L', 6, stickerRotations.B[6] - stickerRotations.L[6]);
-        applyStickerRotation('L', 7, stickerRotations.B[7] - stickerRotations.L[7]);
-        applyStickerRotation('L', 8, stickerRotations.B[8] - stickerRotations.L[8]);
+        stickerRotations.L[6] = stickerRotations.B[6]; stickerRotations.L[7] = stickerRotations.B[7]; stickerRotations.L[8] = stickerRotations.B[8];
         
         cubeState.B[6] = cubeState.R[6]; cubeState.B[7] = cubeState.R[7]; cubeState.B[8] = cubeState.R[8];
-        applyStickerRotation('B', 6, stickerRotations.R[6] - stickerRotations.B[6]);
-        applyStickerRotation('B', 7, stickerRotations.R[7] - stickerRotations.B[7]);
-        applyStickerRotation('B', 8, stickerRotations.R[8] - stickerRotations.B[8]);
+        stickerRotations.B[6] = stickerRotations.R[6]; stickerRotations.B[7] = stickerRotations.R[7]; stickerRotations.B[8] = stickerRotations.R[8];
         
         cubeState.R[6] = temp[0]; cubeState.R[7] = temp[1]; cubeState.R[8] = temp[2];
-        applyStickerRotation('R', 6, tempRot[0] - stickerRotations.R[6]);
-        applyStickerRotation('R', 7, tempRot[1] - stickerRotations.R[7]);
-        applyStickerRotation('R', 8, tempRot[2] - stickerRotations.R[8]);
+        stickerRotations.R[6] = tempRot[0]; stickerRotations.R[7] = tempRot[1]; stickerRotations.R[8] = tempRot[2];
 
         applyCubeStateToDOM();
       }
@@ -1083,24 +1059,16 @@ Use Ctrl+Enter to execute"></textarea>
         const tempRot = [stickerRotations.U[6], stickerRotations.U[7], stickerRotations.U[8]];
         
         cubeState.U[6] = cubeState.L[8]; cubeState.U[7] = cubeState.L[5]; cubeState.U[8] = cubeState.L[2];
-        applyStickerRotation('U', 6, (stickerRotations.L[8] + 1) - stickerRotations.U[6]);
-        applyStickerRotation('U', 7, (stickerRotations.L[5] + 1) - stickerRotations.U[7]);
-        applyStickerRotation('U', 8, (stickerRotations.L[2] + 1) - stickerRotations.U[8]);
+        stickerRotations.U[6] = (stickerRotations.L[8] + 1) % 4; stickerRotations.U[7] = (stickerRotations.L[5] + 1) % 4; stickerRotations.U[8] = (stickerRotations.L[2] + 1) % 4;
         
         cubeState.L[2] = cubeState.D[0]; cubeState.L[5] = cubeState.D[1]; cubeState.L[8] = cubeState.D[2];
-        applyStickerRotation('L', 2, (stickerRotations.D[0] + 1) - stickerRotations.L[2]);
-        applyStickerRotation('L', 5, (stickerRotations.D[1] + 1) - stickerRotations.L[5]);
-        applyStickerRotation('L', 8, (stickerRotations.D[2] + 1) - stickerRotations.L[8]);
+        stickerRotations.L[2] = (stickerRotations.D[0] + 1) % 4; stickerRotations.L[5] = (stickerRotations.D[1] + 1) % 4; stickerRotations.L[8] = (stickerRotations.D[2] + 1) % 4;
         
         cubeState.D[0] = cubeState.R[6]; cubeState.D[1] = cubeState.R[3]; cubeState.D[2] = cubeState.R[0];
-        applyStickerRotation('D', 0, (stickerRotations.R[6] + 1) - stickerRotations.D[0]);
-        applyStickerRotation('D', 1, (stickerRotations.R[3] + 1) - stickerRotations.D[1]);
-        applyStickerRotation('D', 2, (stickerRotations.R[0] + 1) - stickerRotations.D[2]);
+        stickerRotations.D[0] = (stickerRotations.R[6] + 1) % 4; stickerRotations.D[1] = (stickerRotations.R[3] + 1) % 4; stickerRotations.D[2] = (stickerRotations.R[0] + 1) % 4;
         
         cubeState.R[0] = temp[0]; cubeState.R[3] = temp[1]; cubeState.R[6] = temp[2];
-        applyStickerRotation('R', 0, (tempRot[0] + 1) - stickerRotations.R[0]);
-        applyStickerRotation('R', 3, (tempRot[1] + 1) - stickerRotations.R[3]);
-        applyStickerRotation('R', 6, (tempRot[2] + 1) - stickerRotations.R[6]);
+        stickerRotations.R[0] = (tempRot[0] + 1) % 4; stickerRotations.R[3] = (tempRot[1] + 1) % 4; stickerRotations.R[6] = (tempRot[2] + 1) % 4;
 
         applyCubeStateToDOM();
       }
@@ -1125,24 +1093,16 @@ Use Ctrl+Enter to execute"></textarea>
         const tempRot = [stickerRotations.U[0], stickerRotations.U[1], stickerRotations.U[2]];
         
         cubeState.U[0] = cubeState.R[2]; cubeState.U[1] = cubeState.R[5]; cubeState.U[2] = cubeState.R[8];
-        applyStickerRotation('U', 0, (stickerRotations.R[2] + 3) - stickerRotations.U[0]);
-        applyStickerRotation('U', 1, (stickerRotations.R[5] + 3) - stickerRotations.U[1]);
-        applyStickerRotation('U', 2, (stickerRotations.R[8] + 3) - stickerRotations.U[2]);
+        stickerRotations.U[0] = (stickerRotations.R[2] + 3) % 4; stickerRotations.U[1] = (stickerRotations.R[5] + 3) % 4; stickerRotations.U[2] = (stickerRotations.R[8] + 3) % 4;
         
         cubeState.R[2] = cubeState.D[8]; cubeState.R[5] = cubeState.D[7]; cubeState.R[8] = cubeState.D[6];
-        applyStickerRotation('R', 2, (stickerRotations.D[8] + 3) - stickerRotations.R[2]);
-        applyStickerRotation('R', 5, (stickerRotations.D[7] + 3) - stickerRotations.R[5]);
-        applyStickerRotation('R', 8, (stickerRotations.D[6] + 3) - stickerRotations.R[8]);
+        stickerRotations.R[2] = (stickerRotations.D[8] + 3) % 4; stickerRotations.R[5] = (stickerRotations.D[7] + 3) % 4; stickerRotations.R[8] = (stickerRotations.D[6] + 3) % 4;
         
         cubeState.D[6] = cubeState.L[0]; cubeState.D[7] = cubeState.L[3]; cubeState.D[8] = cubeState.L[6];
-        applyStickerRotation('D', 6, (stickerRotations.L[0] + 3) - stickerRotations.D[6]);
-        applyStickerRotation('D', 7, (stickerRotations.L[3] + 3) - stickerRotations.D[7]);
-        applyStickerRotation('D', 8, (stickerRotations.L[6] + 3) - stickerRotations.D[8]);
+        stickerRotations.D[6] = (stickerRotations.L[0] + 3) % 4; stickerRotations.D[7] = (stickerRotations.L[3] + 3) % 4; stickerRotations.D[8] = (stickerRotations.L[6] + 3) % 4;
         
         cubeState.L[0] = temp[2]; cubeState.L[3] = temp[1]; cubeState.L[6] = temp[0];
-        applyStickerRotation('L', 0, (tempRot[2] + 3) - stickerRotations.L[0]);
-        applyStickerRotation('L', 3, (tempRot[1] + 3) - stickerRotations.L[3]);
-        applyStickerRotation('L', 6, (tempRot[0] + 3) - stickerRotations.L[6]);
+        stickerRotations.L[0] = (tempRot[2] + 3) % 4; stickerRotations.L[3] = (tempRot[1] + 3) % 4; stickerRotations.L[6] = (tempRot[0] + 3) % 4;
 
         applyCubeStateToDOM();
       }

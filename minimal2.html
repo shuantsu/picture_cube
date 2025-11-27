@@ -22,23 +22,50 @@
       background: #f0f0f0;
     }
 
-    #cube {
-      flex: 1;
-      display: grid;
-      grid-template: repeat(3, 1fr) / repeat(4, 1fr);
-      gap: 10px;
-      padding: 20px;
+    :root {
+      --sticker-size: 30px;
+      --cube-size: 300px;
+      --font-size-3d: 16px;
     }
 
-    .face {
+    #right-panel {
+      flex: 1;
+      background: rgb(81, 105, 99);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      user-select: none;
+      overflow: hidden;
+      cursor: grab;
+    }
+
+    #right-panel:active {
+      cursor: grabbing;
+    }
+
+    /* 2D Net View */
+    #cube-net {
       display: grid;
-      grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+      grid-template-columns: repeat(4, calc(var(--sticker-size) * 3));
+      grid-template-rows: repeat(3, calc(var(--sticker-size) * 3));
+      gap: 4px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .face-2d {
+      display: grid;
+      grid-template-columns: repeat(3, var(--sticker-size));
+      grid-template-rows: repeat(3, var(--sticker-size));
       gap: 2px;
-      width: 120px;
-      height: 120px;
     }
 
     .sticker {
+      width: var(--sticker-size);
+      height: var(--sticker-size);
       border: 1px solid #000;
       display: flex;
       align-items: center;
@@ -48,27 +75,97 @@
     }
 
     .face-U {
-      grid-area: 1 / 2;
+      grid-column: 2;
+      grid-row: 1;
     }
 
     .face-L {
-      grid-area: 2 / 1;
+      grid-column: 1;
+      grid-row: 2;
     }
 
     .face-F {
-      grid-area: 2 / 2;
+      grid-column: 2;
+      grid-row: 2;
     }
 
     .face-R {
-      grid-area: 2 / 3;
+      grid-column: 3;
+      grid-row: 2;
     }
 
     .face-B {
-      grid-area: 2 / 4;
+      grid-column: 4;
+      grid-row: 2;
     }
 
     .face-D {
-      grid-area: 3 / 2;
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    /* 3D View */
+    #cube-3d-wrapper {
+      perspective: none;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      display: none;
+    }
+
+    #cube-3d {
+      position: relative;
+      top: 50%;
+      left: 50%;
+      transform-style: preserve-3d;
+      width: var(--cube-size);
+      height: var(--cube-size);
+      pointer-events: none;
+    }
+
+    .face-3d {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 2px;
+      background: #000;
+      padding: 2px;
+    }
+
+    .sticker-3d {
+      border: 1px solid #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-size-3d);
+      font-weight: bold;
+    }
+
+    .is-3d #cube-3d .face-U {
+      transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-D {
+      transform: rotateX(-90deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-F {
+      transform: translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-B {
+      transform: rotateY(180deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-L {
+      transform: rotateY(-90deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-R {
+      transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2));
     }
 
     button {
@@ -117,21 +214,39 @@
       <button onclick="prime(moveB)()">B'</button>
 
       <h3>Algoritmo</h3>
-      <textarea id="alg" placeholder="Digite algoritmo (ex: R U R' U')" onkeydown="if(event.ctrlKey && event.key==='Enter') applyAlgorithm()"></textarea>
+      <textarea id="alg" placeholder="Digite algoritmo (ex: R U R' U')"
+        onkeydown="if(event.ctrlKey && event.key==='Enter') applyAlgorithm()"></textarea>
       <button onclick="applyAlgorithm()">Executar</button>
 
       <h3>Estado</h3>
       <button onclick="solveCube()">Reset</button>
       <button onclick="printRotations()">Ver Rotações</button>
+
+      <h3>Visualização</h3>
+      <button id="cubenetBtn" onclick="setViewMode('cubenet')" disabled>Cube Net</button>
+      <button id="orthographicBtn" onclick="setViewMode('orthographic')">3D Orthographic</button>
     </div>
 
-    <div id="cube">
-      <div class="face face-U" data-face="U"></div>
-      <div class="face face-L" data-face="L"></div>
-      <div class="face face-F" data-face="F"></div>
-      <div class="face face-R" data-face="R"></div>
-      <div class="face face-B" data-face="B"></div>
-      <div class="face face-D" data-face="D"></div>
+    <div id="right-panel">
+      <div id="cube-net">
+        <div class="face-2d face-U" data-face="U"></div>
+        <div class="face-2d face-L" data-face="L"></div>
+        <div class="face-2d face-F" data-face="F"></div>
+        <div class="face-2d face-R" data-face="R"></div>
+        <div class="face-2d face-B" data-face="B"></div>
+        <div class="face-2d face-D" data-face="D"></div>
+      </div>
+
+      <div id="cube-3d-wrapper">
+        <div id="cube-3d">
+          <div class="face-3d face-U" data-face="U"></div>
+          <div class="face-3d face-D" data-face="D"></div>
+          <div class="face-3d face-F" data-face="F"></div>
+          <div class="face-3d face-B" data-face="B"></div>
+          <div class="face-3d face-L" data-face="L"></div>
+          <div class="face-3d face-R" data-face="R"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -145,22 +260,37 @@
     let stickerRotations = { U: [], L: [], F: [], R: [], B: [], D: [] };
     let stickerIds = { U: [], L: [], F: [], R: [], B: [], D: [] };
 
+    let currentViewMode = 'cubenet';
+    let cubeRotation = { x: -25, y: -45 };
+    let cubeSize = 300;
+    let zoom2D = 1;
+    let panOffset = { x: 0, y: 0 };
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+
+    function createStickers(faceElement, is3D = false) {
+      faceElement.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const sticker = document.createElement('div');
+        sticker.className = is3D ? 'sticker-3d' : 'sticker';
+        faceElement.appendChild(sticker);
+      }
+    }
+
     function initCube() {
       faces.forEach((face, faceIndex) => {
         cubeState[face] = Array(9).fill(0).map((_, i) => faceIndex * 9 + i);
         stickerRotations[face] = Array(9).fill(0);
         stickerIds[face] = Array(9).fill(0).map((_, i) => faceIndex * 9 + i);
 
-        const faceElement = document.querySelector(`[data-face="${face}"]`);
-        faceElement.innerHTML = '';
-        for (let i = 0; i < 9; i++) {
-          const sticker = document.createElement('div');
-          sticker.className = 'sticker';
-          sticker.style.backgroundColor = colors[faceIndex];
-          sticker.innerHTML = `<u>${faceIndex * 9 + i}</u>`;
-          faceElement.appendChild(sticker);
-        }
+        // Inicializar faces 2D e 3D
+        const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
+        const face3D = document.querySelector(`.face-3d[data-face="${face}"]`);
+
+        if (face2D) createStickers(face2D, false);
+        if (face3D) createStickers(face3D, true);
       });
+      updateDOM();
     }
 
     function applyStickerRotation(face, index, rotationIncrement) {
@@ -171,23 +301,121 @@
     function needsFlip(fromFace, toFace) {
       const faceB = 'B';
       const facesUDF = ['U', 'D', 'F'];
-      return (fromFace === faceB && facesUDF.includes(toFace)) || 
-             (facesUDF.includes(fromFace) && toFace === faceB);
+      return (fromFace === faceB && facesUDF.includes(toFace)) ||
+        (facesUDF.includes(fromFace) && toFace === faceB);
     }
 
     function updateDOM() {
       faces.forEach((face, faceIndex) => {
-        const faceElement = document.querySelector(`[data-face="${face}"]`);
-        for (let i = 0; i < 9; i++) {
-          const sticker = faceElement.children[i];
-          const stickerId = cubeState[face][i];
-          const colorIndex = Math.floor(stickerId / 9);
-          sticker.style.backgroundColor = colors[colorIndex];
-          sticker.innerHTML = `<u>${stickerId}</u>`;
-          const rotation = stickerRotations[face][i] * 90;
-          sticker.style.transform = rotation ? `rotate(${rotation}deg)` : '';
-        }
+        const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
+        const face3D = document.querySelector(`.face-3d[data-face="${face}"]`);
+
+        [face2D, face3D].forEach(faceElement => {
+          if (faceElement) {
+            for (let i = 0; i < 9; i++) {
+              const sticker = faceElement.children[i];
+              const stickerId = cubeState[face][i];
+              const colorIndex = Math.floor(stickerId / 9);
+              sticker.style.backgroundColor = colors[colorIndex];
+              sticker.innerHTML = `<u>${stickerId}</u>`;
+              const rotation = stickerRotations[face][i] * 90;
+              sticker.style.transform = rotation ? `rotate(${rotation}deg)` : '';
+            }
+          }
+        });
       });
+    }
+
+    function setViewMode(mode) {
+      const cubeNet = document.getElementById('cube-net');
+      const cube3DWrapper = document.getElementById('cube-3d-wrapper');
+      const cube3D = document.getElementById('cube-3d');
+
+      currentViewMode = mode;
+
+      if (mode === 'cubenet') {
+        cubeNet.style.display = 'grid';
+        cube3DWrapper.style.display = 'none';
+        document.body.classList.remove('is-3d');
+        document.getElementById('cubenetBtn').disabled = true;
+        document.getElementById('orthographicBtn').disabled = false;
+        update2DZoom();
+      } else if (mode === 'orthographic') {
+        cubeNet.style.display = 'none';
+        cube3DWrapper.style.display = 'block';
+        document.body.classList.add('is-3d');
+        document.getElementById('cubenetBtn').disabled = false;
+        document.getElementById('orthographicBtn').disabled = true;
+
+        document.documentElement.style.setProperty('--cube-size', `${cubeSize}px`);
+        updateCubeRotation();
+      }
+    }
+
+    function updateCubeRotation() {
+      const cube = document.getElementById('cube-3d');
+      cube.style.transform = `
+        translate(-50%, -50%)
+        rotateX(${cubeRotation.x}deg)
+        rotateY(${cubeRotation.y}deg)
+      `;
+    }
+
+    function update2DZoom() {
+      const cubeNet = document.getElementById('cube-net');
+      cubeNet.style.transform = `translate(calc(-50% + ${panOffset.x}px), calc(-50% + ${panOffset.y}px)) scale(${zoom2D})`;
+    }
+
+    function handleMouseDown(e) {
+      if (e.target.id !== 'right-panel' && !e.target.closest('#right-panel')) return;
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+      document.getElementById('right-panel').style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+
+    function handleMouseMove(e) {
+      if (!isDragging) return;
+
+      const deltaMove = {
+        x: e.clientX - previousMousePosition.x,
+        y: e.clientY - previousMousePosition.y
+      };
+
+      if (currentViewMode === 'cubenet') {
+        panOffset.x += deltaMove.x;
+        panOffset.y += deltaMove.y;
+        update2DZoom();
+      } else {
+        cubeRotation.x -= deltaMove.y * 0.5;
+        cubeRotation.y += deltaMove.x * 0.5;
+        cubeRotation.x = Math.max(-90, Math.min(90, cubeRotation.x));
+        updateCubeRotation();
+      }
+
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    }
+
+    function handleMouseUp() {
+      isDragging = false;
+      document.getElementById('right-panel').style.cursor = 'grab';
+    }
+
+    function handleWheel(e) {
+      if (e.target.closest('#controls')) return;
+      e.preventDefault();
+
+      const delta = Math.sign(e.deltaY);
+
+      if (currentViewMode === 'cubenet') {
+        zoom2D = Math.max(0.5, Math.min(3, zoom2D * (1 - delta * 0.1)));
+        update2DZoom();
+      } else {
+        cubeSize = Math.max(200, Math.min(800, cubeSize * (1 - delta * 0.1)));
+        const fontSize = Math.max(8, Math.min(32, (cubeSize / 300) * 16));
+        document.documentElement.style.setProperty('--cube-size', `${cubeSize}px`);
+        document.documentElement.style.setProperty('--font-size-3d', `${fontSize}px`);
+      }
     }
 
     function rotateFaceDataCW(faceData) {
@@ -288,8 +516,8 @@
       updateDOM();
     }
 
-    // CRIAR Z A PARTIR DE X E Y
-    function rotationZ() { rotationY(); rotationX(); repeat(rotationY, 3); }
+    // CRIAR Z A PARTIR DE X E Y (invertido)
+    function rotationZ() { repeat(rotationY, 3); rotationX(); rotationY(); }
 
     // CONSTRUIR TODOS OS MOVIMENTOS A PARTIR DOS FUNDAMENTOS
     const repeat = (fn, times) => { for (let i = 0; i < times; i++) fn(); };
@@ -297,8 +525,8 @@
     const double = (fn) => () => repeat(fn, 2);
 
     const moveD = () => { double(rotationX)(); moveU(); double(rotationX)(); };
-    const moveR = () => { rotationZ(); moveU(); prime(rotationZ)(); };
-    const moveL = () => { prime(rotationZ)(); moveU(); rotationZ(); };
+    const moveR = () => { prime(rotationZ)(); moveU(); rotationZ(); };
+    const moveL = () => { rotationZ(); moveU(); prime(rotationZ)(); };
     const moveF = () => { rotationX(); moveU(); prime(rotationX)(); };
     const moveB = () => { prime(rotationX)(); moveU(); rotationX(); };
 
@@ -337,8 +565,16 @@
       console.log('Rotações por face:', JSON.stringify(stickerRotations, null, 2));
     }
 
+    // Event listeners
+    const rightPanel = document.getElementById('right-panel');
+    rightPanel.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    rightPanel.addEventListener('wheel', handleWheel, { passive: false });
+
     // Inicializar
     initCube();
+    setViewMode('cubenet');
   </script>
 </body>
 
