@@ -888,10 +888,7 @@ Use Ctrl+Enter to execute"></textarea>
                         }
 
     function moveR() {
-      rotateFaceStickers('R', true);
-      
       if (CubeConfig.mode === 'standard') {
-        // Modo compatibilidade: usar sistema antigo
         const cube = JSON.parse(serializeCube());
         cube.R = rotateFaceCW(cube.R);
         const temp = [cube.F[2], cube.F[5], cube.F[8]];
@@ -901,10 +898,10 @@ Use Ctrl+Enter to execute"></textarea>
         cube.U[2] = temp[0]; cube.U[5] = temp[1]; cube.U[8] = temp[2];
         deserializeCube(JSON.stringify(cube));
       } else {
-        // Novos modos: usar estado interno
         cubeState.R = rotateFaceDataCW(cubeState.R);
+        stickerRotations.R = rotateFaceCW(stickerRotations.R);
+        for (let i = 0; i < 9; i++) stickerRotations.R[i] = (stickerRotations.R[i] + 1) % 4;
         
-        // Ciclo dos stickers laterais com rotações
         const temp = [cubeState.F[2], cubeState.F[5], cubeState.F[8]];
         const tempRot = [stickerRotations.F[2], stickerRotations.F[5], stickerRotations.F[8]];
         
@@ -925,10 +922,6 @@ Use Ctrl+Enter to execute"></textarea>
     }
 
     function moveL() {
-      console.log('=== MOVIMENTO L ===');
-      console.log('ANTES - Face L rotações:', JSON.stringify(stickerRotations.L));
-      rotateFaceStickers('L', true);
-      
       if (CubeConfig.mode === 'standard') {
         const cube = JSON.parse(serializeCube());
         cube.L = rotateFaceCW(cube.L);
@@ -940,7 +933,9 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         cubeState.L = rotateFaceDataCW(cubeState.L);
-
+        stickerRotations.L = rotateFaceCW(stickerRotations.L);
+        for (let i = 0; i < 9; i++) stickerRotations.L[i] = (stickerRotations.L[i] + 1) % 4;
+        
         const temp = [cubeState.F[0], cubeState.F[3], cubeState.F[6]];
         const tempRot = [stickerRotations.F[0], stickerRotations.F[3], stickerRotations.F[6]];
         
@@ -958,7 +953,6 @@ Use Ctrl+Enter to execute"></textarea>
 
         applyCubeStateToDOM();
       }
-      console.log('DEPOIS - Face L rotações:', JSON.stringify(stickerRotations.L));
     }
 
     function moveU() {
@@ -1030,8 +1024,6 @@ Use Ctrl+Enter to execute"></textarea>
     }
 
     function moveF() {
-      rotateFaceStickers('F', true);
-      
       if (CubeConfig.mode === 'standard') {
         const cube = JSON.parse(serializeCube());
         cube.F = rotateFaceCW(cube.F);
@@ -1043,7 +1035,9 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         cubeState.F = rotateFaceDataCW(cubeState.F);
-
+        stickerRotations.F = rotateFaceCW(stickerRotations.F);
+        for (let i = 0; i < 9; i++) stickerRotations.F[i] = (stickerRotations.F[i] + 1) % 4;
+        
         const temp = [cubeState.U[6], cubeState.U[7], cubeState.U[8]];
         const tempRot = [stickerRotations.U[6], stickerRotations.U[7], stickerRotations.U[8]];
         
@@ -1064,8 +1058,6 @@ Use Ctrl+Enter to execute"></textarea>
     }
 
     function moveB() {
-      rotateFaceStickers('B', true);
-      
       if (CubeConfig.mode === 'standard') {
         const cube = JSON.parse(serializeCube());
         cube.B = rotateFaceCW(cube.B);
@@ -1077,7 +1069,9 @@ Use Ctrl+Enter to execute"></textarea>
         deserializeCube(JSON.stringify(cube));
       } else {
         cubeState.B = rotateFaceDataCW(cubeState.B);
-
+        stickerRotations.B = rotateFaceCW(stickerRotations.B);
+        for (let i = 0; i < 9; i++) stickerRotations.B[i] = (stickerRotations.B[i] + 1) % 4;
+        
         const temp = [cubeState.U[0], cubeState.U[1], cubeState.U[2]];
         const tempRot = [stickerRotations.U[0], stickerRotations.U[1], stickerRotations.U[2]];
         
