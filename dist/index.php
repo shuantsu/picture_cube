@@ -529,11 +529,14 @@ if (file_exists('marked.min.js')) {
               <option value="">Select an example...</option>
               <?php
               $examplesDir = 'examples/';
+              $examples = [];
               if (is_dir($examplesDir)) {
                 $files = scandir($examplesDir);
                 foreach ($files as $file) {
                   if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
                     $name = pathinfo($file, PATHINFO_FILENAME);
+                    $content = json_decode(file_get_contents($examplesDir . $file), true);
+                    $examples[$file] = $content;
                     $selected = ($file === '5-pochman_supercube.json') ? ' selected' : '';
                     echo "<option value='$file'$selected>$name</option>";
                   }
@@ -1472,6 +1475,8 @@ if (file_exists('marked.min.js')) {
       }
 
       function loadCustomConfig() {
+        document.getElementById('loadingSpinner').style.display = 'block';
+        
         try {
           const config = JSON.parse(
             document.getElementById("customConfig").value
@@ -1493,8 +1498,35 @@ if (file_exists('marked.min.js')) {
             customStickers = config.stickers || {};
           }
 
-          updateDOM();
+          // Check for background images and wait for them to load
+          const imagePromises = [];
+          Object.values(faceTextures).forEach(texture => {
+            if (texture && texture.backgroundImage) {
+              const match = texture.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/);
+              if (match) {
+                const img = new Image();
+                const promise = new Promise((resolve, reject) => {
+                  img.onload = resolve;
+                  img.onerror = resolve; // Continue even if image fails
+                });
+                img.src = match[1];
+                imagePromises.push(promise);
+              }
+            }
+          });
+
+          Promise.all(imagePromises).then(() => {
+            updateDOM();
+            document.getElementById('loadingSpinner').style.display = 'none';
+          });
+
+          // If no images, hide spinner immediately after DOM update
+          if (imagePromises.length === 0) {
+            updateDOM();
+            document.getElementById('loadingSpinner').style.display = 'none';
+          }
         } catch (error) {
+          document.getElementById('loadingSpinner').style.display = 'none';
           alert("JSON Error: " + error.message);
         }
       }
@@ -1650,32 +1682,19 @@ if (file_exists('marked.min.js')) {
         loadCustomConfig();
       }
 
-      function showSpinner() {
-        document.getElementById('loadingSpinner').style.display = 'block';
-      }
-
-      function hideSpinner() {
-        document.getElementById('loadingSpinner').style.display = 'none';
-      }
+      const examples = <?php echo json_encode($examples); ?>;
 
       function loadExample() {
         const select = document.getElementById('exampleSelect');
         const filename = select.value;
         if (!filename) return;
         
-        showSpinner();
-        fetch(`examples/${filename}`)
-          .then(response => response.json())
-          .then(config => {
-            document.getElementById('customConfig').value = JSON.stringify(config, null, 2);
-            loadCustomConfig();
-            saveSelectedTexture(filename);
-            hideSpinner();
-          })
-          .catch(error => {
-            hideSpinner();
-            alert('Error loading example: ' + error.message);
-          });
+        const config = examples[filename];
+        if (config) {
+          document.getElementById('customConfig').value = JSON.stringify(config, null, 2);
+          loadCustomConfig();
+          saveSelectedTexture(filename);
+        }
       }
 
       function saveSelectedTexture(filename) {
