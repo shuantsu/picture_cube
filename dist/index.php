@@ -362,6 +362,26 @@
       .accordion.open .accordion-arrow {
         transform: rotate(90deg);
       }
+
+      .loading-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #333;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        z-index: 10;
+        display: none;
+      }
+
+      @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
     </style>
     <script>
 <?php
@@ -568,6 +588,7 @@ if (file_exists('marked.min.js')) {
       </div>
 
       <div id="right-panel">
+        <div class="loading-spinner" id="loadingSpinner"></div>
         <div id="cube-net">
           <div class="face-2d face-U" data-face="U"></div>
           <div class="face-2d face-L" data-face="L"></div>
@@ -730,19 +751,11 @@ if (file_exists('marked.min.js')) {
           const style = customStickers[stickerId];
           if (style) Object.assign(sticker.style, style);
         } else {
-          const colorIndex = Math.floor(stickerId / 9);
-          sticker.style.backgroundColor = colors[colorIndex];
+          sticker.style.backgroundColor = "#888888";
         }
 
-        // Hide indices when custom textures are active
-        if (
-          textureMode === "face_textures" ||
-          textureMode === "custom_indices"
-        ) {
-          sticker.innerHTML = "";
-        } else {
-          sticker.innerHTML = `<u>${stickerId}</u>`;
-        }
+        // Hide indices when custom textures are active or in standard mode
+        sticker.innerHTML = "";
 
         const rotation = stickerRotations[face][index] * 90;
         sticker.style.transform = rotation ? `rotate(${rotation}deg)` : "";
@@ -1636,20 +1649,45 @@ if (file_exists('marked.min.js')) {
         loadCustomConfig();
       }
 
+      function showSpinner() {
+        document.getElementById('loadingSpinner').style.display = 'block';
+      }
+
+      function hideSpinner() {
+        document.getElementById('loadingSpinner').style.display = 'none';
+      }
+
       function loadExample() {
         const select = document.getElementById('exampleSelect');
         const filename = select.value;
         if (!filename) return;
         
+        showSpinner();
         fetch(`examples/${filename}`)
           .then(response => response.json())
           .then(config => {
             document.getElementById('customConfig').value = JSON.stringify(config, null, 2);
             loadCustomConfig();
+            saveSelectedTexture(filename);
+            hideSpinner();
           })
           .catch(error => {
+            hideSpinner();
             alert('Error loading example: ' + error.message);
           });
+      }
+
+      function saveSelectedTexture(filename) {
+        localStorage.setItem('selectedTexture', filename);
+      }
+
+      function loadSelectedTexture() {
+        const saved = localStorage.getItem('selectedTexture');
+        if (saved) {
+          const select = document.getElementById('exampleSelect');
+          select.value = saved;
+          loadExample();
+        }
       }
 
       // Close modal when clicking outside
@@ -1698,8 +1736,11 @@ if (file_exists('marked.min.js')) {
       loadAccordionStates();
       loadSidebarState();
       
-      // Load default texture
-      if (defaultTexture) {
+      // Load saved texture or default
+      const savedTexture = localStorage.getItem('selectedTexture');
+      if (savedTexture) {
+        setTimeout(() => loadSelectedTexture(), 100);
+      } else if (defaultTexture) {
         textureMode = defaultTexture.mode;
         if (defaultTexture.mode === "face_textures") {
           faceTextures = defaultTexture.textures || {};
