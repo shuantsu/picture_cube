@@ -1,17 +1,47 @@
 {
-  "dist\\index.html": {
-    "mtime": "2025-11-27T14:39:36.868048",
-    "hash": "55d487685aca1a0e6a38189e6917974b",
-    "uploaded_at": "2025-11-27T14:39:39.062740"
-  },
   "dist\\texture-instructions.md": {
-    "mtime": "2025-11-27T14:55:42.526257",
-    "hash": "d30d5c0dd89df78951ccd8e400d0148c",
-    "uploaded_at": "2025-11-27T14:56:10.626180"
+    "mtime": "2025-11-28T07:55:48.407879",
+    "hash": "42b2f9825d64a53d936c80e1c40dd668",
+    "uploaded_at": "2025-11-28T09:00:53.772838"
   },
   "dist\\texture.png": {
     "mtime": "2025-11-27T14:50:30.948134",
     "hash": "61415663092f3d561b4a17947297dfb2",
     "uploaded_at": "2025-11-27T14:56:10.926242"
+  },
+  "dist\\index.php": {
+    "mtime": "2025-11-28T09:23:07.977401",
+    "hash": "24650f9e13a33b369b2793a6486b4bb1",
+    "uploaded_at": "2025-11-28T09:23:12.571969"
+  },
+  "dist\\marked.min.js": {
+    "mtime": "2025-11-28T08:09:53.046555",
+    "hash": "52bfebeb89f7045f49f3b72f947067ad",
+    "uploaded_at": "2025-11-28T09:00:53.603256"
+  },
+  "dist\\examples\\1-simple.json": {
+    "mtime": "2025-11-28T07:34:45.571470",
+    "hash": "1df742e4e4b240a16801f116da3cbde9",
+    "uploaded_at": "2025-11-28T09:00:54.305415"
+  },
+  "dist\\examples\\2-round.json": {
+    "mtime": "2025-11-28T07:53:36.752412",
+    "hash": "d7f8a7f6527623b895886ea484db3a08",
+    "uploaded_at": "2025-11-28T09:00:54.767095"
+  },
+  "dist\\examples\\3-moyucube.json": {
+    "mtime": "2025-11-28T07:31:11.633970",
+    "hash": "67232d87655238f28f74b5054c174f70",
+    "uploaded_at": "2025-11-28T09:00:55.233030"
+  },
+  "dist\\examples\\4-circle_supercube.json": {
+    "mtime": "2025-11-28T07:32:46.663886",
+    "hash": "0cf585089951dbdd3ff94b8fa07af996",
+    "uploaded_at": "2025-11-28T09:00:55.705983"
+  },
+  "dist\\examples\\5-pochman_supercube.json": {
+    "mtime": "2025-11-28T07:27:16.395039",
+    "hash": "cda193dc80caf6fc573f83221bdcf4d1",
+    "uploaded_at": "2025-11-28T09:00:56.180056"
   }
 }

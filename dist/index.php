@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <meta charset="UTF-8" />
+  <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Picture Cube -- Beta</title>
     <style>
@@ -13,7 +13,7 @@
 
       #container {
         display: flex;
-        height: 100vh;
+        height: var(--real-vh, 100vh);
         position: relative;
       }
 
@@ -62,7 +62,7 @@
         
         #controls {
           width: 100%;
-          height: 50vh;
+          height: calc(var(--real-vh, 100vh) * 0.5);
           transform: translateY(-100%);
           position: absolute;
           top: 0;
@@ -75,13 +75,13 @@
         }
         
         #right-panel {
-          height: 100vh;
+          height: var(--real-vh, 100vh);
           transition: margin-top 0.3s ease;
         }
         
         #container.controls-open #right-panel {
-          margin-top: 50vh;
-          height: 50vh;
+          margin-top: calc(var(--real-vh, 100vh) * 0.5);
+          height: calc(var(--real-vh, 100vh) * 0.5);
         }
       }
       
@@ -347,10 +347,21 @@
     </style>
     <script>
 <?php
-include_once('marked.min.js');
+if (file_exists('marked.min.js')) {
+    echo file_get_contents('marked.min.js');
+}
 ?>
     </script>
     <script>
+      function setRealViewportHeight() {
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        document.documentElement.style.setProperty('--real-vh', `${vh}px`);
+      }
+      
+      window.addEventListener('resize', setRealViewportHeight);
+      window.addEventListener('orientationchange', setRealViewportHeight);
+      setRealViewportHeight();
+      
       const defaultTexture = <?php echo json_encode(json_decode(file_get_contents('examples/5-pochman_supercube.json'), true)); ?>;
     </script>
   </head>
@@ -361,7 +372,7 @@ include_once('marked.min.js');
     <div id="container">
       <div id="controls">
         <div class="spacer"></div>
-        <div class="accordion">
+        <div class="accordion open">
           <button class="accordion-header" onclick="toggleAccordion(this)">
             Moveset
             <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
@@ -370,53 +381,69 @@ include_once('marked.min.js');
           </button>
           <div class="accordion-content">
             <div class="move-grid">
+              <!-- Face Moves -->
               <button onclick="moveU()">U</button>
-              <button onclick="moveD()">D</button>
-              <button onclick="moveR()">R</button>
-              <button onclick="moveL()">L</button>
-              <button onclick="moveF()">F</button>
-              <button onclick="moveB()">B</button>
               <button onclick="prime(moveU)()">U'</button>
-              <button onclick="prime(moveD)()">D'</button>
-              <button onclick="prime(moveR)()">R'</button>
-              <button onclick="prime(moveL)()">L'</button>
-              <button onclick="prime(moveF)()">F'</button>
-              <button onclick="prime(moveB)()">B'</button>
               <button onclick="double(moveU)()">U2</button>
+              <button onclick="moveD()">D</button>
+              <button onclick="prime(moveD)()">D'</button>
               <button onclick="double(moveD)()">D2</button>
+              <button onclick="moveR()">R</button>
+              <button onclick="prime(moveR)()">R'</button>
               <button onclick="double(moveR)()">R2</button>
+              <button onclick="moveL()">L</button>
+              <button onclick="prime(moveL)()">L'</button>
               <button onclick="double(moveL)()">L2</button>
+              <button onclick="moveF()">F</button>
+              <button onclick="prime(moveF)()">F'</button>
               <button onclick="double(moveF)()">F2</button>
+              <button onclick="moveB()">B</button>
+              <button onclick="prime(moveB)()">B'</button>
               <button onclick="double(moveB)()">B2</button>
+              <!-- Slice Moves -->
               <button onclick="moveM()">M</button>
+              <button onclick="moveMPrime()">M'</button>
+              <button onclick="moveM2()">M2</button>
               <button onclick="moveE()">E</button>
+              <button onclick="moveEPrime()">E'</button>
+              <button onclick="moveE2()">E2</button>
               <button onclick="moveS()">S</button>
+              <button onclick="moveSPrime()">S'</button>
+              <button onclick="moveS2()">S2</button>
+              <!-- Rotations -->
               <button onclick="rotationX()">X</button>
-              <button onclick="rotationY()">Y</button>
-              <button onclick="rotationZ()">Z</button>
-              <button onclick="prime(moveM)()">M'</button>
-              <button onclick="prime(moveE)()">E'</button>
-              <button onclick="prime(moveS)()">S'</button>
               <button onclick="prime(rotationX)()">X'</button>
+              <button onclick="double(rotationX)()">X2</button>
+              <button onclick="rotationY()">Y</button>
               <button onclick="prime(rotationY)()">Y'</button>
+              <button onclick="double(rotationY)()">Y2</button>
+              <button onclick="rotationZ()">Z</button>
               <button onclick="prime(rotationZ)()">Z'</button>
+              <button onclick="double(rotationZ)()">Z2</button>
+              <!-- Wide Moves -->
               <button onclick="moveRw()">Rw</button>
-              <button onclick="moveLw()">Lw</button>
-              <button onclick="moveUw()">Uw</button>
-              <button onclick="moveDw()">Dw</button>
-              <button onclick="moveFw()">Fw</button>
-              <button onclick="moveBw()">Bw</button>
               <button onclick="prime(moveRw)()">Rw'</button>
+              <button onclick="double(moveRw)()">Rw2</button>
+              <button onclick="moveLw()">Lw</button>
               <button onclick="prime(moveLw)()">Lw'</button>
+              <button onclick="double(moveLw)()">Lw2</button>
+              <button onclick="moveUw()">Uw</button>
               <button onclick="prime(moveUw)()">Uw'</button>
+              <button onclick="double(moveUw)()">Uw2</button>
+              <button onclick="moveDw()">Dw</button>
               <button onclick="prime(moveDw)()">Dw'</button>
+              <button onclick="double(moveDw)()">Dw2</button>
+              <button onclick="moveFw()">Fw</button>
               <button onclick="prime(moveFw)()">Fw'</button>
+              <button onclick="double(moveFw)()">Fw2</button>
+              <button onclick="moveBw()">Bw</button>
               <button onclick="prime(moveBw)()">Bw'</button>
+              <button onclick="double(moveBw)()">Bw2</button>
             </div>
           </div>
         </div>
 
-        <div class="accordion open">
+        <div class="accordion">
           <button class="accordion-header" onclick="toggleAccordion(this)">
             Algorithm
             <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
@@ -1061,23 +1088,215 @@ include_once('marked.min.js');
         rotationX();
       };
 
+ 
+      function moveM() {
+        // Direct M' move: reverse direction of M
+        const temp = [cubeState.U[1], cubeState.U[4], cubeState.U[7]];
+        const tempRot = [stickerRotations.U[1], stickerRotations.U[4], stickerRotations.U[7]];
+        const tempTex = [stickerTextures.U[1], stickerTextures.U[4], stickerTextures.U[7]];
+
+        // U ← B (with 180° flip)
+        cubeState.U[1] = cubeState.B[7];
+        cubeState.U[4] = cubeState.B[4];
+        cubeState.U[7] = cubeState.B[1];
+        stickerRotations.U[1] = (stickerRotations.B[7] + 2) % 4;
+        stickerRotations.U[4] = (stickerRotations.B[4] + 2) % 4;
+        stickerRotations.U[7] = (stickerRotations.B[1] + 2) % 4;
+        stickerTextures.U[1] = stickerTextures.B[7];
+        stickerTextures.U[4] = stickerTextures.B[4];
+        stickerTextures.U[7] = stickerTextures.B[1];
+
+        // B ← D (with 180° flip)
+        cubeState.B[7] = cubeState.D[1];
+        cubeState.B[4] = cubeState.D[4];
+        cubeState.B[1] = cubeState.D[7];
+        stickerRotations.B[7] = (stickerRotations.D[1] + 2) % 4;
+        stickerRotations.B[4] = (stickerRotations.D[4] + 2) % 4;
+        stickerRotations.B[1] = (stickerRotations.D[7] + 2) % 4;
+        stickerTextures.B[7] = stickerTextures.D[1];
+        stickerTextures.B[4] = stickerTextures.D[4];
+        stickerTextures.B[1] = stickerTextures.D[7];
+
+        // D ← F
+        cubeState.D[1] = cubeState.F[1];
+        cubeState.D[4] = cubeState.F[4];
+        cubeState.D[7] = cubeState.F[7];
+        stickerRotations.D[1] = stickerRotations.F[1];
+        stickerRotations.D[4] = stickerRotations.F[4];
+        stickerRotations.D[7] = stickerRotations.F[7];
+        stickerTextures.D[1] = stickerTextures.F[1];
+        stickerTextures.D[4] = stickerTextures.F[4];
+        stickerTextures.D[7] = stickerTextures.F[7];
+
+        // F ← U
+        cubeState.F[1] = temp[0];
+        cubeState.F[4] = temp[1];
+        cubeState.F[7] = temp[2];
+        stickerRotations.F[1] = tempRot[0];
+        stickerRotations.F[4] = tempRot[1];
+        stickerRotations.F[7] = tempRot[2];
+        stickerTextures.F[1] = tempTex[0];
+        stickerTextures.F[4] = tempTex[1];
+        stickerTextures.F[7] = tempTex[2];
+
+        updateDOM();
+      }
+
       // SLICE MOVES
-      const moveM = () => {
-        prime(moveL)();
-        moveR();
-        prime(rotationX)();
-      };
+      function moveMPrime() {
+        // Direct M move: rotate middle slice like L but opposite direction
+        const temp = [cubeState.U[1], cubeState.U[4], cubeState.U[7]];
+        const tempRot = [stickerRotations.U[1], stickerRotations.U[4], stickerRotations.U[7]];
+        const tempTex = [stickerTextures.U[1], stickerTextures.U[4], stickerTextures.U[7]];
+
+        // U ← F
+        cubeState.U[1] = cubeState.F[1];
+        cubeState.U[4] = cubeState.F[4];
+        cubeState.U[7] = cubeState.F[7];
+        stickerRotations.U[1] = stickerRotations.F[1];
+        stickerRotations.U[4] = stickerRotations.F[4];
+        stickerRotations.U[7] = stickerRotations.F[7];
+        stickerTextures.U[1] = stickerTextures.F[1];
+        stickerTextures.U[4] = stickerTextures.F[4];
+        stickerTextures.U[7] = stickerTextures.F[7];
+
+        // F ← D
+        cubeState.F[1] = cubeState.D[1];
+        cubeState.F[4] = cubeState.D[4];
+        cubeState.F[7] = cubeState.D[7];
+        stickerRotations.F[1] = stickerRotations.D[1];
+        stickerRotations.F[4] = stickerRotations.D[4];
+        stickerRotations.F[7] = stickerRotations.D[7];
+        stickerTextures.F[1] = stickerTextures.D[1];
+        stickerTextures.F[4] = stickerTextures.D[4];
+        stickerTextures.F[7] = stickerTextures.D[7];
+
+        // D ← B (with 180° flip)
+        cubeState.D[1] = cubeState.B[7];
+        cubeState.D[4] = cubeState.B[4];
+        cubeState.D[7] = cubeState.B[1];
+        stickerRotations.D[1] = (stickerRotations.B[7] + 2) % 4;
+        stickerRotations.D[4] = (stickerRotations.B[4] + 2) % 4;
+        stickerRotations.D[7] = (stickerRotations.B[1] + 2) % 4;
+        stickerTextures.D[1] = stickerTextures.B[7];
+        stickerTextures.D[4] = stickerTextures.B[4];
+        stickerTextures.D[7] = stickerTextures.B[1];
+
+        // B ← U (with 180° flip)
+        cubeState.B[7] = temp[0];
+        cubeState.B[4] = temp[1];
+        cubeState.B[1] = temp[2];
+        stickerRotations.B[7] = (tempRot[0] + 2) % 4;
+        stickerRotations.B[4] = (tempRot[1] + 2) % 4;
+        stickerRotations.B[1] = (tempRot[2] + 2) % 4;
+        stickerTextures.B[7] = tempTex[0];
+        stickerTextures.B[4] = tempTex[1];
+        stickerTextures.B[1] = tempTex[2];
+
+        updateDOM();
+      }
+
+      function moveM2() {
+        // Direct M2 move: swap opposite middle slices
+        const tempU = [cubeState.U[1], cubeState.U[4], cubeState.U[7]];
+        const tempRotU = [stickerRotations.U[1], stickerRotations.U[4], stickerRotations.U[7]];
+        const tempTexU = [stickerTextures.U[1], stickerTextures.U[4], stickerTextures.U[7]];
+
+        // U ↔ D
+        cubeState.U[1] = cubeState.D[1];
+        cubeState.U[4] = cubeState.D[4];
+        cubeState.U[7] = cubeState.D[7];
+        stickerRotations.U[1] = stickerRotations.D[1];
+        stickerRotations.U[4] = stickerRotations.D[4];
+        stickerRotations.U[7] = stickerRotations.D[7];
+        stickerTextures.U[1] = stickerTextures.D[1];
+        stickerTextures.U[4] = stickerTextures.D[4];
+        stickerTextures.U[7] = stickerTextures.D[7];
+
+        cubeState.D[1] = tempU[0];
+        cubeState.D[4] = tempU[1];
+        cubeState.D[7] = tempU[2];
+        stickerRotations.D[1] = tempRotU[0];
+        stickerRotations.D[4] = tempRotU[1];
+        stickerRotations.D[7] = tempRotU[2];
+        stickerTextures.D[1] = tempTexU[0];
+        stickerTextures.D[4] = tempTexU[1];
+        stickerTextures.D[7] = tempTexU[2];
+
+        // F ↔ B (with 180° flip)
+        const tempF = [cubeState.F[1], cubeState.F[4], cubeState.F[7]];
+        const tempRotF = [stickerRotations.F[1], stickerRotations.F[4], stickerRotations.F[7]];
+        const tempTexF = [stickerTextures.F[1], stickerTextures.F[4], stickerTextures.F[7]];
+
+        cubeState.F[1] = cubeState.B[7];
+        cubeState.F[4] = cubeState.B[4];
+        cubeState.F[7] = cubeState.B[1];
+        stickerRotations.F[1] = (stickerRotations.B[7] + 2) % 4;
+        stickerRotations.F[4] = (stickerRotations.B[4] + 2) % 4;
+        stickerRotations.F[7] = (stickerRotations.B[1] + 2) % 4;
+        stickerTextures.F[1] = stickerTextures.B[7];
+        stickerTextures.F[4] = stickerTextures.B[4];
+        stickerTextures.F[7] = stickerTextures.B[1];
+
+        cubeState.B[7] = tempF[0];
+        cubeState.B[4] = tempF[1];
+        cubeState.B[1] = tempF[2];
+        stickerRotations.B[7] = (tempRotF[0] + 2) % 4;
+        stickerRotations.B[4] = (tempRotF[1] + 2) % 4;
+        stickerRotations.B[1] = (tempRotF[2] + 2) % 4;
+        stickerTextures.B[7] = tempTexF[0];
+        stickerTextures.B[4] = tempTexF[1];
+        stickerTextures.B[1] = tempTexF[2];
+
+        updateDOM();
+      }
       
       const moveE = () => {
-        prime(rotationZ)();
+        rotationZ();
+        rotationZ();
+        rotationZ();
         moveM();
+        rotationZ();
+      };
+      
+      const moveEPrime = () => {
+        rotationZ();
+        rotationZ();
+        rotationZ();
+        moveMPrime();
+        rotationZ();
+      };
+      
+      const moveE2 = () => {
+        rotationZ();
+        rotationZ();
+        rotationZ();
+        moveM2();
         rotationZ();
       };
       
       const moveS = () => {
         rotationY();
         moveM();
-        prime(rotationY)();
+        rotationY();
+        rotationY();
+        rotationY();
+      };
+      
+      const moveSPrime = () => {
+        rotationY();
+        moveMPrime();
+        rotationY();
+        rotationY();
+        rotationY();
+      };
+      
+      const moveS2 = () => {
+        rotationY();
+        moveM2();
+        rotationY();
+        rotationY();
+        rotationY();
       };
 
       // WIDE MOVES
@@ -1143,9 +1362,9 @@ include_once('marked.min.js');
           "L'": prime(moveL),
           "F'": prime(moveF),
           "B'": prime(moveB),
-          "M'": prime(moveM),
-          "E'": prime(moveE),
-          "S'": prime(moveS),
+          "M'": moveMPrime,
+          "E'": moveEPrime,
+          "S'": moveSPrime,
           "Rw'": prime(moveRw),
           "Lw'": prime(moveLw),
           "Uw'": prime(moveUw),
@@ -1167,9 +1386,9 @@ include_once('marked.min.js');
           L2: double(moveL),
           F2: double(moveF),
           B2: double(moveB),
-          M2: double(moveM),
-          E2: double(moveE),
-          S2: double(moveS),
+          M2: moveM2,
+          E2: moveE2,
+          S2: moveS2,
           Rw2: double(moveRw),
           Lw2: double(moveLw),
           Uw2: double(moveUw),
