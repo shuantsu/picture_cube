@@ -266,6 +266,26 @@
         <h3>State</h3>
         <button onclick="solveCube()">Reset</button>
         <button onclick="printRotations()">View Rotations</button>
+        <small style="color: #666; font-style: italic"
+          >(Check the output at developer console)</small
+        >
+
+        <h3>Example Textures</h3>
+        <select id="exampleSelect" onchange="loadExample()">
+          <option value="">Select an example...</option>
+          <?php
+          $examplesDir = 'examples/';
+          if (is_dir($examplesDir)) {
+            $files = scandir($examplesDir);
+            foreach ($files as $file) {
+              if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
+                $name = pathinfo($file, PATHINFO_FILENAME);
+                echo "<option value='$file'>$name</option>";
+              }
+            }
+          }
+          ?>
+        </select>
 
         <h3>
           Custom Textures
@@ -322,6 +342,17 @@
       <div class="modal-content">
         <span class="close" onclick="closeInstructionsModal()">&times;</span>
         <div id="instructionsContent">Loading...</div>
+        <script>
+          <?php
+          if (file_exists('texture-instructions.md')) {
+            $markdown = file_get_contents('texture-instructions.md');
+            echo 'const markdownContent = ' . json_encode($markdown) . ';';
+            echo 'document.getElementById("instructionsContent").innerHTML = marked.parse(markdownContent);';
+          } else {
+            echo 'document.getElementById("instructionsContent").innerHTML = "<p>Instructions file not found.</p>";';
+          }
+          ?>
+        </script>
       </div>
     </div>
 
@@ -413,6 +444,7 @@
         sticker.style.backgroundImage = "";
         sticker.style.backgroundSize = "";
         sticker.style.backgroundPosition = "";
+        sticker.style.backgroundRepeat = "";
 
         if (
           textureMode === "face_textures" &&
@@ -430,6 +462,7 @@
             Object.assign(sticker.style, centerTexture);
           } else if (texture) {
             if (texture.backgroundImage) {
+              // Standard backgroundImage handling
               const row = Math.floor(originalIndex / 3);
               const col = originalIndex % 3;
               sticker.style.backgroundImage = texture.backgroundImage;
@@ -916,35 +949,23 @@
       // Modal functions
       function openInstructionsModal() {
         document.getElementById("instructionsModal").style.display = "block";
-        fetch("texture-instructions.md")
-          .then((response) => response.text())
-          .then((markdown) => {
-            document.getElementById("instructionsContent").innerHTML =
-              marked.parse(markdown);
-            
-            // Add event listeners to try-example links after content is loaded
-            document.querySelectorAll('a[href="#try-example"]').forEach(link => {
-              link.onclick = function() {
-                
-                let nextElement = this.parentElement.nextElementSibling;
-                while (nextElement && nextElement.tagName !== 'PRE') {
-                  nextElement = nextElement.nextElementSibling;
-                }
-                if (nextElement) {
-                  const codeBlock = nextElement.querySelector('code');
-                  if (codeBlock) {
-                    tryExample(codeBlock.textContent);
-                  }
-                }
-                
-                return false;
-              };
-            });
-          })
-          .catch((error) => {
-            document.getElementById("instructionsContent").innerHTML =
-              "<p>Error loading instructions.</p>";
-          });
+        
+        // Add event listeners to try-example links
+        document.querySelectorAll('a[href="#try-example"]').forEach(link => {
+          link.onclick = function() {
+            let nextElement = this.parentElement.nextElementSibling;
+            while (nextElement && nextElement.tagName !== 'PRE') {
+              nextElement = nextElement.nextElementSibling;
+            }
+            if (nextElement) {
+              const codeBlock = nextElement.querySelector('code');
+              if (codeBlock) {
+                tryExample(codeBlock.textContent);
+              }
+            }
+            return false;
+          };
+        });
       }
 
       function closeInstructionsModal() {
@@ -955,6 +976,22 @@
         closeInstructionsModal();
         document.getElementById('customConfig').value = jsonExample;
         loadCustomConfig();
+      }
+
+      function loadExample() {
+        const select = document.getElementById('exampleSelect');
+        const filename = select.value;
+        if (!filename) return;
+        
+        fetch(`examples/${filename}`)
+          .then(response => response.json())
+          .then(config => {
+            document.getElementById('customConfig').value = JSON.stringify(config, null, 2);
+            loadCustomConfig();
+          })
+          .catch(error => {
+            alert('Error loading example: ' + error.message);
+          });
       }
 
       // Close modal when clicking outside

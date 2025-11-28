@@ -1,4 +1,20 @@
-# Map the face keys (for the JSON) to their respective colors (hex codes)
+
+SIZE = 150
+
+def makeSide(F,U,R,D,L,n=50):
+      return f"""<div style='width:{SIZE}px;height:{SIZE}px;background:linear-gradient({F}, {F}) center / {n}% {n}% no-repeat,
+      conic-gradient(from 45deg at 50% 50%,
+          {R} 0deg,
+          {R} 90deg,     
+          {D} 90deg,
+          {D} 180deg,    
+          {L} 180deg,
+          {L} 270deg,    
+          {U} 270deg,
+          {U} 360deg
+        ) center / 100% 100% no-repeat;'></div><br/>
+      """
+
 face_colors = {
     "U": "#ffffff", # White
     "L": "#ff5800", # Orange
@@ -8,29 +24,26 @@ face_colors = {
     "D": "#ffd500", # Yellow
 }
 
-# Create the formatted backgrounds using the base string
-bg_base = "radial-gradient({color} 90%, black 95%)"
-backgrounds = {face: bg_base.format(color=color) for face, color in face_colors.items()}
+W = face_colors["U"]
+O = face_colors["L"]
+G = face_colors["F"]
+R = face_colors["R"]
+B = face_colors["B"]
+Y = face_colors["D"]
 
-# Use an f-string (multiline text) to build the JSON, embedding the backgrounds directly
-json_texture_faces = f"""
-{{
-  "mode": "face_textures",
-  "textures": {{
-    "U": {{"background": "{backgrounds["U"]}"}},
-    "L": {{"background": "{backgrounds["L"]}"}},
-    "F": {{"background": "{backgrounds["F"]}"}},
-    "R": {{"background": "{backgrounds["R"]}"}},
-    "B": {{"background": "{backgrounds["B"]}"}},
-    "D": {{"background": "{backgrounds["D"]}"}},
-    "U_center": {{
-      "background": "url('https://filipeteixeira.com.br/rubiksim/moyulogo.svg'), {backgrounds["U"]}",
-      "backgroundSize": "100%",
-      "backgroundRepeat": "no-repeat",
-      "backgroundPosition": "center"
-    }}
-  }}
-}}
-"""
+n = 66
 
-print(json_texture_faces)
+FU = makeSide(W,B,R,G,O,n)
+FL = makeSide(O,W,G,Y,B,n)
+FF = makeSide(G,W,R,Y,O,n)
+FR = makeSide(R,W,B,Y,G,n)
+FB = makeSide(B,W,O,Y,R,n)
+FD = makeSide(Y,G,R,B,O,n)
+
+print(F'''
+<table>
+      <tr><td></td><td>{FU}</td><td colspan=2></td></tr>
+      <tr><td>{FL}</td><td>{FF}</td><td>{FR}</td><td>{FB}</td></tr>
+      <tr><td></td><td>{FD}</td><td colspan=2></td></tr>
+    </table>
+''')

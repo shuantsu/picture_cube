@@ -1,0 +1,11 @@
+{
+  "mode": "face_textures",
+  "textures": {
+    "U": {"background": "#ffffff"},
+    "L": {"background": "#ff5800"},
+    "F": {"background": "#009b48"},
+    "R": {"background": "#c41e3a"},
+    "B": {"background": "#0045ad"},
+    "D": {"background": "#ffd500"}
+  }
+}

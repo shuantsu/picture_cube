@@ -1,0 +1,53 @@
+{
+  "mode": "face_textures",
+  "textures": {
+    "U": { 
+      "backgroundImage": "radial-gradient(circle, #ffffff 50%, transparent 50%), conic-gradient(from -45deg at center, #0045ad 0deg 90deg, #c41e3a 90deg 180deg, #009b48 180deg 270deg, #ff5800 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "U_center": {
+      "background": "radial-gradient(circle, #ffffff 50%, transparent 50%), conic-gradient(from -45deg at center, #0045ad 0deg 90deg, #c41e3a 90deg 180deg, #009b48 180deg 270deg, #ff5800 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "L": { 
+      "backgroundImage": "radial-gradient(circle, #ff5800 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #009b48 90deg 180deg, #ffd500 180deg 270deg, #0045ad 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "L_center": {
+      "background": "radial-gradient(circle, #ff5800 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #009b48 90deg 180deg, #ffd500 180deg 270deg, #0045ad 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "F": { 
+      "backgroundImage": "radial-gradient(circle, #009b48 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #c41e3a 90deg 180deg, #ffd500 180deg 270deg, #ff5800 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "F_center": {
+      "background": "radial-gradient(circle, #009b48 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #c41e3a 90deg 180deg, #ffd500 180deg 270deg, #ff5800 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "R": { 
+      "backgroundImage": "radial-gradient(circle, #c41e3a 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #0045ad 90deg 180deg, #ffd500 180deg 270deg, #009b48 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "R_center": {
+      "background": "radial-gradient(circle, #c41e3a 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #0045ad 90deg 180deg, #ffd500 180deg 270deg, #009b48 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "B": { 
+      "backgroundImage": "radial-gradient(circle, #0045ad 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #ff5800 90deg 180deg, #ffd500 180deg 270deg, #c41e3a 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "B_center": {
+      "background": "radial-gradient(circle, #0045ad 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #ff5800 90deg 180deg, #ffd500 180deg 270deg, #c41e3a 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "D": { 
+      "backgroundImage": "radial-gradient(circle, #ffd500 50%, transparent 50%), conic-gradient(from -45deg at center, #009b48 0deg 90deg, #c41e3a 90deg 180deg, #0045ad 180deg 270deg, #ff5800 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "D_center": {
+      "background": "radial-gradient(circle, #ffd500 50%, transparent 50%), conic-gradient(from -45deg at center, #009b48 0deg 90deg, #c41e3a 90deg 180deg, #0045ad 180deg 270deg, #ff5800 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    }
+  }
+}
