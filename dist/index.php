@@ -1347,50 +1347,38 @@ if (file_exists('marked.min.js')) {
       }
       
       const moveE = () => {
-        rotationZ();
-        rotationZ();
-        rotationZ();
+        prime(rotationZ)();
         moveM();
         rotationZ();
       };
       
       const moveEPrime = () => {
         rotationZ();
-        rotationZ();
-        rotationZ();
-        moveMPrime();
-        rotationZ();
+        moveM();
+        prime(rotationZ)();
       };
       
       const moveE2 = () => {
-        rotationZ();
-        rotationZ();
-        rotationZ();
+        prime(rotationZ)();
         moveM2();
         rotationZ();
       };
       
       const moveS = () => {
-        rotationY();
+        prime(rotationY)();
         moveM();
-        rotationY();
-        rotationY();
         rotationY();
       };
       
       const moveSPrime = () => {
         rotationY();
-        moveMPrime();
-        rotationY();
-        rotationY();
-        rotationY();
+        moveM();
+        prime(rotationY)();
       };
       
       const moveS2 = () => {
-        rotationY();
+        prime(rotationY)();
         moveM2();
-        rotationY();
-        rotationY();
         rotationY();
       };
 
