@@ -2,17 +2,36 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Picture Cube -- Beta</title>
     <style>
       body {
         margin: 0;
         font-family: Arial, sans-serif;
+        touch-action: none;
       }
 
       #container {
         display: flex;
         height: 100vh;
+        position: relative;
+      }
+
+
+
+      #hamburger {
+        display: none;
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1001;
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 18px;
       }
 
       #controls {
@@ -20,6 +39,59 @@
         padding: 20px;
         background: #f0f0f0;
         overflow-y: auto;
+        transition: transform 0.3s ease;
+        position: relative;
+        z-index: 1000;
+      }
+
+      @media (max-width: 768px) {
+        #hamburger {
+          display: block;
+        }
+        
+        #container {
+          flex-direction: column;
+        }
+        
+        #controls {
+          width: 100%;
+          height: 50vh;
+          padding-top: 70px!important;
+          transform: translateY(-100%);
+          position: absolute;
+          top: 0;
+          left: 0;
+          z-index: 1000;
+        }
+        
+        #controls.open {
+          transform: translateY(0);
+        }
+        
+        #right-panel {
+          height: 100vh;
+          transition: margin-top 0.3s ease;
+        }
+        
+        #container.controls-open #right-panel {
+          margin-top: 50vh;
+          height: 50vh;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        #controls {
+          padding: 5px;
+        }
+        
+        .move-grid {
+          grid-template-columns: repeat(4, 1fr);
+        }
+        
+        button {
+          padding: 6px 4px;
+          font-size: 10px;
+        }
       }
 
       :root {
@@ -278,6 +350,8 @@ include_once('marked.min.js');
   </head>
 
   <body>
+
+    <button id="hamburger" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
     <div id="container">
       <div id="controls">
         <div class="accordion">
@@ -1166,9 +1240,94 @@ include_once('marked.min.js');
       // Event listeners
       const rightPanel = document.getElementById("right-panel");
       rightPanel.addEventListener("mousedown", handleMouseDown);
+      rightPanel.addEventListener("touchstart", handleTouchStart, { passive: false });
       document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("touchmove", handleTouchMove, { passive: false });
       document.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener("touchend", handleTouchEnd);
       rightPanel.addEventListener("wheel", handleWheel, { passive: false });
+      
+      // Pinch zoom for touch devices
+      let initialDistance = 0;
+      let initialZoom = 1;
+      
+      rightPanel.addEventListener("touchstart", function(e) {
+        if (e.touches.length === 2) {
+          initialDistance = getTouchDistance(e.touches[0], e.touches[1]);
+          initialZoom = currentViewMode === "cubenet" ? zoom2D : cubeSize / 300;
+        }
+      });
+      
+      rightPanel.addEventListener("touchmove", function(e) {
+        if (e.touches.length === 2) {
+          e.preventDefault();
+          const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+          const scale = currentDistance / initialDistance;
+          
+          if (currentViewMode === "cubenet") {
+            zoom2D = Math.max(0.5, Math.min(3, initialZoom * scale));
+            update2DZoom();
+          } else {
+            cubeSize = Math.max(200, Math.min(800, initialZoom * scale * 300));
+            const fontSize = Math.max(8, Math.min(32, (cubeSize / 300) * 16));
+            document.documentElement.style.setProperty("--cube-size", `${cubeSize}px`);
+            document.documentElement.style.setProperty("--font-size-3d", `${fontSize}px`);
+          }
+        }
+      });
+      
+      function getTouchDistance(touch1, touch2) {
+        const dx = touch1.clientX - touch2.clientX;
+        const dy = touch1.clientY - touch2.clientY;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+      
+      function handleTouchStart(e) {
+        if (e.touches.length === 1) {
+          isDragging = true;
+          const touch = e.touches[0];
+          previousMousePosition = { x: touch.clientX, y: touch.clientY };
+          e.preventDefault();
+        }
+      }
+      
+      function handleTouchMove(e) {
+        if (!isDragging || e.touches.length !== 1) return;
+        
+        const touch = e.touches[0];
+        const deltaMove = {
+          x: touch.clientX - previousMousePosition.x,
+          y: touch.clientY - previousMousePosition.y,
+        };
+        
+        if (currentViewMode === "cubenet") {
+          panOffset.x += deltaMove.x;
+          panOffset.y += deltaMove.y;
+          update2DZoom();
+        } else {
+          cubeRotation.x -= deltaMove.y * 0.5;
+          cubeRotation.y += deltaMove.x * 0.5;
+          cubeRotation.x = Math.max(-90, Math.min(90, cubeRotation.x));
+          updateCubeRotation();
+        }
+        
+        previousMousePosition = { x: touch.clientX, y: touch.clientY };
+        e.preventDefault();
+      }
+      
+      function handleTouchEnd(e) {
+        isDragging = false;
+      }
+      
+      function toggleSidebar() {
+        const controls = document.getElementById("controls");
+        const container = document.getElementById("container");
+        controls.classList.toggle("open");
+        container.classList.toggle("controls-open");
+        console.log('Toggle called - controls:', controls.className, 'container:', container.className);
+      }
+      
+
 
       // Modal functions
       function openInstructionsModal() {
