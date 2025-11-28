@@ -511,9 +511,7 @@ if (file_exists('marked.min.js')) {
           <div class="accordion-content">
             <button onclick="solveCube()">Reset</button>
             <button onclick="printRotations()">View Rotations</button>
-            <small style="color: #666; font-style: italic"
-              >(Check the output at developer console)</small
-            >
+            <button onclick="printState()">View State</button>
           </div>
         </div>
 
@@ -630,6 +628,24 @@ if (file_exists('marked.min.js')) {
           }
           ?>
         </script>
+      </div>
+    </div>
+
+    <!-- Rotations Modal -->
+    <div id="rotationsModal" class="modal">
+      <div class="modal-content" style="width: 60%; max-width: 600px;">
+        <span class="close" onclick="closeRotationsModal()">&times;</span>
+        <h3>Cube Rotations</h3>
+        <div id="rotationsContent"></div>
+      </div>
+    </div>
+
+    <!-- State Modal -->
+    <div id="stateModal" class="modal">
+      <div class="modal-content">
+        <span class="close" onclick="closeStateModal()">&times;</span>
+        <h3>Cube State</h3>
+        <div id="stateContent"></div>
       </div>
     </div>
 
@@ -1536,19 +1552,88 @@ if (file_exists('marked.min.js')) {
         faces.forEach((face) => {
           stickerRotations[face].forEach((rot) => (total += rot));
         });
-        console.log("Total rotations:", total);
-        console.log(
-          "Rotations per face:",
-          JSON.stringify(stickerRotations, null, 2)
-        );
+        
+
+        
+        const cubeNetDisplay = `          U
+        ${stickerRotations.U[0]} ${stickerRotations.U[1]} ${stickerRotations.U[2]}
+        ${stickerRotations.U[3]} ${stickerRotations.U[4]} ${stickerRotations.U[5]}
+        ${stickerRotations.U[6]} ${stickerRotations.U[7]} ${stickerRotations.U[8]}
+
+  L       F       R       B
+${stickerRotations.L[0]} ${stickerRotations.L[1]} ${stickerRotations.L[2]}   ${stickerRotations.F[0]} ${stickerRotations.F[1]} ${stickerRotations.F[2]}   ${stickerRotations.R[0]} ${stickerRotations.R[1]} ${stickerRotations.R[2]}   ${stickerRotations.B[0]} ${stickerRotations.B[1]} ${stickerRotations.B[2]}
+${stickerRotations.L[3]} ${stickerRotations.L[4]} ${stickerRotations.L[5]}   ${stickerRotations.F[3]} ${stickerRotations.F[4]} ${stickerRotations.F[5]}   ${stickerRotations.R[3]} ${stickerRotations.R[4]} ${stickerRotations.R[5]}   ${stickerRotations.B[3]} ${stickerRotations.B[4]} ${stickerRotations.B[5]}
+${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${stickerRotations.F[6]} ${stickerRotations.F[7]} ${stickerRotations.F[8]}   ${stickerRotations.R[6]} ${stickerRotations.R[7]} ${stickerRotations.R[8]}   ${stickerRotations.B[6]} ${stickerRotations.B[7]} ${stickerRotations.B[8]}
+
+          D
+        ${stickerRotations.D[0]} ${stickerRotations.D[1]} ${stickerRotations.D[2]}
+        ${stickerRotations.D[3]} ${stickerRotations.D[4]} ${stickerRotations.D[5]}
+        ${stickerRotations.D[6]} ${stickerRotations.D[7]} ${stickerRotations.D[8]}`;
+        
+        // Calculate optimal width based on longest line (middle row with L F R B)
+        const longestLineChars = 31; // "0 0 0   0 0 0   0 0 0   0 0 0" = 31 chars
+        const charWidth = 8.4; // Approximate width of monospace character at 14px
+        const padding = 60; // Modal padding and margins
+        const optimalWidth = Math.min(longestLineChars * charWidth + padding, window.innerWidth * 0.9);
+        
+        document.getElementById('rotationsModal').querySelector('.modal-content').style.width = `${optimalWidth}px`;
+        
+        document.getElementById('rotationsContent').innerHTML = `
+          <p><strong>Total rotations:</strong> ${total}</p>
+          <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.2;">${cubeNetDisplay}</pre>
+        `;
+        
+        document.getElementById('rotationsModal').style.display = 'block';
+      }
+
+      function closeRotationsModal() {
+        document.getElementById('rotationsModal').style.display = 'none';
+      }
+
+      function printState() {
+        const formatStateValue = (val) => val.toString().padStart(2, ' ');
+        
+        const cubeStateDisplay = `                U
+            ${formatStateValue(cubeState.U[0])} ${formatStateValue(cubeState.U[1])} ${formatStateValue(cubeState.U[2])}
+            ${formatStateValue(cubeState.U[3])} ${formatStateValue(cubeState.U[4])} ${formatStateValue(cubeState.U[5])}
+            ${formatStateValue(cubeState.U[6])} ${formatStateValue(cubeState.U[7])} ${formatStateValue(cubeState.U[8])}
+
+    L           F          R           B
+${formatStateValue(cubeState.L[0])} ${formatStateValue(cubeState.L[1])} ${formatStateValue(cubeState.L[2])}    ${formatStateValue(cubeState.F[0])} ${formatStateValue(cubeState.F[1])} ${formatStateValue(cubeState.F[2])}    ${formatStateValue(cubeState.R[0])} ${formatStateValue(cubeState.R[1])} ${formatStateValue(cubeState.R[2])}    ${formatStateValue(cubeState.B[0])} ${formatStateValue(cubeState.B[1])} ${formatStateValue(cubeState.B[2])}
+${formatStateValue(cubeState.L[3])} ${formatStateValue(cubeState.L[4])} ${formatStateValue(cubeState.L[5])}    ${formatStateValue(cubeState.F[3])} ${formatStateValue(cubeState.F[4])} ${formatStateValue(cubeState.F[5])}    ${formatStateValue(cubeState.R[3])} ${formatStateValue(cubeState.R[4])} ${formatStateValue(cubeState.R[5])}    ${formatStateValue(cubeState.B[3])} ${formatStateValue(cubeState.B[4])} ${formatStateValue(cubeState.B[5])}
+${formatStateValue(cubeState.L[6])} ${formatStateValue(cubeState.L[7])} ${formatStateValue(cubeState.L[8])}    ${formatStateValue(cubeState.F[6])} ${formatStateValue(cubeState.F[7])} ${formatStateValue(cubeState.F[8])}    ${formatStateValue(cubeState.R[6])} ${formatStateValue(cubeState.R[7])} ${formatStateValue(cubeState.R[8])}    ${formatStateValue(cubeState.B[6])} ${formatStateValue(cubeState.B[7])} ${formatStateValue(cubeState.B[8])}
+
+               D
+            ${formatStateValue(cubeState.D[0])} ${formatStateValue(cubeState.D[1])} ${formatStateValue(cubeState.D[2])}
+            ${formatStateValue(cubeState.D[3])} ${formatStateValue(cubeState.D[4])} ${formatStateValue(cubeState.D[5])}
+            ${formatStateValue(cubeState.D[6])} ${formatStateValue(cubeState.D[7])} ${formatStateValue(cubeState.D[8])}`;
+        
+        // Calculate optimal width for 2-digit numbers
+        const longestLineChars = 41; // Adjusted for 2-digit numbers with proper spacing
+        const charWidth = 8.4;
+        const padding = 60;
+        const optimalWidth = Math.min(longestLineChars * charWidth + padding, window.innerWidth * 0.9);
+        
+        document.getElementById('stateModal').querySelector('.modal-content').style.width = `${optimalWidth}px`;
+        
+        document.getElementById('stateContent').innerHTML = `
+          <p><strong>Sticker positions (0-53):</strong></p>
+          <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.2;">${cubeStateDisplay}</pre>
+        `;
+        
+        document.getElementById('stateModal').style.display = 'block';
+      }
+
+      function closeStateModal() {
+        document.getElementById('stateModal').style.display = 'none';
       }
 
       // Event listeners
       const rightPanel = document.getElementById("right-panel");
       rightPanel.addEventListener("mousedown", handleMouseDown);
-      rightPanel.addEventListener("touchstart", handleTouchStart, { passive: false });
+      rightPanel.addEventListener("touchstart", handleTouchStart, { passive: true });
       document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("touchmove", handleTouchMove, { passive: false });
+      document.addEventListener("touchmove", handleTouchMove, { passive: true });
       document.addEventListener("mouseup", handleMouseUp);
       document.addEventListener("touchend", handleTouchEnd);
       rightPanel.addEventListener("wheel", handleWheel, { passive: false });
@@ -1562,11 +1647,10 @@ if (file_exists('marked.min.js')) {
           initialDistance = getTouchDistance(e.touches[0], e.touches[1]);
           initialZoom = currentViewMode === "cubenet" ? zoom2D : cubeSize / 300;
         }
-      });
+      }, { passive: true });
       
       rightPanel.addEventListener("touchmove", function(e) {
         if (e.touches.length === 2) {
-          e.preventDefault();
           const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
           const scale = currentDistance / initialDistance;
           
@@ -1580,7 +1664,7 @@ if (file_exists('marked.min.js')) {
             document.documentElement.style.setProperty("--font-size-3d", `${fontSize}px`);
           }
         }
-      });
+      }, { passive: true });
       
       function getTouchDistance(touch1, touch2) {
         const dx = touch1.clientX - touch2.clientX;
@@ -1712,9 +1796,15 @@ if (file_exists('marked.min.js')) {
 
       // Close modal when clicking outside
       window.onclick = function (event) {
-        const modal = document.getElementById("instructionsModal");
-        if (event.target === modal) {
+        const instructionsModal = document.getElementById("instructionsModal");
+        const rotationsModal = document.getElementById("rotationsModal");
+        const stateModal = document.getElementById("stateModal");
+        if (event.target === instructionsModal) {
           closeInstructionsModal();
+        } else if (event.target === rotationsModal) {
+          closeRotationsModal();
+        } else if (event.target === stateModal) {
+          closeStateModal();
         }
       };
 
