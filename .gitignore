@@ -1,1 +1,136 @@
+# ==================== SECURITY & CREDENTIALS ====================
+# Environment files
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Configuration files with sensitive data
+config.php
+config.ini
+config.json
+database.php
+db_config.php
+connection.php
+
+# API keys and secrets
+api_keys.txt
+secrets.json
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.cer
+
+# Authentication files
+.htpasswd
+.htaccess.backup
+auth.php
+login_config.php
+
+# ==================== DEVELOPMENT & DEBUGGING ====================
+# Debug files
+*.log
+*.debug
+error.log
+access.log
+debug.txt
+test_output.txt
+
+# Development tools
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+backup/
+backups/
+
+# ==================== BUILD & DEPLOYMENT ====================
+# Node modules and package files
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Composer (PHP)
+vendor/
+composer.lock
+
+# Build outputs
+dist/
+build/
+out/
+
+# ==================== FTP & DEPLOYMENT ====================
+# FTP configuration
+.ftp_cache.json
 .ftprules
+.ftpconfig
+ftp_settings.json
+
+# Deployment scripts
+deploy.sh
+deploy.php
+upload.php
+
+# ==================== CACHE & TEMPORARY ====================
+# Cache directories
+cache/
+tmp/
+temp/
+*.cache
+
+# Session files
+sessions/
+*.sess
+
+# ==================== SENSITIVE DATA ====================
+# Database dumps
+*.sql
+*.dump
+*.db
+*.sqlite
+*.sqlite3
+
+# User uploads (if containing sensitive data)
+uploads/private/
+user_data/
+
+# Documentation with sensitive info
+README_PRIVATE.md
+INTERNAL_NOTES.md
+PASSWORDS.txt
+CREDENTIALS.md
+
+# ==================== TESTING ====================
+# Test files
+test.php
+test.html
+test_*.php
+debug_*.php
+phpinfo.php
+info.php
+
+# ==================== SYSTEM FILES ====================
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
