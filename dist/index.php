@@ -217,7 +217,14 @@
         color: black;
       }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+<?php
+include_once('marked.min.js');
+?>
+    </script>
+    <script>
+      const defaultTexture = <?php echo json_encode(json_decode(file_get_contents('examples/5-pochman_supercube.json'), true)); ?>;
+    </script>
   </head>
 
   <body>
@@ -280,7 +287,8 @@
             foreach ($files as $file) {
               if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
                 $name = pathinfo($file, PATHINFO_FILENAME);
-                echo "<option value='$file'>$name</option>";
+                $selected = ($file === '5-pochman_supercube.json') ? ' selected' : '';
+                echo "<option value='$file'$selected>$name</option>";
               }
             }
           }
@@ -1006,6 +1014,21 @@
 
       // Inicializar
       initCube();
+      
+      // Load default texture
+      if (defaultTexture) {
+        textureMode = defaultTexture.mode;
+        if (defaultTexture.mode === "face_textures") {
+          faceTextures = defaultTexture.textures || {};
+          faces.forEach((face, faceIndex) => {
+            stickerTextures[face] = Array(9)
+              .fill(0)
+              .map((_, i) => ({ face, index: i }));
+          });
+        }
+        updateDOM();
+      }
+      
       setViewMode("perspective");
     </script>
   </body>
