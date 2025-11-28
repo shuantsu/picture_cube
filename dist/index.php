@@ -259,6 +259,30 @@ include_once('marked.min.js');
         <button onclick="prime(moveF)()">F'</button>
         <button onclick="prime(moveB)()">B'</button>
 
+        <h3>Slice Moves</h3>
+        <button onclick="moveM()">M</button>
+        <button onclick="moveE()">E</button>
+        <button onclick="moveS()">S</button>
+        <br />
+        <button onclick="prime(moveM)()">M'</button>
+        <button onclick="prime(moveE)()">E'</button>
+        <button onclick="prime(moveS)()">S'</button>
+
+        <h3>Wide Moves</h3>
+        <button onclick="moveRw()">Rw</button>
+        <button onclick="moveLw()">Lw</button>
+        <button onclick="moveUw()">Uw</button>
+        <button onclick="moveDw()">Dw</button>
+        <button onclick="moveFw()">Fw</button>
+        <button onclick="moveBw()">Bw</button>
+        <br />
+        <button onclick="prime(moveRw)()">Rw'</button>
+        <button onclick="prime(moveLw)()">Lw'</button>
+        <button onclick="prime(moveUw)()">Uw'</button>
+        <button onclick="prime(moveDw)()">Dw'</button>
+        <button onclick="prime(moveFw)()">Fw'</button>
+        <button onclick="prime(moveBw)()">Bw'</button>
+
         <h3>Algorithm</h3>
         <textarea
           id="alg"
@@ -861,6 +885,56 @@ include_once('marked.min.js');
         rotationX();
       };
 
+      // SLICE MOVES
+      const moveM = () => {
+        prime(moveL)();
+        moveR();
+        prime(rotationX)();
+      };
+      
+      const moveE = () => {
+        prime(rotationZ)();
+        moveM();
+        rotationZ();
+      };
+      
+      const moveS = () => {
+        rotationY();
+        moveM();
+        prime(rotationY)();
+      };
+
+      // WIDE MOVES
+      const moveRw = () => {
+        moveL();
+        rotationX();
+      };
+      
+      const moveLw = () => {
+        moveR();
+        prime(rotationX)();
+      };
+      
+      const moveUw = () => {
+        moveD();
+        rotationY();
+      };
+      
+      const moveDw = () => {
+        moveU();
+        prime(rotationY)();
+      };
+      
+      const moveFw = () => {
+        moveB();
+        rotationZ();
+      };
+      
+      const moveBw = () => {
+        moveF();
+        prime(rotationZ)();
+      };
+
       function applyMove(move) {
         const moves = {
           U: moveU,
@@ -869,6 +943,15 @@ include_once('marked.min.js');
           L: moveL,
           F: moveF,
           B: moveB,
+          M: moveM,
+          E: moveE,
+          S: moveS,
+          Rw: moveRw,
+          Lw: moveLw,
+          Uw: moveUw,
+          Dw: moveDw,
+          Fw: moveFw,
+          Bw: moveBw,
           x: rotationX,
           y: rotationY,
           z: rotationZ,
@@ -878,6 +961,15 @@ include_once('marked.min.js');
           "L'": prime(moveL),
           "F'": prime(moveF),
           "B'": prime(moveB),
+          "M'": prime(moveM),
+          "E'": prime(moveE),
+          "S'": prime(moveS),
+          "Rw'": prime(moveRw),
+          "Lw'": prime(moveLw),
+          "Uw'": prime(moveUw),
+          "Dw'": prime(moveDw),
+          "Fw'": prime(moveFw),
+          "Bw'": prime(moveBw),
           "x'": prime(rotationX),
           "y'": prime(rotationY),
           "z'": prime(rotationZ),
@@ -887,6 +979,15 @@ include_once('marked.min.js');
           L2: double(moveL),
           F2: double(moveF),
           B2: double(moveB),
+          M2: double(moveM),
+          E2: double(moveE),
+          S2: double(moveS),
+          Rw2: double(moveRw),
+          Lw2: double(moveLw),
+          Uw2: double(moveUw),
+          Dw2: double(moveDw),
+          Fw2: double(moveFw),
+          Bw2: double(moveBw),
           x2: double(rotationX),
           y2: double(rotationY),
           z2: double(rotationZ),
