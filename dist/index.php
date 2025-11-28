@@ -382,6 +382,51 @@
         0% { transform: translate(-50%, -50%) rotate(0deg); }
         100% { transform: translate(-50%, -50%) rotate(360deg); }
       }
+
+      .tab-buttons {
+        display: flex;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 15px;
+      }
+
+      .tab-button {
+        background: none;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+      }
+
+      .tab-button.active {
+        border-bottom-color: #007cba;
+        color: #007cba;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 4px;
+        z-index: 1001;
+        opacity: 0;
+        transition: opacity 0.3s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      }
+
+      .toast.show {
+        opacity: 1;
+      }
     </style>
     <script>
 <?php
@@ -510,8 +555,7 @@ if (file_exists('marked.min.js')) {
           </button>
           <div class="accordion-content">
             <button onclick="solveCube()">Reset</button>
-            <button onclick="printRotations()">View Rotations</button>
-            <button onclick="printState()">View State</button>
+            <button onclick="openStateModal()">View State</button>
           </div>
         </div>
 
@@ -631,23 +675,23 @@ if (file_exists('marked.min.js')) {
       </div>
     </div>
 
-    <!-- Rotations Modal -->
-    <div id="rotationsModal" class="modal">
-      <div class="modal-content" style="width: 60%; max-width: 600px;">
-        <span class="close" onclick="closeRotationsModal()">&times;</span>
-        <h3>Cube Rotations</h3>
-        <div id="rotationsContent"></div>
-      </div>
-    </div>
-
     <!-- State Modal -->
     <div id="stateModal" class="modal">
       <div class="modal-content">
         <span class="close" onclick="closeStateModal()">&times;</span>
-        <h3>Cube State</h3>
-        <div id="stateContent"></div>
+        <h3>Cube Analysis</h3>
+        <div class="tab-container">
+          <div class="tab-buttons">
+            <button class="tab-button active" onclick="switchTab('state')">State</button>
+            <button class="tab-button" onclick="switchTab('rotations')">Rotations</button>
+          </div>
+          <div id="stateTab" class="tab-content active"></div>
+          <div id="rotationsTab" class="tab-content"></div>
+        </div>
       </div>
     </div>
+
+    <div id="toast" class="toast"></div>
 
     <script>
       // ==================== FUNDAMENTOS: X, Y, U + applyStickerRotation ====================
@@ -1547,15 +1591,43 @@ if (file_exists('marked.min.js')) {
         }
       }
 
-      function printRotations() {
-        let total = 0;
-        faces.forEach((face) => {
-          stickerRotations[face].forEach((rot) => (total += rot));
-        });
+      function openStateModal() {
+        updateStateTab();
+        updateRotationsTab();
         
+        // Calculate optimal width based on longest line (middle row with L F R B)
+        const longestLineChars = 41; // Adjusted for 2-digit numbers with proper spacing
+        const charWidth = 8.4;
+        const padding = 60;
+        const optimalWidth = Math.min(longestLineChars * charWidth + padding, window.innerWidth * 0.9);
+        
+        document.getElementById('stateModal').querySelector('.modal-content').style.width = `${optimalWidth}px`;
+        document.getElementById('stateModal').style.display = 'block';
+      }
 
+      function closeStateModal() {
+        document.getElementById('stateModal').style.display = 'none';
+      }
+
+      function copyToClipboard() {
+        const formatStateValue = (val) => val.toString().padStart(2, ' ');
         
-        const cubeNetDisplay = `          U
+        const stateDisplay = `                U
+            ${formatStateValue(cubeState.U[0])} ${formatStateValue(cubeState.U[1])} ${formatStateValue(cubeState.U[2])}
+            ${formatStateValue(cubeState.U[3])} ${formatStateValue(cubeState.U[4])} ${formatStateValue(cubeState.U[5])}
+            ${formatStateValue(cubeState.U[6])} ${formatStateValue(cubeState.U[7])} ${formatStateValue(cubeState.U[8])}
+
+    L           F          R           B
+${formatStateValue(cubeState.L[0])} ${formatStateValue(cubeState.L[1])} ${formatStateValue(cubeState.L[2])}    ${formatStateValue(cubeState.F[0])} ${formatStateValue(cubeState.F[1])} ${formatStateValue(cubeState.F[2])}    ${formatStateValue(cubeState.R[0])} ${formatStateValue(cubeState.R[1])} ${formatStateValue(cubeState.R[2])}    ${formatStateValue(cubeState.B[0])} ${formatStateValue(cubeState.B[1])} ${formatStateValue(cubeState.B[2])}
+${formatStateValue(cubeState.L[3])} ${formatStateValue(cubeState.L[4])} ${formatStateValue(cubeState.L[5])}    ${formatStateValue(cubeState.F[3])} ${formatStateValue(cubeState.F[4])} ${formatStateValue(cubeState.F[5])}    ${formatStateValue(cubeState.R[3])} ${formatStateValue(cubeState.R[4])} ${formatStateValue(cubeState.R[5])}    ${formatStateValue(cubeState.B[3])} ${formatStateValue(cubeState.B[4])} ${formatStateValue(cubeState.B[5])}
+${formatStateValue(cubeState.L[6])} ${formatStateValue(cubeState.L[7])} ${formatStateValue(cubeState.L[8])}    ${formatStateValue(cubeState.F[6])} ${formatStateValue(cubeState.F[7])} ${formatStateValue(cubeState.F[8])}    ${formatStateValue(cubeState.R[6])} ${formatStateValue(cubeState.R[7])} ${formatStateValue(cubeState.R[8])}    ${formatStateValue(cubeState.B[6])} ${formatStateValue(cubeState.B[7])} ${formatStateValue(cubeState.B[8])}
+
+               D
+            ${formatStateValue(cubeState.D[0])} ${formatStateValue(cubeState.D[1])} ${formatStateValue(cubeState.D[2])}
+            ${formatStateValue(cubeState.D[3])} ${formatStateValue(cubeState.D[4])} ${formatStateValue(cubeState.D[5])}
+            ${formatStateValue(cubeState.D[6])} ${formatStateValue(cubeState.D[7])} ${formatStateValue(cubeState.D[8])}`;
+        
+        const rotationsDisplay = `          U
         ${stickerRotations.U[0]} ${stickerRotations.U[1]} ${stickerRotations.U[2]}
         ${stickerRotations.U[3]} ${stickerRotations.U[4]} ${stickerRotations.U[5]}
         ${stickerRotations.U[6]} ${stickerRotations.U[7]} ${stickerRotations.U[8]}
@@ -1570,27 +1642,29 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         ${stickerRotations.D[3]} ${stickerRotations.D[4]} ${stickerRotations.D[5]}
         ${stickerRotations.D[6]} ${stickerRotations.D[7]} ${stickerRotations.D[8]}`;
         
-        // Calculate optimal width based on longest line (middle row with L F R B)
-        const longestLineChars = 31; // "0 0 0   0 0 0   0 0 0   0 0 0" = 31 chars
-        const charWidth = 8.4; // Approximate width of monospace character at 14px
-        const padding = 60; // Modal padding and margins
-        const optimalWidth = Math.min(longestLineChars * charWidth + padding, window.innerWidth * 0.9);
+        const combinedText = `----STICKERS----\n\n${stateDisplay}\n\n----ROTATIONS----\n\n${rotationsDisplay}`;
         
-        document.getElementById('rotationsModal').querySelector('.modal-content').style.width = `${optimalWidth}px`;
-        
-        document.getElementById('rotationsContent').innerHTML = `
-          <p><strong>Total rotations:</strong> ${total}</p>
-          <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.2;">${cubeNetDisplay}</pre>
-        `;
-        
-        document.getElementById('rotationsModal').style.display = 'block';
+        navigator.clipboard.writeText(combinedText).then(() => {
+          showToast('Copied to clipboard!');
+        });
       }
 
-      function closeRotationsModal() {
-        document.getElementById('rotationsModal').style.display = 'none';
+      function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
       }
 
-      function printState() {
+      function switchTab(tab) {
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+        document.getElementById(tab + 'Tab').classList.add('active');
+      }
+
+      function updateStateTab() {
         const formatStateValue = (val) => val.toString().padStart(2, ' ');
         
         const cubeStateDisplay = `                U
@@ -1608,24 +1682,43 @@ ${formatStateValue(cubeState.L[6])} ${formatStateValue(cubeState.L[7])} ${format
             ${formatStateValue(cubeState.D[3])} ${formatStateValue(cubeState.D[4])} ${formatStateValue(cubeState.D[5])}
             ${formatStateValue(cubeState.D[6])} ${formatStateValue(cubeState.D[7])} ${formatStateValue(cubeState.D[8])}`;
         
-        // Calculate optimal width for 2-digit numbers
-        const longestLineChars = 41; // Adjusted for 2-digit numbers with proper spacing
-        const charWidth = 8.4;
-        const padding = 60;
-        const optimalWidth = Math.min(longestLineChars * charWidth + padding, window.innerWidth * 0.9);
+        const statePreElement = document.createElement('pre');
+        statePreElement.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: "Courier New", monospace; font-size: 14px; line-height: 1.2; cursor: pointer;';
+        statePreElement.textContent = cubeStateDisplay;
+        statePreElement.onclick = () => copyToClipboard();
         
-        document.getElementById('stateModal').querySelector('.modal-content').style.width = `${optimalWidth}px`;
-        
-        document.getElementById('stateContent').innerHTML = `
-          <p><strong>Sticker positions (0-53):</strong></p>
-          <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.2;">${cubeStateDisplay}</pre>
-        `;
-        
-        document.getElementById('stateModal').style.display = 'block';
+        document.getElementById('stateTab').innerHTML = '<p><strong>Sticker positions (0-53):</strong></p>';
+        document.getElementById('stateTab').appendChild(statePreElement);
       }
 
-      function closeStateModal() {
-        document.getElementById('stateModal').style.display = 'none';
+      function updateRotationsTab() {
+        let total = 0;
+        faces.forEach((face) => {
+          stickerRotations[face].forEach((rot) => (total += rot));
+        });
+        
+        const cubeNetDisplay = `          U
+        ${stickerRotations.U[0]} ${stickerRotations.U[1]} ${stickerRotations.U[2]}
+        ${stickerRotations.U[3]} ${stickerRotations.U[4]} ${stickerRotations.U[5]}
+        ${stickerRotations.U[6]} ${stickerRotations.U[7]} ${stickerRotations.U[8]}
+
+  L       F       R       B
+${stickerRotations.L[0]} ${stickerRotations.L[1]} ${stickerRotations.L[2]}   ${stickerRotations.F[0]} ${stickerRotations.F[1]} ${stickerRotations.F[2]}   ${stickerRotations.R[0]} ${stickerRotations.R[1]} ${stickerRotations.R[2]}   ${stickerRotations.B[0]} ${stickerRotations.B[1]} ${stickerRotations.B[2]}
+${stickerRotations.L[3]} ${stickerRotations.L[4]} ${stickerRotations.L[5]}   ${stickerRotations.F[3]} ${stickerRotations.F[4]} ${stickerRotations.F[5]}   ${stickerRotations.R[3]} ${stickerRotations.R[4]} ${stickerRotations.R[5]}   ${stickerRotations.B[3]} ${stickerRotations.B[4]} ${stickerRotations.B[5]}
+${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${stickerRotations.F[6]} ${stickerRotations.F[7]} ${stickerRotations.F[8]}   ${stickerRotations.R[6]} ${stickerRotations.R[7]} ${stickerRotations.R[8]}   ${stickerRotations.B[6]} ${stickerRotations.B[7]} ${stickerRotations.B[8]}
+
+          D
+        ${stickerRotations.D[0]} ${stickerRotations.D[1]} ${stickerRotations.D[2]}
+        ${stickerRotations.D[3]} ${stickerRotations.D[4]} ${stickerRotations.D[5]}
+        ${stickerRotations.D[6]} ${stickerRotations.D[7]} ${stickerRotations.D[8]}`;
+        
+        const rotationsPreElement = document.createElement('pre');
+        rotationsPreElement.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: "Courier New", monospace; font-size: 14px; line-height: 1.2; cursor: pointer;';
+        rotationsPreElement.textContent = cubeNetDisplay;
+        rotationsPreElement.onclick = () => copyToClipboard();
+        
+        document.getElementById('rotationsTab').innerHTML = `<p><strong>Total rotations:</strong> ${total}</p>`;
+        document.getElementById('rotationsTab').appendChild(rotationsPreElement);
       }
 
       // Event listeners
@@ -1797,12 +1890,9 @@ ${formatStateValue(cubeState.L[6])} ${formatStateValue(cubeState.L[7])} ${format
       // Close modal when clicking outside
       window.onclick = function (event) {
         const instructionsModal = document.getElementById("instructionsModal");
-        const rotationsModal = document.getElementById("rotationsModal");
         const stateModal = document.getElementById("stateModal");
         if (event.target === instructionsModal) {
           closeInstructionsModal();
-        } else if (event.target === rotationsModal) {
-          closeRotationsModal();
         } else if (event.target === stateModal) {
           closeStateModal();
         }
