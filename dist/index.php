@@ -17,7 +17,9 @@
         position: relative;
       }
 
-
+      .spacer {
+        display: none;
+      }
 
       #hamburger {
         display: none;
@@ -36,7 +38,7 @@
 
       #controls {
         width: 300px;
-        padding: 20px;
+        padding: 10px;
         background: #f0f0f0;
         overflow-y: auto;
         transition: transform 0.3s ease;
@@ -49,6 +51,11 @@
           display: block;
         }
         
+          .spacer {
+            display: block;
+            height: 55px;
+          }
+        
         #container {
           flex-direction: column;
         }
@@ -56,12 +63,11 @@
         #controls {
           width: 100%;
           height: 50vh;
-          padding-top: 70px!important;
           transform: translateY(-100%);
           position: absolute;
           top: 0;
           left: 0;
-          z-index: 1000;
+          z-index: 0;
         }
         
         #controls.open {
@@ -354,6 +360,7 @@ include_once('marked.min.js');
     <button id="hamburger" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
     <div id="container">
       <div id="controls">
+        <div class="spacer"></div>
         <div class="accordion">
           <button class="accordion-header" onclick="toggleAccordion(this)">
             Moveset
