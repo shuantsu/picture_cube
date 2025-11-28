@@ -9,12 +9,14 @@
         margin: 0;
         font-family: Arial, sans-serif;
         touch-action: none;
+        overflow-x: hidden;
       }
 
       #container {
         display: flex;
         height: var(--real-vh, 100vh);
         position: relative;
+        overflow-x: hidden;
       }
 
       .spacer {
@@ -91,12 +93,21 @@
         }
         
         .move-grid {
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1px;
         }
         
         button {
-          padding: 6px 4px;
-          font-size: 10px;
+          padding: 4px 2px;
+          font-size: 9px;
+          margin: 1px;
+          min-width: 0;
+          overflow: hidden;
+        }
+        
+        :root {
+          --cube-size: 200px;
+          --font-size-3d: 12px;
         }
       }
 
@@ -261,12 +272,17 @@
         grid-template-columns: repeat(6, 1fr);
         gap: 2px;
         margin: 5px 0;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       textarea {
         width: 100%;
+        max-width: 100%;
         height: 100px;
         margin: 10px 0;
+        box-sizing: border-box;
+        resize: vertical;
       }
       /* Modal styles */
       .modal {
@@ -312,7 +328,7 @@
         background: #e0e0e0;
         border: none;
         padding: 10px;
-        width: 100%;
+        width: calc(100% - 10px);
         text-align: left;
         cursor: pointer;
         display: flex;
@@ -320,6 +336,8 @@
         align-items: center;
         font-weight: bold;
         border-radius: 4px;
+        margin: 0;
+        box-sizing: border-box;
       }
 
       .accordion-header:hover {
@@ -453,7 +471,7 @@ if (file_exists('marked.min.js')) {
           <div class="accordion-content">
             <textarea
               id="alg"
-              placeholder="Enter algorithm (ex: R U R' U')"
+              placeholder="Enter algorithm (ex: R U R&#39; U&#39;)"
               onkeydown="if(event.ctrlKey && event.key==='Enter') applyAlgorithm()"
             ></textarea>
             <button onclick="applyAlgorithm()">Execute</button>
@@ -616,7 +634,7 @@ if (file_exists('marked.min.js')) {
 
       let currentViewMode = "cubenet";
       let cubeRotation = { x: -25, y: -45 };
-      let cubeSize = 300;
+      let cubeSize = window.innerWidth <= 480 ? 230 : 350;
       let zoom2D = 1;
       let panOffset = { x: 0, y: 0 };
       let isDragging = false;
@@ -1410,9 +1428,25 @@ if (file_exists('marked.min.js')) {
       }
 
       function applyAlgorithm() {
-        const alg = document.getElementById("alg").value.trim();
+        let alg = document.getElementById("alg").value.trim();
         if (!alg) return;
-        const moves = alg.split(/\s+/);
+        
+        alg = alg.replace(/’/g, "'");
+        
+        // Remove single-line comments (// comment)
+        alg = alg.replace(/\/\/.*$/gm, '');
+        
+        // Remove multi-line comments (/* comment */)
+        alg = alg.replace(/\/\*[\s\S]*?\*\//g, '');
+        
+        // Replace )( with space to act as separator
+        alg = alg.replace(/\)\(/g, ' ');
+        
+        // Remove remaining parentheses
+        alg = alg.replace(/[()]/g, '');
+        
+        // Clean up and split moves
+        const moves = alg.trim().split(/\s+/).filter(move => move.length > 0);
         moves.forEach((move) => applyMove(move));
       }
 
@@ -1550,7 +1584,22 @@ if (file_exists('marked.min.js')) {
         const container = document.getElementById("container");
         controls.classList.toggle("open");
         container.classList.toggle("controls-open");
-        console.log('Toggle called - controls:', controls.className, 'container:', container.className);
+        saveSidebarState();
+      }
+
+      function saveSidebarState() {
+        const controls = document.getElementById("controls");
+        localStorage.setItem('sidebarOpen', controls.classList.contains('open'));
+      }
+
+      function loadSidebarState() {
+        const saved = localStorage.getItem('sidebarOpen');
+        if (saved === 'true') {
+          const controls = document.getElementById("controls");
+          const container = document.getElementById("container");
+          controls.classList.add('open');
+          container.classList.add('controls-open');
+        }
       }
       
 
@@ -1617,10 +1666,37 @@ if (file_exists('marked.min.js')) {
       function toggleAccordion(header) {
         const accordion = header.parentElement;
         accordion.classList.toggle('open');
+        saveAccordionStates();
+      }
+
+      function saveAccordionStates() {
+        const accordions = document.querySelectorAll('.accordion');
+        const states = {};
+        accordions.forEach((accordion, index) => {
+          states[index] = accordion.classList.contains('open');
+        });
+        localStorage.setItem('accordionStates', JSON.stringify(states));
+      }
+
+      function loadAccordionStates() {
+        const saved = localStorage.getItem('accordionStates');
+        if (saved) {
+          const states = JSON.parse(saved);
+          const accordions = document.querySelectorAll('.accordion');
+          accordions.forEach((accordion, index) => {
+            if (states[index]) {
+              accordion.classList.add('open');
+            } else {
+              accordion.classList.remove('open');
+            }
+          });
+        }
       }
 
       // Inicializar
       initCube();
+      loadAccordionStates();
+      loadSidebarState();
       
       // Load default texture
       if (defaultTexture) {
