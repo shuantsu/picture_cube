@@ -788,6 +788,7 @@ if (file_exists('marked.min.js')) {
         const cube3D = document.getElementById("cube-3d");
 
         currentViewMode = mode;
+        localStorage.setItem('viewMode', mode);
 
         // Reset button states
         document.getElementById("cubenetBtn").disabled = false;
@@ -1753,7 +1754,9 @@ if (file_exists('marked.min.js')) {
         updateDOM();
       }
       
-      setViewMode("perspective");
+      // Load saved view mode or default to perspective
+      const savedViewMode = localStorage.getItem('viewMode') || 'perspective';
+      setViewMode(savedViewMode);
     </script>
   </body>
 </html>
