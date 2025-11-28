@@ -952,6 +952,12 @@ include_once('marked.min.js');
           Dw: moveDw,
           Fw: moveFw,
           Bw: moveBw,
+          r: moveRw,
+          l: moveLw,
+          u: moveUw,
+          d: moveDw,
+          f: moveFw,
+          b: moveBw,
           x: rotationX,
           y: rotationY,
           z: rotationZ,
@@ -970,6 +976,12 @@ include_once('marked.min.js');
           "Dw'": prime(moveDw),
           "Fw'": prime(moveFw),
           "Bw'": prime(moveBw),
+          "r'": prime(moveRw),
+          "l'": prime(moveLw),
+          "u'": prime(moveUw),
+          "d'": prime(moveDw),
+          "f'": prime(moveFw),
+          "b'": prime(moveBw),
           "x'": prime(rotationX),
           "y'": prime(rotationY),
           "z'": prime(rotationZ),
@@ -988,6 +1000,12 @@ include_once('marked.min.js');
           Dw2: double(moveDw),
           Fw2: double(moveFw),
           Bw2: double(moveBw),
+          r2: double(moveRw),
+          l2: double(moveLw),
+          u2: double(moveUw),
+          d2: double(moveDw),
+          f2: double(moveFw),
+          b2: double(moveBw),
           x2: double(rotationX),
           y2: double(rotationY),
           z2: double(rotationZ),
@@ -1004,8 +1022,10 @@ include_once('marked.min.js');
       }
 
       function solveCube() {
-        textureMode = "standard";
         initCube();
+        if (textureMode !== "standard") {
+          updateDOM();
+        }
       }
 
       function loadCustomConfig() {
