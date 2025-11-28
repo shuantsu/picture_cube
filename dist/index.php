@@ -173,8 +173,16 @@
       }
 
       button {
-        margin: 5px;
-        padding: 10px;
+        margin: 2px;
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+
+      .move-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 2px;
+        margin: 5px 0;
       }
 
       textarea {
@@ -216,6 +224,48 @@
       .close:hover {
         color: black;
       }
+
+      /* Accordion styles */
+      .accordion {
+        margin-bottom: 10px;
+      }
+
+      .accordion-header {
+        background: #e0e0e0;
+        border: none;
+        padding: 10px;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        border-radius: 4px;
+      }
+
+      .accordion-header:hover {
+        background: #d0d0d0;
+      }
+
+      .accordion-arrow {
+        width: 12px;
+        height: 12px;
+        transition: transform 0.2s ease;
+      }
+
+      .accordion-content {
+        padding: 15px 10px;
+        display: none;
+      }
+
+      .accordion.open .accordion-content {
+        display: block;
+      }
+
+      .accordion.open .accordion-arrow {
+        transform: rotate(90deg);
+      }
     </style>
     <script>
 <?php
@@ -230,120 +280,165 @@ include_once('marked.min.js');
   <body>
     <div id="container">
       <div id="controls">
-        <h3>Fundamentals: X, Y, U, Z</h3>
-        <button onclick="moveU()">U</button>
-        <button onclick="rotationX()">X</button>
-        <button onclick="rotationY()">Y</button>
-        <button onclick="rotationZ()">Z</button>
-        <br />
-        <button onclick="prime(moveU)()">U'</button>
-        <button onclick="prime(rotationX)()">X'</button>
-        <button onclick="prime(rotationY)()">Y'</button>
-        <button onclick="prime(rotationZ)()">Z'</button>
-        <br />
-        <button onclick="double(moveU)()">U2</button>
-        <button onclick="double(rotationX)()">X2</button>
-        <button onclick="double(rotationY)()">Y2</button>
-        <button onclick="double(rotationZ)()">Z2</button>
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            Moveset
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <div class="move-grid">
+              <button onclick="moveU()">U</button>
+              <button onclick="moveD()">D</button>
+              <button onclick="moveR()">R</button>
+              <button onclick="moveL()">L</button>
+              <button onclick="moveF()">F</button>
+              <button onclick="moveB()">B</button>
+              <button onclick="prime(moveU)()">U'</button>
+              <button onclick="prime(moveD)()">D'</button>
+              <button onclick="prime(moveR)()">R'</button>
+              <button onclick="prime(moveL)()">L'</button>
+              <button onclick="prime(moveF)()">F'</button>
+              <button onclick="prime(moveB)()">B'</button>
+              <button onclick="double(moveU)()">U2</button>
+              <button onclick="double(moveD)()">D2</button>
+              <button onclick="double(moveR)()">R2</button>
+              <button onclick="double(moveL)()">L2</button>
+              <button onclick="double(moveF)()">F2</button>
+              <button onclick="double(moveB)()">B2</button>
+              <button onclick="moveM()">M</button>
+              <button onclick="moveE()">E</button>
+              <button onclick="moveS()">S</button>
+              <button onclick="rotationX()">X</button>
+              <button onclick="rotationY()">Y</button>
+              <button onclick="rotationZ()">Z</button>
+              <button onclick="prime(moveM)()">M'</button>
+              <button onclick="prime(moveE)()">E'</button>
+              <button onclick="prime(moveS)()">S'</button>
+              <button onclick="prime(rotationX)()">X'</button>
+              <button onclick="prime(rotationY)()">Y'</button>
+              <button onclick="prime(rotationZ)()">Z'</button>
+              <button onclick="moveRw()">Rw</button>
+              <button onclick="moveLw()">Lw</button>
+              <button onclick="moveUw()">Uw</button>
+              <button onclick="moveDw()">Dw</button>
+              <button onclick="moveFw()">Fw</button>
+              <button onclick="moveBw()">Bw</button>
+              <button onclick="prime(moveRw)()">Rw'</button>
+              <button onclick="prime(moveLw)()">Lw'</button>
+              <button onclick="prime(moveUw)()">Uw'</button>
+              <button onclick="prime(moveDw)()">Dw'</button>
+              <button onclick="prime(moveFw)()">Fw'</button>
+              <button onclick="prime(moveBw)()">Bw'</button>
+            </div>
+          </div>
+        </div>
 
-        <h3>Derived</h3>
-        <button onclick="moveD()">D</button>
-        <button onclick="moveR()">R</button>
-        <button onclick="moveL()">L</button>
-        <button onclick="moveF()">F</button>
-        <button onclick="moveB()">B</button>
-        <br />
-        <button onclick="prime(moveD)()">D'</button>
-        <button onclick="prime(moveR)()">R'</button>
-        <button onclick="prime(moveL)()">L'</button>
-        <button onclick="prime(moveF)()">F'</button>
-        <button onclick="prime(moveB)()">B'</button>
+        <div class="accordion open">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            Algorithm
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <textarea
+              id="alg"
+              placeholder="Enter algorithm (ex: R U R' U')"
+              onkeydown="if(event.ctrlKey && event.key==='Enter') applyAlgorithm()"
+            ></textarea>
+            <button onclick="applyAlgorithm()">Execute</button>
+            <small style="color: #666; font-style: italic"
+              >Tip: Press Ctrl+Enter to execute</small
+            >
+          </div>
+        </div>
 
-        <h3>Slice Moves</h3>
-        <button onclick="moveM()">M</button>
-        <button onclick="moveE()">E</button>
-        <button onclick="moveS()">S</button>
-        <br />
-        <button onclick="prime(moveM)()">M'</button>
-        <button onclick="prime(moveE)()">E'</button>
-        <button onclick="prime(moveS)()">S'</button>
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            State
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <button onclick="solveCube()">Reset</button>
+            <button onclick="printRotations()">View Rotations</button>
+            <small style="color: #666; font-style: italic"
+              >(Check the output at developer console)</small
+            >
+          </div>
+        </div>
 
-        <h3>Wide Moves</h3>
-        <button onclick="moveRw()">Rw</button>
-        <button onclick="moveLw()">Lw</button>
-        <button onclick="moveUw()">Uw</button>
-        <button onclick="moveDw()">Dw</button>
-        <button onclick="moveFw()">Fw</button>
-        <button onclick="moveBw()">Bw</button>
-        <br />
-        <button onclick="prime(moveRw)()">Rw'</button>
-        <button onclick="prime(moveLw)()">Lw'</button>
-        <button onclick="prime(moveUw)()">Uw'</button>
-        <button onclick="prime(moveDw)()">Dw'</button>
-        <button onclick="prime(moveFw)()">Fw'</button>
-        <button onclick="prime(moveBw)()">Bw'</button>
-
-        <h3>Algorithm</h3>
-        <textarea
-          id="alg"
-          placeholder="Enter algorithm (ex: R U R' U')"
-          onkeydown="if(event.ctrlKey && event.key==='Enter') applyAlgorithm()"
-        ></textarea>
-        <button onclick="applyAlgorithm()">Execute</button>
-        <small style="color: #666; font-style: italic"
-          >Tip: Press Ctrl+Enter to execute</small
-        >
-
-        <h3>State</h3>
-        <button onclick="solveCube()">Reset</button>
-        <button onclick="printRotations()">View Rotations</button>
-        <small style="color: #666; font-style: italic"
-          >(Check the output at developer console)</small
-        >
-
-        <h3>Example Textures</h3>
-        <select id="exampleSelect" onchange="loadExample()">
-          <option value="">Select an example...</option>
-          <?php
-          $examplesDir = 'examples/';
-          if (is_dir($examplesDir)) {
-            $files = scandir($examplesDir);
-            foreach ($files as $file) {
-              if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
-                $name = pathinfo($file, PATHINFO_FILENAME);
-                $selected = ($file === '5-pochman_supercube.json') ? ' selected' : '';
-                echo "<option value='$file'$selected>$name</option>";
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            Example Textures
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <select id="exampleSelect" onchange="loadExample()">
+              <option value="">Select an example...</option>
+              <?php
+              $examplesDir = 'examples/';
+              if (is_dir($examplesDir)) {
+                $files = scandir($examplesDir);
+                foreach ($files as $file) {
+                  if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
+                    $name = pathinfo($file, PATHINFO_FILENAME);
+                    $selected = ($file === '5-pochman_supercube.json') ? ' selected' : '';
+                    echo "<option value='$file'$selected>$name</option>";
+                  }
+                }
               }
-            }
-          }
-          ?>
-        </select>
+              ?>
+            </select>
+          </div>
+        </div>
 
-        <h3>
-          Custom Textures
-          <a
-            href="#"
-            onclick="openInstructionsModal()"
-            style="font-size: 14px; margin-left: 10px"
-            >[Instructions]</a
-          >
-        </h3>
-        <textarea
-          id="customConfig"
-          placeholder='{"mode": "face_textures", "textures": {"U": {"background": "linear-gradient(45deg, red, yellow)"}}}'
-        ></textarea>
-        <button onclick="loadCustomConfig()">Apply Textures</button>
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            Custom Textures
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <a
+              href="#"
+              onclick="openInstructionsModal()"
+              style="font-size: 14px; margin-bottom: 10px; display: inline-block"
+              >[Instructions]</a
+            >
+            <textarea
+              id="customConfig"
+              placeholder='{"mode": "face_textures", "textures": {"U": {"background": "linear-gradient(45deg, red, yellow)"}}}'
+            ></textarea>
+            <button onclick="loadCustomConfig()">Apply Textures</button>
+          </div>
+        </div>
 
-        <h3>Visualization</h3>
-        <button id="cubenetBtn" onclick="setViewMode('cubenet')" disabled>
-          Cube Net
-        </button>
-        <button id="orthographicBtn" onclick="setViewMode('orthographic')">
-          3D Orthographic
-        </button>
-        <button id="perspectiveBtn" onclick="setViewMode('perspective')">
-          3D Perspective
-        </button>
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            Visualization
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <button id="cubenetBtn" onclick="setViewMode('cubenet')" disabled>
+              Cube Net
+            </button>
+            <button id="orthographicBtn" onclick="setViewMode('orthographic')">
+              3D Orthographic
+            </button>
+            <button id="perspectiveBtn" onclick="setViewMode('perspective')">
+              3D Perspective
+            </button>
+          </div>
+        </div>
       </div>
 
       <div id="right-panel">
@@ -1132,6 +1227,12 @@ include_once('marked.min.js');
       };
 
 
+
+      // Accordion functionality
+      function toggleAccordion(header) {
+        const accordion = header.parentElement;
+        accordion.classList.toggle('open');
+      }
 
       // Inicializar
       initCube();
