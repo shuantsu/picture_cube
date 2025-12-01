@@ -1,53 +1,46 @@
 {
-  "mode": "face_textures",
+  // Variables: Define reusable gradients
+  "vars": {
+    "U_grad": "radial-gradient(circle, #ffffff 50%, transparent 50%), conic-gradient(from -45deg at center, #0045ad 0deg 90deg, #c41e3a 90deg 180deg, #009b48 180deg 270deg, #ff5800 270deg 360deg)",
+    "L_grad": "radial-gradient(circle, #ff5800 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #009b48 90deg 180deg, #ffd500 180deg 270deg, #0045ad 270deg 360deg)",
+    "F_grad": "radial-gradient(circle, #009b48 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #c41e3a 90deg 180deg, #ffd500 180deg 270deg, #ff5800 270deg 360deg)",
+    "R_grad": "radial-gradient(circle, #c41e3a 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #0045ad 90deg 180deg, #ffd500 180deg 270deg, #009b48 270deg 360deg)",
+    "B_grad": "radial-gradient(circle, #0045ad 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #ff5800 90deg 180deg, #ffd500 180deg 270deg, #c41e3a 270deg 360deg)",
+    "D_grad": "radial-gradient(circle, #ffd500 50%, transparent 50%), conic-gradient(from -45deg at center, #009b48 0deg 90deg, #c41e3a 90deg 180deg, #0045ad 180deg 270deg, #ff5800 270deg 360deg)"
+  },
+  
+  // Textures: Compose from vars
   "textures": {
-    "U": { 
-      "backgroundImage": "radial-gradient(circle, #ffffff 50%, transparent 50%), conic-gradient(from -45deg at center, #0045ad 0deg 90deg, #c41e3a 90deg 180deg, #009b48 180deg 270deg, #ff5800 270deg 360deg)",
-      "backgroundSize": "300% 300%"
-    },
-    "U_center": {
-      "background": "radial-gradient(circle, #ffffff 50%, transparent 50%), conic-gradient(from -45deg at center, #0045ad 0deg 90deg, #c41e3a 90deg 180deg, #009b48 180deg 270deg, #ff5800 270deg 360deg)",
-      "backgroundSize": "100% 100%"
-    },
-    "L": { 
-      "backgroundImage": "radial-gradient(circle, #ff5800 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #009b48 90deg 180deg, #ffd500 180deg 270deg, #0045ad 270deg 360deg)",
-      "backgroundSize": "300% 300%"
-    },
-    "L_center": {
-      "background": "radial-gradient(circle, #ff5800 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #009b48 90deg 180deg, #ffd500 180deg 270deg, #0045ad 270deg 360deg)",
-      "backgroundSize": "100% 100%"
-    },
-    "F": { 
-      "backgroundImage": "radial-gradient(circle, #009b48 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #c41e3a 90deg 180deg, #ffd500 180deg 270deg, #ff5800 270deg 360deg)",
-      "backgroundSize": "300% 300%"
-    },
-    "F_center": {
-      "background": "radial-gradient(circle, #009b48 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #c41e3a 90deg 180deg, #ffd500 180deg 270deg, #ff5800 270deg 360deg)",
-      "backgroundSize": "100% 100%"
-    },
-    "R": { 
-      "backgroundImage": "radial-gradient(circle, #c41e3a 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #0045ad 90deg 180deg, #ffd500 180deg 270deg, #009b48 270deg 360deg)",
-      "backgroundSize": "300% 300%"
-    },
-    "R_center": {
-      "background": "radial-gradient(circle, #c41e3a 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #0045ad 90deg 180deg, #ffd500 180deg 270deg, #009b48 270deg 360deg)",
-      "backgroundSize": "100% 100%"
-    },
-    "B": { 
-      "backgroundImage": "radial-gradient(circle, #0045ad 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #ff5800 90deg 180deg, #ffd500 180deg 270deg, #c41e3a 270deg 360deg)",
-      "backgroundSize": "300% 300%"
-    },
-    "B_center": {
-      "background": "radial-gradient(circle, #0045ad 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #ff5800 90deg 180deg, #ffd500 180deg 270deg, #c41e3a 270deg 360deg)",
-      "backgroundSize": "100% 100%"
-    },
-    "D": { 
-      "backgroundImage": "radial-gradient(circle, #ffd500 50%, transparent 50%), conic-gradient(from -45deg at center, #009b48 0deg 90deg, #c41e3a 90deg 180deg, #0045ad 180deg 270deg, #ff5800 270deg 360deg)",
-      "backgroundSize": "300% 300%"
-    },
-    "D_center": {
-      "background": "radial-gradient(circle, #ffd500 50%, transparent 50%), conic-gradient(from -45deg at center, #009b48 0deg 90deg, #c41e3a 90deg 180deg, #0045ad 180deg 270deg, #ff5800 270deg 360deg)",
-      "backgroundSize": "100% 100%"
-    }
+    "U_sprite": {"backgroundImage": "$U_grad", "backgroundSize": "300% 300%"},
+    "U_full": {"background": "$U_grad", "backgroundSize": "100% 100%"},
+    "L_sprite": {"backgroundImage": "$L_grad", "backgroundSize": "300% 300%"},
+    "L_full": {"background": "$L_grad", "backgroundSize": "100% 100%"},
+    "F_sprite": {"backgroundImage": "$F_grad", "backgroundSize": "300% 300%"},
+    "F_full": {"background": "$F_grad", "backgroundSize": "100% 100%"},
+    "R_sprite": {"backgroundImage": "$R_grad", "backgroundSize": "300% 300%"},
+    "R_full": {"background": "$R_grad", "backgroundSize": "100% 100%"},
+    "B_sprite": {"backgroundImage": "$B_grad", "backgroundSize": "300% 300%"},
+    "B_full": {"background": "$B_grad", "backgroundSize": "100% 100%"},
+    "D_sprite": {"backgroundImage": "$D_grad", "backgroundSize": "300% 300%"},
+    "D_full": {"background": "$D_grad", "backgroundSize": "100% 100%"}
+  },
+  
+  // Cube: Assign textures to faces and stickers
+  "cube": {
+    // Faces
+    "U": "U_sprite",
+    "L": "L_sprite",
+    "F": "F_sprite",
+    "R": "R_sprite",
+    "B": "B_sprite",
+    "D": "D_sprite",
+    
+    // Centers
+    "U4": "U_full",
+    "L4": "L_full",
+    "F4": "F_full",
+    "R4": "R_full",
+    "B4": "B_full",
+    "D4": "D_full"
   }
 }

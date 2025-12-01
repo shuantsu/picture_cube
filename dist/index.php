@@ -445,7 +445,55 @@ if (file_exists('marked.min.js')) {
       window.addEventListener('orientationchange', setRealViewportHeight);
       setRealViewportHeight();
       
-      const defaultTexture = <?php echo json_encode(json_decode(file_get_contents('examples/5-pochman_supercube.json'), true)); ?>;
+      const defaultTexture = <?php 
+        function stripJsonComments($json) {
+          $result = '';
+          $inString = false;
+          $inComment = false;
+          $inBlockComment = false;
+          $len = strlen($json);
+          for ($i = 0; $i < $len; $i++) {
+            $char = $json[$i];
+            $next = ($i + 1 < $len) ? $json[$i + 1] : '';
+            if ($inBlockComment) {
+              if ($char === '*' && $next === '/') {
+                $inBlockComment = false;
+                $i++;
+              }
+              continue;
+            }
+            if ($inComment) {
+              if ($char === "\n") {
+                $inComment = false;
+                $result .= $char;
+              }
+              continue;
+            }
+            if ($char === '"' && ($i === 0 || $json[$i - 1] !== '\\')) {
+              $inString = !$inString;
+              $result .= $char;
+              continue;
+            }
+            if (!$inString) {
+              if ($char === '/' && $next === '/') {
+                $inComment = true;
+                $i++;
+                continue;
+              }
+              if ($char === '/' && $next === '*') {
+                $inBlockComment = true;
+                $i++;
+                continue;
+              }
+            }
+            $result .= $char;
+          }
+          return $result;
+        }
+        $json = file_get_contents('examples/5-pochman_supercube.json');
+        $json = stripJsonComments($json);
+        echo json_encode(json_decode($json, true)); 
+      ?>;
     </script>
   </head>
 
@@ -577,7 +625,9 @@ if (file_exists('marked.min.js')) {
                 foreach ($files as $file) {
                   if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
                     $name = pathinfo($file, PATHINFO_FILENAME);
-                    $content = json_decode(file_get_contents($examplesDir . $file), true);
+                    $json = file_get_contents($examplesDir . $file);
+                    $json = stripJsonComments($json);
+                    $content = json_decode($json, true);
                     $examples[$file] = $content;
                     $selected = ($file === '5-pochman_supercube.json') ? ' selected' : '';
                     echo "<option value='$file'$selected>$name</option>";
@@ -605,7 +655,7 @@ if (file_exists('marked.min.js')) {
             >
             <textarea
               id="customConfig"
-              placeholder='{"mode": "face_textures", "textures": {"U": {"background": "linear-gradient(45deg, red, yellow)"}}}'
+              placeholder='{"textures": {"red": "#c41e3a", "star": {"background": "url(\"star.svg\")", "backgroundSize": "80%"}}, "cube": {"U": "red", "U1": ["red", "star"]}}'
             ></textarea>
             <button onclick="loadCustomConfig()">Apply Textures</button>
           </div>
@@ -715,6 +765,10 @@ if (file_exists('marked.min.js')) {
       let textureMode = "standard";
       let faceTextures = {};
       let customStickers = {};
+      
+      // New unified system
+      let textureLibrary = {};
+      let cubeAssignments = {};
 
       let currentViewMode = "cubenet";
       let cubeRotation = { x: -25, y: -45 };
@@ -783,28 +837,80 @@ if (file_exists('marked.min.js')) {
         sticker.style.backgroundPosition = "";
         sticker.style.backgroundRepeat = "";
 
-        if (
-          textureMode === "face_textures" &&
-          stickerTextures[face] &&
-          stickerTextures[face][index]
-        ) {
-          const textureInfo = stickerTextures[face][index];
-          const originalFace = textureInfo.face;
-          const originalIndex = textureInfo.index;
+        if (textureMode === "layered") {
+          // LAYERED MODE: Build multiple background layers
+          const backgroundImages = [];
+          const backgroundSizes = [];
+          const backgroundPositions = [];
+          const backgroundRepeats = [];
+          
+          // First, check for custom sticker overlay
+          const customStyle = customStickers[stickerId];
+          if (customStyle && customStyle.background) {
+            backgroundImages.push(customStyle.background);
+            backgroundSizes.push(customStyle.backgroundSize || 'auto');
+            backgroundPositions.push(customStyle.backgroundPosition || 'center');
+            backgroundRepeats.push(customStyle.backgroundRepeat || 'no-repeat');
+          }
+          
+          // Then add face texture as base layer (whole face texture)
+          if (stickerTextures[face] && stickerTextures[face][index]) {
+            const textureInfo = stickerTextures[face][index];
+            const originalFace = textureInfo.face;
+            const originalIndex = textureInfo.index;
 
-          const texture = faceTextures[originalFace];
-          const centerTexture = faceTextures[originalFace + "_center"];
+            const texture = faceTextures[originalFace];
+            const centerTexture = faceTextures[originalFace + "_center"];
 
-          if (originalIndex === 4 && centerTexture) {
+            if (originalIndex === 4 && centerTexture) {
+              // Center-specific texture
+              if (centerTexture.background) {
+                // Apply center texture directly as background
+                sticker.style.background = centerTexture.background;
+                if (centerTexture.backgroundSize) sticker.style.backgroundSize = centerTexture.backgroundSize;
+                if (centerTexture.backgroundPosition) sticker.style.backgroundPosition = centerTexture.backgroundPosition;
+                if (centerTexture.backgroundRepeat) sticker.style.backgroundRepeat = centerTexture.backgroundRepeat;
+              }
+            } else if (texture) {
+              // Handle both backgroundImage (sprite) and background (whole face)
+              if (texture.backgroundImage) {
+                const row = Math.floor(originalIndex / 3);
+                const col = originalIndex % 3;
+                backgroundImages.push(texture.backgroundImage);
+                backgroundSizes.push(texture.backgroundSize || '300% 300%');
+                backgroundPositions.push(`${col * 50}% ${row * 50}%`);
+                backgroundRepeats.push(texture.backgroundRepeat || 'no-repeat');
+              } else if (texture.background) {
+                // Don't convert to backgroundImage - apply directly as background
+                sticker.style.background = texture.background;
+                if (texture.backgroundSize) sticker.style.backgroundSize = texture.backgroundSize;
+                if (texture.backgroundPosition) sticker.style.backgroundPosition = texture.backgroundPosition;
+                if (texture.backgroundRepeat) sticker.style.backgroundRepeat = texture.backgroundRepeat;
+              }
+            }
+          }
+          
+          // Apply all layers
+          if (backgroundImages.length > 0) {
+            sticker.style.backgroundImage = backgroundImages.join(', ');
+            sticker.style.backgroundSize = backgroundSizes.join(', ');
+            sticker.style.backgroundPosition = backgroundPositions.join(', ');
+            sticker.style.backgroundRepeat = backgroundRepeats.join(', ');
+          }
+        } else if (textureMode === "face_textures") {
+          const texture = faceTextures[face];
+          const centerTexture = faceTextures[face + "_center"];
+
+          if (index === 4 && centerTexture) {
             Object.assign(sticker.style, centerTexture);
           } else if (texture) {
             if (texture.backgroundImage) {
               // Standard backgroundImage handling
-              const row = Math.floor(originalIndex / 3);
-              const col = originalIndex % 3;
+              const row = Math.floor(index / 3);
+              const col = index % 3;
               sticker.style.backgroundImage = texture.backgroundImage;
               sticker.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
-              sticker.style.backgroundSize = "300% 300%";
+              sticker.style.backgroundSize = texture.backgroundSize || "300% 300%";
               sticker.style.backgroundRepeat = "no-repeat";
             } else {
               Object.assign(sticker.style, texture);
@@ -813,6 +919,8 @@ if (file_exists('marked.min.js')) {
         } else if (textureMode === "custom_indices") {
           const style = customStickers[stickerId];
           if (style) Object.assign(sticker.style, style);
+        } else if (textureMode === "unified") {
+          applyUnifiedTexture(sticker, face, index);
         } else {
           sticker.style.backgroundColor = "#888888";
         }
@@ -1526,24 +1634,95 @@ if (file_exists('marked.min.js')) {
         document.getElementById('loadingSpinner').style.display = 'block';
         
         try {
-          const config = JSON.parse(
-            document.getElementById("customConfig").value
-          );
-
-          if (config.mode === "face_textures") {
-            textureMode = "face_textures";
-            faceTextures = config.textures || {};
-            // Reinitialize textures if needed
-            if (!stickerTextures.U || stickerTextures.U.length === 0) {
-              faces.forEach((face, faceIndex) => {
-                stickerTextures[face] = Array(9)
-                  .fill(0)
-                  .map((_, i) => ({ face, index: i }));
-              });
+          let configText = document.getElementById("customConfig").value;
+          // Strip comments from JSON
+          function stripJsonComments(json) {
+            let result = '';
+            let inString = false;
+            let inComment = false;
+            let inBlockComment = false;
+            for (let i = 0; i < json.length; i++) {
+              const char = json[i];
+              const next = json[i + 1] || '';
+              if (inBlockComment) {
+                if (char === '*' && next === '/') {
+                  inBlockComment = false;
+                  i++;
+                }
+                continue;
+              }
+              if (inComment) {
+                if (char === '\n') {
+                  inComment = false;
+                  result += char;
+                }
+                continue;
+              }
+              if (char === '"' && (i === 0 || json[i - 1] !== '\\')) {
+                inString = !inString;
+                result += char;
+                continue;
+              }
+              if (!inString) {
+                if (char === '/' && next === '/') {
+                  inComment = true;
+                  i++;
+                  continue;
+                }
+                if (char === '/' && next === '*') {
+                  inBlockComment = true;
+                  i++;
+                  continue;
+                }
+              }
+              result += char;
             }
-          } else if (config.mode === "custom_indices") {
-            textureMode = "custom_indices";
-            customStickers = config.stickers || {};
+            return result;
+          }
+          configText = stripJsonComments(configText);
+          let finalConfig = JSON.parse(configText);
+          
+          // Handle new unified system
+          if (finalConfig.textures && finalConfig.cube && !finalConfig.mode) {
+            textureMode = "unified";
+            // Process vars for unified system
+            if (finalConfig.vars) {
+              finalConfig = replaceVarsInConfig(finalConfig);
+            }
+            loadUnifiedConfig(finalConfig);
+          }
+          // Legacy system support
+          else if (finalConfig.mode) {
+            // Process variables for legacy modes
+            if (finalConfig.vars) {
+              finalConfig = replaceVarsInConfig(finalConfig);
+            }
+
+            if (finalConfig.mode === "face_textures") {
+              textureMode = "face_textures";
+              faceTextures = finalConfig.textures || {};
+              if (!stickerTextures.U || stickerTextures.U.length === 0) {
+                faces.forEach((face, faceIndex) => {
+                  stickerTextures[face] = Array(9)
+                    .fill(0)
+                    .map((_, i) => ({ face, index: i }));
+                });
+              }
+            } else if (finalConfig.mode === "custom_indices") {
+              textureMode = "custom_indices";
+              customStickers = finalConfig.stickers || {};
+            } else if (finalConfig.mode === "layered") {
+              textureMode = "layered";
+              faceTextures = finalConfig.textures || {};
+              customStickers = finalConfig.stickers || {};
+              if (!stickerTextures.U || stickerTextures.U.length === 0) {
+                faces.forEach((face, faceIndex) => {
+                  stickerTextures[face] = Array(9)
+                    .fill(0)
+                    .map((_, i) => ({ face, index: i }));
+                });
+              }
+            }
           }
 
           // Check for background images and wait for them to load
@@ -1848,15 +2027,22 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       }
 
       const examples = <?php echo json_encode($examples); ?>;
+      const examplesRaw = <?php 
+        $rawExamples = [];
+        foreach ($examples as $file => $content) {
+          $rawExamples[$file] = file_get_contents($examplesDir . $file);
+        }
+        echo json_encode($rawExamples);
+      ?>;
 
       function loadExample() {
         const select = document.getElementById('exampleSelect');
         const filename = select.value;
         if (!filename) return;
         
-        const config = examples[filename];
-        if (config) {
-          document.getElementById('customConfig').value = JSON.stringify(config, null, 2);
+        const rawContent = examplesRaw[filename];
+        if (rawContent) {
+          document.getElementById('customConfig').value = rawContent;
           loadCustomConfig();
           saveSelectedTexture(filename);
         }
@@ -1929,8 +2115,11 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       if (savedTexture) {
         setTimeout(() => loadSelectedTexture(), 100);
       } else if (defaultTexture) {
-        textureMode = defaultTexture.mode;
-        if (defaultTexture.mode === "face_textures") {
+        if (defaultTexture.textures && defaultTexture.cube && !defaultTexture.mode) {
+          textureMode = "unified";
+          loadUnifiedConfig(defaultTexture);
+        } else if (defaultTexture.mode === "face_textures") {
+          textureMode = "face_textures";
           faceTextures = defaultTexture.textures || {};
           faces.forEach((face, faceIndex) => {
             stickerTextures[face] = Array(9)
@@ -1944,6 +2133,135 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       // Load saved view mode or default to perspective
       const savedViewMode = localStorage.getItem('viewMode') || 'perspective';
       setViewMode(savedViewMode);
+      
+      // Variable replacement function (shared between unified and legacy)
+      function replaceVarsInConfig(config) {
+        const replaceVars = (obj) => {
+          if (typeof obj === 'string' && obj.startsWith('$')) {
+            const varName = obj.substring(1);
+            return config.vars[varName] || obj;
+          } else if (Array.isArray(obj)) {
+            return obj.map(replaceVars);
+          } else if (obj && typeof obj === 'object') {
+            const result = {};
+            for (const [key, value] of Object.entries(obj)) {
+              if (key !== 'vars') {
+                result[key] = replaceVars(value);
+              }
+            }
+            return result;
+          }
+          return obj;
+        };
+        return replaceVars(config);
+      }
+      
+      // Unified texture system functions
+      function loadUnifiedConfig(config) {
+        textureLibrary = config.textures || {};
+        cubeAssignments = config.cube || {};
+        
+        // Initialize texture arrays if needed
+        if (!stickerTextures.U || stickerTextures.U.length === 0) {
+          faces.forEach((face) => {
+            stickerTextures[face] = Array(9).fill(0).map((_, i) => ({ face, index: i }));
+          });
+        }
+      }
+      
+      function applyUnifiedTexture(sticker, face, index) {
+        sticker.style.background = "";
+        sticker.style.backgroundImage = "";
+        sticker.style.backgroundSize = "";
+        sticker.style.backgroundPosition = "";
+        sticker.style.backgroundRepeat = "";
+        
+        const stickerId = cubeState[face][index];
+        const originalFace = faces[Math.floor(stickerId / 9)];
+        const originalIndex = stickerId % 9;
+        const originalKey = originalFace + originalIndex;
+        
+        const stickerAssignment = cubeAssignments[originalKey];
+        const faceAssignment = cubeAssignments[originalFace];
+        
+        if (Array.isArray(stickerAssignment)) {
+          const [baseTexture, overlayTexture] = stickerAssignment;
+          const base = resolveTexture(baseTexture);
+          if (base) applyTextureToElement(sticker, base, originalFace, originalIndex, true);
+          const overlay = resolveTexture(overlayTexture);
+          if (overlay && overlay.background) {
+            sticker.style.backgroundImage = overlay.background;
+            if (overlay.backgroundSize) sticker.style.backgroundSize = overlay.backgroundSize;
+            if (overlay.backgroundPosition) sticker.style.backgroundPosition = overlay.backgroundPosition;
+            if (overlay.backgroundRepeat) sticker.style.backgroundRepeat = overlay.backgroundRepeat;
+          }
+        } else if (stickerAssignment && faceAssignment) {
+          const base = resolveTexture(faceAssignment);
+          if (base) applyTextureToElement(sticker, base, originalFace, originalIndex, true);
+          const overlay = resolveTexture(stickerAssignment);
+          if (overlay && overlay.background) {
+            sticker.style.backgroundImage = overlay.background;
+            if (overlay.backgroundSize) sticker.style.backgroundSize = overlay.backgroundSize;
+            if (overlay.backgroundPosition) sticker.style.backgroundPosition = overlay.backgroundPosition;
+            if (overlay.backgroundRepeat) sticker.style.backgroundRepeat = overlay.backgroundRepeat;
+          }
+        } else if (stickerAssignment) {
+          const texture = resolveTexture(stickerAssignment);
+          if (texture) applyTextureToElement(sticker, texture, originalFace, originalIndex, false);
+        } else if (faceAssignment) {
+          const texture = resolveTexture(faceAssignment);
+          if (texture) applyTextureToElement(sticker, texture, originalFace, originalIndex, true);
+        }
+      }
+      
+      function applyTextureAssignment(sticker, assignment, face, index) {
+        if (Array.isArray(assignment)) {
+          // Two-layer system: ["base", "overlay"]
+          const [baseTexture, overlayTexture] = assignment;
+          
+          // Apply base texture
+          const base = resolveTexture(baseTexture);
+          if (base) applyTextureToElement(sticker, base, face, index);
+          
+          // Apply overlay as backgroundImage
+          const overlay = resolveTexture(overlayTexture);
+          if (overlay) {
+            if (typeof overlay === 'string') {
+              sticker.style.backgroundImage = overlay;
+            } else if (overlay.background) {
+              sticker.style.backgroundImage = overlay.background;
+              if (overlay.backgroundSize) sticker.style.backgroundSize = overlay.backgroundSize;
+              if (overlay.backgroundPosition) sticker.style.backgroundPosition = overlay.backgroundPosition;
+              if (overlay.backgroundRepeat) sticker.style.backgroundRepeat = overlay.backgroundRepeat;
+            }
+          }
+        } else {
+          // Single texture
+          const texture = resolveTexture(assignment);
+          if (texture) applyTextureToElement(sticker, texture, face, index);
+        }
+      }
+      
+      function resolveTexture(textureName) {
+        return textureLibrary[textureName] || textureName;
+      }
+      
+      function applyTextureToElement(sticker, texture, face, index, isSprite) {
+        if (typeof texture === 'string') {
+          sticker.style.background = texture;
+        } else if (texture && typeof texture === 'object') {
+          if (texture.backgroundImage && isSprite) {
+            const row = Math.floor(index / 3);
+            const col = index % 3;
+            sticker.style.backgroundImage = texture.backgroundImage;
+            sticker.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
+            sticker.style.backgroundSize = texture.backgroundSize || "300% 300%";
+            sticker.style.backgroundRepeat = "no-repeat";
+          } else {
+            Object.assign(sticker.style, texture);
+          }
+        }
+      }
     </script>
   </body>
 </html>
