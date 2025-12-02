@@ -1,0 +1,33 @@
+{
+  "vars":{
+   "url": "https://raw.githubusercontent.com/shuantsu/picture_cube_textures/refs/heads/master/MAZE_CUBE"
+  },
+  "textures": {
+    "BACK": {
+      "backgroundImage": "url('$url/BACK.png')"
+    },
+    "FRONT": {
+      "backgroundImage": "url('$url/FRONT.png')"
+    },
+    "LEFT": {
+      "backgroundImage": "url('$url/LEFT.png')"
+    },
+    "RIGHT": {
+      "backgroundImage": "url('$url/RIGHT.png')"
+    },
+    "DOWN": {
+      "backgroundImage": "url('$url/DOWN.png')"
+    },
+    "UP": {
+      "backgroundImage": "url('$url/UP.png')"
+    }
+  },
+  "cube": {
+    "B": "textures.BACK",
+    "F": "textures.FRONT",
+    "L": "textures.LEFT",
+    "D": "textures.DOWN",
+    "U": "textures.UP",
+    "R": "textures.RIGHT"
+  }
+}
