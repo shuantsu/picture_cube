@@ -1,0 +1,22 @@
+Git Commit Message Generator
+  Create a semantic commit message in English following these guidelines:
+  
+  - Use git diff HEAD to analyze the changes
+  - Format: emoji + type + colon + space + description
+  - Types: feat, fix, docs, refactor, style, perf, config, remove
+  - Emojis: ✨ feat, 🐛 fix, 📝 docs, ♻️ refactor, 🎨 style, ⚡ perf, 🔧 config, 🗑️ remove
+  - First line: max 72 chars
+  - If needed, add blank line then bullet list with details (use "- " prefix)
+  - Use present tense ("add" not "added")
+  - Be specific about what changed and why
+  - Only use emoji on the first line
+
+  - Must have a single space between emoji and commit type
+  - Provide me the commit in a code block
+  
+  Example:
+  ✨ feat: add map style persistence with localStorage
+  - Create utility to save/load map preferences across sessions
+  - Add compact style selector with flyout menu to fence modal
+  - Preserve polygon data when switching between map styles
+  - Implement click-outside handler to close style menu

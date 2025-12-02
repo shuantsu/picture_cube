@@ -28,19 +28,19 @@
   // Cube: Assign textures to faces and stickers
   "cube": {
     // Faces
-    "U": "U_sprite",
-    "L": "L_sprite",
-    "F": "F_sprite",
-    "R": "R_sprite",
-    "B": "B_sprite",
-    "D": "D_sprite",
+    "U": "textures.U_sprite",
+    "L": "textures.L_sprite",
+    "F": "textures.F_sprite",
+    "R": "textures.R_sprite",
+    "B": "textures.B_sprite",
+    "D": "textures.D_sprite",
     
     // Centers
-    "U4": "U_full",
-    "L4": "L_full",
-    "F4": "F_full",
-    "R4": "R_full",
-    "B4": "B_full",
-    "D4": "D_full"
+    "U4": "textures.U_full",
+    "L4": "textures.L_full",
+    "F4": "textures.F_full",
+    "R4": "textures.R_full",
+    "B4": "textures.B_full",
+    "D4": "textures.D_full"
   }
 }

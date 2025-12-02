@@ -1455,15 +1455,15 @@ if (file_exists('marked.min.js')) {
       }
       
       const moveE = () => {
-        prime(rotationZ)();
-        moveM();
         rotationZ();
+        moveM();
+        prime(rotationZ)();
       };
       
       const moveEPrime = () => {
-        rotationZ();
-        moveM();
         prime(rotationZ)();
+        moveM();
+        rotationZ();
       };
       
       const moveE2 = () => {
@@ -1473,15 +1473,15 @@ if (file_exists('marked.min.js')) {
       };
       
       const moveS = () => {
-        prime(rotationY)();
-        moveM();
         rotationY();
+        moveM();
+        prime(rotationY)();
       };
       
       const moveSPrime = () => {
-        rotationY();
-        moveM();
         prime(rotationY)();
+        moveM();
+        rotationY();
       };
       
       const moveS2 = () => {
@@ -2243,6 +2243,15 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       }
       
       function resolveTexture(textureName) {
+        if (typeof textureName === 'string') {
+          if (textureName.startsWith('textures.')) {
+            const name = textureName.slice(9);
+            return textureLibrary[name] || textureName;
+          }
+          if (textureName.startsWith('$')) {
+            return textureName;
+          }
+        }
         return textureLibrary[textureName] || textureName;
       }
       
