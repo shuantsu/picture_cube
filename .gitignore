@@ -71,9 +71,9 @@ vendor/
 composer.lock
 
 # Build outputs
-dist/
 build/
 out/
+git-message.txt
 
 # ==================== FTP & DEPLOYMENT ====================
 # FTP configuration

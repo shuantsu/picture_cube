@@ -2137,9 +2137,11 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       // Variable replacement function (shared between unified and legacy)
       function replaceVarsInConfig(config) {
         const replaceVars = (obj) => {
-          if (typeof obj === 'string' && obj.startsWith('$')) {
-            const varName = obj.substring(1);
-            return config.vars[varName] || obj;
+          if (typeof obj === 'string') {
+            // Replace variables embedded in strings (e.g., "url('$url/image.png')")
+            return obj.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, varName) => {
+              return config.vars[varName] !== undefined ? config.vars[varName] : match;
+            });
           } else if (Array.isArray(obj)) {
             return obj.map(replaceVars);
           } else if (obj && typeof obj === 'object') {
