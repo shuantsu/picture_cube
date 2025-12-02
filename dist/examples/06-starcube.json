@@ -19,11 +19,11 @@
     "B": "$white",
     "D": "$white",
 
-    "U1": "textures.star",
-    "L1": "textures.star",
-    "D1": "textures.star",
-    "F3": "textures.star",
-    "R7": "textures.star",
-    "B3": "textures.star"
+    "U1": ["textures.star"],
+    "L1": ["textures.star"],
+    "D1": ["textures.star"],
+    "F3": ["textures.star"],
+    "R7": ["textures.star"],
+    "B3": ["textures.star"]
   }
 }

@@ -1,5 +1,4 @@
 {
-  // Variables: Define reusable images and styles
   "vars": {
     "U_img": "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iY29uaWNHcmFkIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2M0MWUzYSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjI1JSIgc3RvcC1jb2xvcj0iIzAwOWI0OCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjUwJSIgc3RvcC1jb2xvcj0iI2ZmNTgwMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9Ijc1JSIgc3RvcC1jb2xvcj0iIzAwNDVhZCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNjNDFlM2EiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxnIHRyYW5zZm9ybT0icm90YXRlKDAgNzUgNzUpIj4KICAgIDxwYXRoIGQ9Ik0gNzUgNzUgTCAxNTAgMCBMIDE1MCAxNTAgWiIgZmlsbD0iI2M0MWUzYSIvPgogICAgPHBhdGggZD0iTSA3NSA3NSBMIDE1MCAxNTAgTCAwIDE1MCBaIiBmaWxsPSIjMDA5YjQ4Ii8+CiAgICA8cGF0aCBkPSJNIDc1IDc1IEwgMCAxNTAgTCAwIDAgWiIgZmlsbD0iI2ZmNTgwMCIvPgogICAgPHBhdGggZD0iTSA3NSA3NSBMIDAgMCBMIDE1MCAwIFoiIGZpbGw9IiMwMDQ1YWQiLz4KICA8L2c+CiAgPHJlY3QgeD0iMjUiIHk9IjI1IiB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI2ZmZmZmZiIvPgo8L3N2Zz4=')",
     "L_img": "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyB0cmFuc2Zvcm09InJvdGF0ZSgwIDc1IDc1KSI+CiAgICA8cGF0aCBkPSJNIDc1IDc1IEwgMTUwIDAgTCAxNTAgMTUwIFoiIGZpbGw9IiMwMDliNDgiLz4KICAgIDxwYXRoIGQ9Ik0gNzUgNzUgTCAxNTAgMTUwIEwgMCAxNTAgWiIgZmlsbD0iI2ZmZDUwMCIvPgogICAgPHBhdGggZD0iTSA3NSA3NSBMIDAgMTUwIEwgMCAwIFoiIGZpbGw9IiMwMDQ1YWQiLz4KICAgIDxwYXRoIGQ9Ik0gNzUgNzUgTCAwIDAgTCAxNTAgMCBaIiBmaWxsPSIjZmZmZmZmIi8+CiAgPC9nPgogIDxyZWN0IHg9IjI1IiB5PSIyNSIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNmZjU4MDAiLz4KPC9zdmc+')",
@@ -8,39 +7,80 @@
     "B_img": "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyB0cmFuc2Zvcm09InJvdGF0ZSgwIDc1IDc1KSI+CiAgICA8cGF0aCBkPSJNIDc1IDc1IEwgMTUwIDAgTCAxNTAgMTUwIFoiIGZpbGw9IiNmZjU4MDAiLz4KICAgIDxwYXRoIGQ9Ik0gNzUgNzUgTCAxNTAgMTUwIEwgMCAxNTAgWiIgZmlsbD0iI2ZmZDUwMCIvPgogICAgPHBhdGggZD0iTSA3NSA3NSBMIDAgMTUwIEwgMCAwIFoiIGZpbGw9IiNjNDFlM2EiLz4KICAgIDxwYXRoIGQ9Ik0gNzUgNzUgTCAwIDAgTCAxNTAgMCBaIiBmaWxsPSIjZmZmZmZmIi8+CiAgPC9nPgogIDxyZWN0IHg9IjI1IiB5PSIyNSIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMwMDQ1YWQiLz4KPC9zdmc+')",
     "D_img": "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyB0cmFuc2Zvcm09InJvdGF0ZSgwIDc1IDc1KSI+CiAgICA8cGF0aCBkPSJNIDc1IDc1IEwgMTUwIDAgTCAxNTAgMTUwIFoiIGZpbGw9IiNjNDFlM2EiLz4KICAgIDxwYXRoIGQ9Ik0gNzUgNzUgTCAxNTAgMTUwIEwgMCAxNTAgWiIgZmlsbD0iIzAwNDVhZCIvPgogICAgPHBhdGggZD0iTSA3NSA3NSBMIDAgMTUwIEwgMCAwIFoiIGZpbGw9IiNmZjU4MDAiLz4KICAgIDxwYXRoIGQ9Ik0gNzUgNzUgTCAwIDAgTCAxNTAgMCBaIiBmaWxsPSIjMDA5YjQ4Ii8+CiAgPC9nPgogIDxyZWN0IHg9IjI1IiB5PSIyNSIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiNmZmQ1MDAiLz4KPC9zdmc+')"
   },
-  
-  // Textures: Compose from vars
   "textures": {
-    "U_sprite": {"backgroundImage": "$U_img"},
-    "U_full": {"background": "$U_img", "backgroundSize": "cover"},
-    "L_sprite": {"backgroundImage": "$L_img"},
-    "L_full": {"background": "$L_img", "backgroundSize": "cover"},
-    "F_sprite": {"backgroundImage": "$F_img"},
-    "F_full": {"background": "$F_img", "backgroundSize": "cover"},
-    "R_sprite": {"backgroundImage": "$R_img"},
-    "R_full": {"background": "$R_img", "backgroundSize": "cover"},
-    "B_sprite": {"backgroundImage": "$B_img"},
-    "B_full": {"background": "$B_img", "backgroundSize": "cover"},
-    "D_sprite": {"backgroundImage": "$D_img"},
-    "D_full": {"background": "$D_img", "backgroundSize": "cover"}
+    "U_spritesheet_sprite": {
+      "backgroundImage": "$U_img",
+      "backgroundSize": "300% 300%"
+    },
+    "U_spritesheet_spread": {
+      "backgroundImage": "$U_img",
+      "backgroundSize": "cover"
+    },
+    "L_spritesheet_sprite": {
+      "backgroundImage": "$L_img",
+      "backgroundSize": "300% 300%"
+    },
+    "L_spritesheet_spread": {
+      "backgroundImage": "$L_img",
+      "backgroundSize": "cover"
+    },
+    "F_spritesheet_sprite": {
+      "backgroundImage": "$F_img",
+      "backgroundSize": "300% 300%"
+    },
+    "F_spritesheet_spread": {
+      "backgroundImage": "$F_img",
+      "backgroundSize": "cover"
+    },
+    "R_spritesheet_sprite": {
+      "backgroundImage": "$R_img",
+      "backgroundSize": "300% 300%"
+    },
+    "R_spritesheet_spread": {
+      "backgroundImage": "$R_img",
+      "backgroundSize": "cover"
+    },
+    "B_spritesheet_sprite": {
+      "backgroundImage": "$B_img",
+      "backgroundSize": "300% 300%"
+    },
+    "B_spritesheet_spread": {
+      "backgroundImage": "$B_img",
+      "backgroundSize": "cover"
+    },
+    "D_spritesheet_sprite": {
+      "backgroundImage": "$D_img",
+      "backgroundSize": "300% 300%"
+    },
+    "D_spritesheet_spread": {
+      "backgroundImage": "$D_img",
+      "backgroundSize": "cover"
+    }
   },
-  
-  // Cube: Assign textures to faces and stickers
   "cube": {
-    // Faces
-    "U": "textures.U_sprite",
-    "L": "textures.L_sprite",
-    "F": "textures.F_sprite",
-    "R": "textures.R_sprite",
-    "B": "textures.B_sprite",
-    "D": "textures.D_sprite",
-    
-    // Centers
-    "U4": "textures.U_full",
-    "L4": "textures.L_full",
-    "F4": "textures.F_full",
-    "R4": "textures.R_full",
-    "B4": "textures.B_full",
-    "D4": "textures.D_full"
+    "U": "textures.U_spritesheet_sprite",
+    "L": "textures.L_spritesheet_sprite",
+    "F": "textures.F_spritesheet_sprite",
+    "R": "textures.R_spritesheet_sprite",
+    "B": "textures.B_spritesheet_sprite",
+    "D": "textures.D_spritesheet_sprite",
+    "U4": [
+      "textures.U_spritesheet_spread"
+    ],
+    "F4": [
+      "textures.F_spritesheet_spread"
+    ],
+    "R4": [
+      "textures.R_spritesheet_spread"
+    ],
+    "B4": [
+      "textures.B_spritesheet_spread"
+    ],
+    "L4": [
+      "textures.L_spritesheet_spread"
+    ],
+    "D4": [
+      "textures.D_spritesheet_spread"
+    ]
   }
 }

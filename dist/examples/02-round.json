@@ -1,0 +1,30 @@
+{
+  "textures": {
+    "U": {
+      "background": "radial-gradient(#ffffff 90%, black 95%)"
+    },
+    "L": {
+      "background": "radial-gradient(#ff5800 90%, black 95%)"
+    },
+    "F": {
+      "background": "radial-gradient(#009b48 90%, black 95%)"
+    },
+    "R": {
+      "background": "radial-gradient(#c41e3a 90%, black 95%)"
+    },
+    "B": {
+      "background": "radial-gradient(#0045ad 90%, black 95%)"
+    },
+    "D": {
+      "background": "radial-gradient(#ffd500 90%, black 95%)"
+    }
+  },
+  "cube": {
+    "U": "textures.U",
+    "L": "textures.L",
+    "F": "textures.F",
+    "R": "textures.R",
+    "B": "textures.B",
+    "D": "textures.D"
+  }
+}

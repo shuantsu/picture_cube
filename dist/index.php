@@ -284,6 +284,13 @@
         box-sizing: border-box;
         resize: vertical;
       }
+
+      #customConfig {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        tab-size: 2;
+        font-family: 'Courier New', monospace;
+      }
       /* Modal styles */
       .modal {
         display: none;
@@ -410,6 +417,30 @@
         display: block;
       }
 
+      .texture-editor-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 6px;
+        cursor: pointer;
+        width: calc(100% - 10px);
+        margin: 10px 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .texture-editor-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      }
+
+      .texture-editor-btn:active {
+        transform: translateY(0);
+      }
+
       .toast {
         position: fixed;
         top: 20px;
@@ -490,7 +521,7 @@ if (file_exists('marked.min.js')) {
           }
           return $result;
         }
-        $json = file_get_contents('examples/5-pochman_supercube.json');
+        $json = file_get_contents('examples/05-pochman_supercube.json');
         $json = stripJsonComments($json);
         echo json_encode(json_decode($json, true)); 
       ?>;
@@ -503,6 +534,11 @@ if (file_exists('marked.min.js')) {
     <div id="container">
       <div id="controls">
         <div class="spacer"></div>
+        <a href="editor/" target="_blank">
+          <button class="texture-editor-btn">
+            🎨 Textures Editor (experimental)
+          </button>
+        </a>
         <div class="accordion open">
           <button class="accordion-header" onclick="toggleAccordion(this)">
             Moveset
@@ -629,7 +665,7 @@ if (file_exists('marked.min.js')) {
                     $json = stripJsonComments($json);
                     $content = json_decode($json, true);
                     $examples[$file] = $content;
-                    $selected = ($file === '5-pochman_supercube.json') ? ' selected' : '';
+                    $selected = ($file === '05-pochman_supercube.json') ? ' selected' : '';
                     echo "<option value='$file'$selected>$name</option>";
                   }
                 }
@@ -1005,11 +1041,44 @@ if (file_exists('marked.min.js')) {
         rotateX(${cubeRotation.x}deg)
         rotateY(${cubeRotation.y}deg)
       `;
+        saveViewState();
       }
 
       function update2DZoom() {
         const cubeNet = document.getElementById("cube-net");
         cubeNet.style.transform = `translate(calc(-50% + ${panOffset.x}px), calc(-50% + ${panOffset.y}px)) scale(${zoom2D})`;
+        saveViewState();
+      }
+
+      function saveViewState() {
+        localStorage.setItem('cubeViewState', JSON.stringify({
+          cubeRotation,
+          zoom2D,
+          panOffset,
+          cubeSize
+        }));
+      }
+
+      function loadViewState() {
+        try {
+          const saved = localStorage.getItem('cubeViewState');
+          if (saved) {
+            const state = JSON.parse(saved);
+            cubeRotation = state.cubeRotation || cubeRotation;
+            zoom2D = state.zoom2D || zoom2D;
+            panOffset = state.panOffset || panOffset;
+            cubeSize = state.cubeSize || cubeSize;
+            
+            if (currentViewMode === 'cubenet') {
+              update2DZoom();
+            } else {
+              document.documentElement.style.setProperty('--cube-size', `${cubeSize}px`);
+              const fontSize = Math.max(8, Math.min(32, (cubeSize / 300) * 16));
+              document.documentElement.style.setProperty('--font-size-3d', `${fontSize}px`);
+              updateCubeRotation();
+            }
+          }
+        } catch (e) {}
       }
 
       function handleMouseDown(e) {
@@ -1068,6 +1137,7 @@ if (file_exists('marked.min.js')) {
             "--font-size-3d",
             `${fontSize}px`
           );
+          saveViewState();
         }
       }
 
@@ -1983,13 +2053,15 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       }
 
       function loadSidebarState() {
-        const saved = localStorage.getItem('sidebarOpen');
-        if (saved === 'true') {
-          const controls = document.getElementById("controls");
-          const container = document.getElementById("container");
-          controls.classList.add('open');
-          container.classList.add('controls-open');
-        }
+        try {
+          const saved = localStorage.getItem('sidebarOpen');
+          if (saved === 'true') {
+            const controls = document.getElementById("controls");
+            const container = document.getElementById("container");
+            controls.classList.add('open');
+            container.classList.add('controls-open');
+          }
+        } catch (e) {}
       }
       
 
@@ -2053,11 +2125,15 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       }
 
       function loadSelectedTexture() {
-        const saved = localStorage.getItem('selectedTexture');
-        if (saved) {
-          const select = document.getElementById('exampleSelect');
-          select.value = saved;
-          loadExample();
+        try {
+          const saved = localStorage.getItem('selectedTexture');
+          if (saved) {
+            const select = document.getElementById('exampleSelect');
+            select.value = saved;
+            loadExample();
+          }
+        } catch (e) {
+          loadPochmannDefault();
         }
       }
 
@@ -2091,17 +2167,44 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       }
 
       function loadAccordionStates() {
-        const saved = localStorage.getItem('accordionStates');
-        if (saved) {
-          const states = JSON.parse(saved);
-          const accordions = document.querySelectorAll('.accordion');
-          accordions.forEach((accordion, index) => {
-            if (states[index]) {
-              accordion.classList.add('open');
-            } else {
-              accordion.classList.remove('open');
-            }
-          });
+        try {
+          const saved = localStorage.getItem('accordionStates');
+          if (saved) {
+            const states = JSON.parse(saved);
+            const accordions = document.querySelectorAll('.accordion');
+            accordions.forEach((accordion, index) => {
+              if (states[index]) {
+                accordion.classList.add('open');
+              } else {
+                accordion.classList.remove('open');
+              }
+            });
+          }
+        } catch (e) {}
+      }
+
+      // Send ESC to parent if in iframe
+      if (window.parent !== window) {
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            window.parent.postMessage('closePreview', '*');
+          }
+        });
+      }
+
+      function loadPochmannDefault() {
+        if (defaultTexture) {
+          if (defaultTexture.textures && defaultTexture.cube && !defaultTexture.mode) {
+            textureMode = "unified";
+            loadUnifiedConfig(defaultTexture);
+          } else if (defaultTexture.mode === "face_textures") {
+            textureMode = "face_textures";
+            faceTextures = defaultTexture.textures || {};
+            faces.forEach((face) => {
+              stickerTextures[face] = Array(9).fill(0).map((_, i) => ({ face, index: i }));
+            });
+          }
+          updateDOM();
         }
       }
 
@@ -2110,29 +2213,42 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       loadAccordionStates();
       loadSidebarState();
       
-      // Load saved texture or default
-      const savedTexture = localStorage.getItem('selectedTexture');
-      if (savedTexture) {
-        setTimeout(() => loadSelectedTexture(), 100);
-      } else if (defaultTexture) {
-        if (defaultTexture.textures && defaultTexture.cube && !defaultTexture.mode) {
-          textureMode = "unified";
-          loadUnifiedConfig(defaultTexture);
-        } else if (defaultTexture.mode === "face_textures") {
-          textureMode = "face_textures";
-          faceTextures = defaultTexture.textures || {};
-          faces.forEach((face, faceIndex) => {
-            stickerTextures[face] = Array(9)
-              .fill(0)
-              .map((_, i) => ({ face, index: i }));
-          });
+      // Check for config in URL hash first
+      if (window.location.hash) {
+        try {
+          const base64 = window.location.hash.slice(1);
+          const json = atob(base64);
+          const config = JSON.parse(json);
+          document.getElementById('customConfig').value = json;
+          document.getElementById('exampleSelect').selectedIndex = 0;
+          loadCustomConfig();
+          loadViewState();
+        } catch (e) {
+          console.error('Failed to load config from URL:', e);
+          loadPochmannDefault();
         }
-        updateDOM();
+      }
+      // Load saved texture or default
+      else {
+        try {
+          const savedTexture = localStorage.getItem('selectedTexture');
+          if (savedTexture) {
+            setTimeout(() => loadSelectedTexture(), 100);
+          } else {
+            loadPochmannDefault();
+          }
+        } catch (e) {
+          loadPochmannDefault();
+        }
       }
       
       // Load saved view mode or default to perspective
-      const savedViewMode = localStorage.getItem('viewMode') || 'perspective';
-      setViewMode(savedViewMode);
+      try {
+        const savedViewMode = localStorage.getItem('viewMode') || 'perspective';
+        setViewMode(savedViewMode);
+      } catch (e) {
+        setViewMode('perspective');
+      }
       
       // Variable replacement function (shared between unified and legacy)
       function replaceVarsInConfig(config) {
@@ -2186,33 +2302,102 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         const stickerAssignment = cubeAssignments[originalKey];
         const faceAssignment = cubeAssignments[originalFace];
         
+        // Array notation = inheritance (sprite-based with overlay)
         if (Array.isArray(stickerAssignment)) {
-          const [baseTexture, overlayTexture] = stickerAssignment;
-          const base = resolveTexture(baseTexture);
-          if (base) applyTextureToElement(sticker, base, originalFace, originalIndex, true);
-          const overlay = resolveTexture(overlayTexture);
-          if (overlay && overlay.background) {
-            sticker.style.backgroundImage = overlay.background;
-            if (overlay.backgroundSize) sticker.style.backgroundSize = overlay.backgroundSize;
-            if (overlay.backgroundPosition) sticker.style.backgroundPosition = overlay.backgroundPosition;
-            if (overlay.backgroundRepeat) sticker.style.backgroundRepeat = overlay.backgroundRepeat;
+          const layers = [];
+          const sizes = [];
+          const positions = [];
+          const repeats = [];
+          
+          // Determine base and overlay based on array length
+          let baseTexture, overlayTexture;
+          
+          if (stickerAssignment.length === 1) {
+            // ["overlay"] - use face assignment as base, array item as overlay
+            overlayTexture = stickerAssignment[0];
+            if (faceAssignment) {
+              baseTexture = faceAssignment;
+            }
+          } else if (stickerAssignment.length >= 2) {
+            // ["base", "overlay"] - first item is base (replaces face), second is overlay
+            baseTexture = stickerAssignment[0];
+            overlayTexture = stickerAssignment[1];
           }
-        } else if (stickerAssignment && faceAssignment) {
-          const base = resolveTexture(faceAssignment);
-          if (base) applyTextureToElement(sticker, base, originalFace, originalIndex, true);
-          const overlay = resolveTexture(stickerAssignment);
-          if (overlay && overlay.background) {
-            sticker.style.backgroundImage = overlay.background;
-            if (overlay.backgroundSize) sticker.style.backgroundSize = overlay.backgroundSize;
-            if (overlay.backgroundPosition) sticker.style.backgroundPosition = overlay.backgroundPosition;
-            if (overlay.backgroundRepeat) sticker.style.backgroundRepeat = overlay.backgroundRepeat;
+          
+          // Add overlay first (top layer)
+          if (overlayTexture) {
+            const overlay = resolveTexture(overlayTexture);
+            if (overlay) {
+              if (typeof overlay === 'string') {
+                layers.push(overlay);
+                sizes.push('auto');
+                positions.push('center');
+                repeats.push('no-repeat');
+              } else if (overlay && typeof overlay === 'object') {
+                if (overlay.background) {
+                  layers.push(overlay.background);
+                } else if (overlay.backgroundImage) {
+                  layers.push(overlay.backgroundImage);
+                }
+                sizes.push(overlay.backgroundSize || 'auto');
+                positions.push(overlay.backgroundPosition || 'center');
+                repeats.push(overlay.backgroundRepeat || 'no-repeat');
+              }
+            }
           }
-        } else if (stickerAssignment) {
+          
+          // Add base texture (bottom layer)
+          if (baseTexture) {
+            const base = resolveTexture(baseTexture);
+            if (base) {
+              if (typeof base === 'string') {
+                // Convert solid colors to linear-gradient for backgroundImage compatibility
+                if (base.startsWith('#') || base.startsWith('rgb') || (!base.includes('(') && !base.includes('url'))) {
+                  layers.push(`linear-gradient(${base}, ${base})`);
+                } else {
+                  layers.push(base);
+                }
+                sizes.push('auto');
+                positions.push('center');
+                repeats.push('no-repeat');
+              } else if (base && typeof base === 'object') {
+                if (base.backgroundImage) {
+                  // Sprite texture
+                  const row = Math.floor(originalIndex / 3);
+                  const col = originalIndex % 3;
+                  layers.push(base.backgroundImage);
+                  sizes.push(base.backgroundSize || '300% 300%');
+                  positions.push(`${col * 50}% ${row * 50}%`);
+                  repeats.push('no-repeat');
+                } else if (base.background) {
+                  layers.push(base.background);
+                  sizes.push(base.backgroundSize || 'auto');
+                  positions.push(base.backgroundPosition || 'center');
+                  repeats.push(base.backgroundRepeat || 'no-repeat');
+                }
+              }
+            }
+          }
+          
+          // Apply all layers
+          if (layers.length > 0) {
+            sticker.style.backgroundImage = layers.join(', ');
+            sticker.style.backgroundSize = sizes.join(', ');
+            sticker.style.backgroundPosition = positions.join(', ');
+            sticker.style.backgroundRepeat = repeats.join(', ');
+          }
+        }
+        // Individual sticker string = replacement (overrides face texture)
+        else if (stickerAssignment) {
           const texture = resolveTexture(stickerAssignment);
           if (texture) applyTextureToElement(sticker, texture, originalFace, originalIndex, false);
-        } else if (faceAssignment) {
+        }
+        // Face assignment = apply to all stickers on that face
+        else if (faceAssignment) {
           const texture = resolveTexture(faceAssignment);
-          if (texture) applyTextureToElement(sticker, texture, originalFace, originalIndex, true);
+          // Check if face texture is a sprite (has backgroundImage)
+          const isSprite = texture && typeof texture === 'object' && texture.backgroundImage;
+          if (texture) applyTextureToElement(sticker, texture, originalFace, originalIndex, isSprite);
         }
       }
       
@@ -2246,13 +2431,23 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       
       function resolveTexture(textureName) {
         if (typeof textureName === 'string') {
+          // "textures." prefix - lookup in library
           if (textureName.startsWith('textures.')) {
             const name = textureName.slice(9);
-            return textureLibrary[name] || textureName;
+            return textureLibrary[name] || null;
           }
+          // Variable reference - already resolved by replaceVarsInConfig
           if (textureName.startsWith('$')) {
+            return textureName; // Should already be resolved, but pass through
+          }
+          // Inline values: colors, gradients, urls
+          if (textureName.startsWith('#') || textureName.startsWith('rgb') || 
+              textureName.includes('gradient') || textureName.includes('url(')) {
             return textureName;
           }
+          // Invalid - not a valid reference format
+          console.warn(`Invalid texture reference: "${textureName}". Use "textures.name", "$var", or inline value.`);
+          return null;
         }
         return textureLibrary[textureName] || textureName;
       }
@@ -2260,7 +2455,7 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       function applyTextureToElement(sticker, texture, face, index, isSprite) {
         if (typeof texture === 'string') {
           sticker.style.background = texture;
-        } else if (texture && typeof texture === 'object') {
+        } else if (texture && typeof texture === 'object' && !Array.isArray(texture)) {
           if (texture.backgroundImage && isSprite) {
             const row = Math.floor(index / 3);
             const col = index % 3;
@@ -2268,8 +2463,16 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
             sticker.style.backgroundPosition = `${col * 50}% ${row * 50}%`;
             sticker.style.backgroundSize = texture.backgroundSize || "300% 300%";
             sticker.style.backgroundRepeat = "no-repeat";
+          } else if (texture.backgroundImage) {
+            sticker.style.backgroundImage = texture.backgroundImage;
+            if (texture.backgroundSize) sticker.style.backgroundSize = texture.backgroundSize;
+            if (texture.backgroundPosition) sticker.style.backgroundPosition = texture.backgroundPosition;
+            if (texture.backgroundRepeat) sticker.style.backgroundRepeat = texture.backgroundRepeat;
           } else {
-            Object.assign(sticker.style, texture);
+            // Apply each property individually to avoid array issues
+            for (const [key, value] of Object.entries(texture)) {
+              sticker.style[key] = value;
+            }
           }
         }
       }

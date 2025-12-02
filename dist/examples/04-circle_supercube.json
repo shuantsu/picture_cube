@@ -1,5 +1,4 @@
 {
-  // Variables: Define reusable gradients
   "vars": {
     "U_grad": "radial-gradient(circle, #ffffff 50%, transparent 50%), conic-gradient(from -45deg at center, #0045ad 0deg 90deg, #c41e3a 90deg 180deg, #009b48 180deg 270deg, #ff5800 270deg 360deg)",
     "L_grad": "radial-gradient(circle, #ff5800 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #009b48 90deg 180deg, #ffd500 180deg 270deg, #0045ad 270deg 360deg)",
@@ -8,39 +7,68 @@
     "B_grad": "radial-gradient(circle, #0045ad 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #ff5800 90deg 180deg, #ffd500 180deg 270deg, #c41e3a 270deg 360deg)",
     "D_grad": "radial-gradient(circle, #ffd500 50%, transparent 50%), conic-gradient(from -45deg at center, #009b48 0deg 90deg, #c41e3a 90deg 180deg, #0045ad 180deg 270deg, #ff5800 270deg 360deg)"
   },
-  
-  // Textures: Compose from vars
   "textures": {
-    "U_sprite": {"backgroundImage": "$U_grad", "backgroundSize": "300% 300%"},
-    "U_full": {"background": "$U_grad", "backgroundSize": "100% 100%"},
-    "L_sprite": {"backgroundImage": "$L_grad", "backgroundSize": "300% 300%"},
-    "L_full": {"background": "$L_grad", "backgroundSize": "100% 100%"},
-    "F_sprite": {"backgroundImage": "$F_grad", "backgroundSize": "300% 300%"},
-    "F_full": {"background": "$F_grad", "backgroundSize": "100% 100%"},
-    "R_sprite": {"backgroundImage": "$R_grad", "backgroundSize": "300% 300%"},
-    "R_full": {"background": "$R_grad", "backgroundSize": "100% 100%"},
-    "B_sprite": {"backgroundImage": "$B_grad", "backgroundSize": "300% 300%"},
-    "B_full": {"background": "$B_grad", "backgroundSize": "100% 100%"},
-    "D_sprite": {"backgroundImage": "$D_grad", "backgroundSize": "300% 300%"},
-    "D_full": {"background": "$D_grad", "backgroundSize": "100% 100%"}
+    "U_sprite": {
+      "backgroundImage": "$U_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "U_spread": {
+      "backgroundImage": "$U_grad",
+      "backgroundSize": "cover"
+    },
+    "L_sprite": {
+      "backgroundImage": "$L_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "L_spread": {
+      "backgroundImage": "$L_grad",
+      "backgroundSize": "cover"
+    },
+    "F_sprite": {
+      "backgroundImage": "$F_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "F_spread": {
+      "backgroundImage": "$F_grad",
+      "backgroundSize": "cover"
+    },
+    "R_sprite": {
+      "backgroundImage": "$R_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "R_spread": {
+      "backgroundImage": "$R_grad",
+      "backgroundSize": "cover"
+    },
+    "B_sprite": {
+      "backgroundImage": "$B_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "B_spread": {
+      "backgroundImage": "$B_grad",
+      "backgroundSize": "cover"
+    },
+    "D_sprite": {
+      "backgroundImage": "$D_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "D_spread": {
+      "backgroundImage": "$D_grad",
+      "backgroundSize": "cover"
+    }
   },
-  
-  // Cube: Assign textures to faces and stickers
   "cube": {
-    // Faces
     "U": "textures.U_sprite",
     "L": "textures.L_sprite",
     "F": "textures.F_sprite",
     "R": "textures.R_sprite",
     "B": "textures.B_sprite",
     "D": "textures.D_sprite",
-    
-    // Centers
-    "U4": "textures.U_full",
-    "L4": "textures.L_full",
-    "F4": "textures.F_full",
-    "R4": "textures.R_full",
-    "B4": "textures.B_full",
-    "D4": "textures.D_full"
+    "U4": "textures.U_spread",
+    "L4": "textures.L_spread",
+    "F4": "textures.F_spread",
+    "R4": "textures.R_spread",
+    "B4": "textures.B_spread",
+    "D4": "textures.D_spread"
   }
 }

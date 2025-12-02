@@ -1,0 +1,19 @@
+{
+  "vars": {
+    "red": "#c41e3a",
+    "white": "#ffffff",
+    "blue": "#0045ad",
+    "orange": "#ff5800",
+    "yellow": "#ffd500",
+    "green": "#009b48"
+  },
+  "textures": {},
+  "cube": {
+    "R": "$red",
+    "U": "$white",
+    "B": "$blue",
+    "L": "$orange",
+    "D": "$yellow",
+    "F": "$green"
+  }
+}
