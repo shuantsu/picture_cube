@@ -505,6 +505,13 @@ if (file_exists('marked.min.js')) {
 ?>
     </script>
     <script>
+<?php
+if (file_exists('bluetooth.js')) {
+    echo file_get_contents('bluetooth.js');
+}
+?>
+    </script>
+    <script>
       function setRealViewportHeight() {
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         document.documentElement.style.setProperty('--real-vh', `${vh}px`);
@@ -663,6 +670,19 @@ if (file_exists('marked.min.js')) {
             <small style="color: #666; font-style: italic"
               >Tip: Press Ctrl+Enter to execute</small
             >
+          </div>
+        </div>
+
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            Bluetooth Cube
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <button id="bluetoothBtn" onclick="toggleBluetooth()">Connect GiiKER Cube</button>
+            <div id="bluetoothStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
           </div>
         </div>
 
@@ -2363,6 +2383,51 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
           }
         }
       });
+      
+      // Bluetooth cube integration
+      let bluetoothCube = null;
+      
+      function toggleBluetooth() {
+        const btn = document.getElementById('bluetoothBtn');
+        const status = document.getElementById('bluetoothStatus');
+        
+        if (!bluetoothCube || !bluetoothCube.isConnected()) {
+          btn.textContent = 'Connecting...';
+          btn.disabled = true;
+          
+          bluetoothCube = new BluetoothCube();
+          
+          bluetoothCube.onMove((notation) => {
+            applyMove(notation);
+          });
+          
+          bluetoothCube.onConnect(() => {
+            btn.textContent = 'Disconnect';
+            btn.disabled = false;
+            status.textContent = 'Connected to GiiKER cube';
+            status.style.color = '#4caf50';
+          });
+          
+          bluetoothCube.onDisconnect(() => {
+            btn.textContent = 'Connect GiiKER Cube';
+            btn.disabled = false;
+            status.textContent = 'Disconnected';
+            status.style.color = '#666';
+          });
+          
+          bluetoothCube.onError((error) => {
+            btn.textContent = 'Connect GiiKER Cube';
+            btn.disabled = false;
+            status.textContent = 'Connection failed';
+            status.style.color = '#f44336';
+            console.error('Bluetooth error:', error);
+          });
+          
+          bluetoothCube.connect();
+        } else {
+          bluetoothCube.disconnect();
+        }
+      }
       
       // Inicializar
       initCube();
