@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Picture Cube -- Beta</title>
     <style>
+      body.crisp-mode {
+        .sticker, .sticker-3d {
+          image-rendering: pixelated!important;
+        }
+      }
       body {
         margin: 0;
         font-family: Arial, sans-serif;
@@ -713,6 +718,9 @@ if (file_exists('marked.min.js')) {
             </button>
             <button id="perspectiveBtn" onclick="setViewMode('perspective')">
               3D Perspective
+            </button><br /><br />
+            <button id="perspectiveBtn" onclick="window.toggleCrispMode()">
+              Toggle Crisp mode
             </button>
           </div>
         </div>
@@ -2476,6 +2484,18 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
           }
         }
       }
+      window.setCrispMode = () => {
+        document.body.classList.add('crisp-mode');
+        console.log('ok')
+      };
+      window.unsetCrispMode = () => {
+        document.body.classList.remove('crisp-mode');
+        console.log('ok')
+      };
+      window.toggleCrispMode = () => {
+        document.body.classList.toggle('crisp-mode');
+        console.log('ok')
+      };
     </script>
   </body>
 </html>
