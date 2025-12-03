@@ -90,7 +90,35 @@
           margin-top: calc(var(--real-vh, 100vh) * 0.5);
           height: calc(var(--real-vh, 100vh) * 0.5);
         }
+
+
       }
+
+      #editor-iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: none;
+        z-index: 1;
+      }
+
+      .editor-open #cube-3d-wrapper {
+        position: absolute !important;
+        bottom: 0px !important;
+        top: auto !important;
+        left: auto !important;
+        right: 300px !important;
+        width: 1000px !important;
+        height: 1000px !important;
+        border: 2px solid black !important;
+        background: #1e1e1e !important;
+        transform: scale(.4);
+        transform-origin: right bottom;
+      }
+
       
       @media (max-width: 480px) {
         #controls {
@@ -148,6 +176,7 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+        z-index: 2;
       }
 
       .face-2d {
@@ -200,11 +229,15 @@
 
       /* 3D View */
       #cube-3d-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
         perspective: none;
         height: 100%;
         width: 100%;
         overflow: hidden;
         display: none;
+        z-index: 2;
       }
 
       #cube-3d-wrapper.perspective {
@@ -539,11 +572,9 @@ if (file_exists('marked.min.js')) {
     <div id="container">
       <div id="controls">
         <div class="spacer"></div>
-        <a href="editor/" target="_blank">
-          <button class="texture-editor-btn">
-            🎨 Textures Editor (experimental)
-          </button>
-        </a>
+        <button class="texture-editor-btn" onclick="toggleEditor()">
+          🎨 Textures Editor (experimental)
+        </button>
         <div class="accordion open">
           <button class="accordion-header" onclick="toggleAccordion(this)">
             Moveset
@@ -727,6 +758,7 @@ if (file_exists('marked.min.js')) {
       </div>
 
       <div id="right-panel">
+        <iframe id="editor-iframe" src="editor/"></iframe>
         <div class="loading-spinner" id="loadingSpinner"></div>
         <div id="cube-net">
           <div class="face-2d face-U" data-face="U"></div>
@@ -786,6 +818,8 @@ if (file_exists('marked.min.js')) {
     </div>
 
     <div id="toast" class="toast"></div>
+
+
 
     <script>
       // ==================== FUNDAMENTOS: X, Y, U + applyStickerRotation ====================
@@ -1040,6 +1074,9 @@ if (file_exists('marked.min.js')) {
           );
           updateCubeRotation();
         }
+        if (editorOpen) {
+          document.getElementById("cubenetBtn").disabled = true;
+        }
       }
 
       function updateCubeRotation() {
@@ -1090,12 +1127,12 @@ if (file_exists('marked.min.js')) {
       }
 
       function handleMouseDown(e) {
-        if (e.target.id !== "right-panel" && !e.target.closest("#right-panel"))
-          return;
-        isDragging = true;
-        previousMousePosition = { x: e.clientX, y: e.clientY };
-        document.getElementById("right-panel").style.cursor = "grabbing";
-        e.preventDefault();
+        if (e.target.id === "right-panel" || e.target.closest("#right-panel")) {
+          isDragging = true;
+          previousMousePosition = { x: e.clientX, y: e.clientY };
+          document.getElementById("right-panel").style.cursor = "grabbing";
+          e.preventDefault();
+        }
       }
 
       function handleMouseMove(e) {
@@ -2216,10 +2253,119 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         }
       }
 
+      // Editor functions
+      let editorOpen = false;
+      
+      function toggleEditor() {
+        const rightPanel = document.getElementById('right-panel');
+        const cubeNet = document.getElementById('cube-net');
+        const cube3DWrapper = document.getElementById('cube-3d-wrapper');
+        const editorIframe = document.getElementById('editor-iframe');
+        
+        editorOpen = !editorOpen;
+        
+        if (editorOpen) {
+          
+          document.getElementById("cubenetBtn").disabled = true;
+          setViewMode('perspective');
+
+          // Show editor
+          editorIframe.style.display = 'block';
+          rightPanel.classList.add('editor-open');
+          
+          // Trigger auto-import after iframe is shown
+          setTimeout(() => {
+            try {
+              editorIframe.contentWindow.triggerImportFromParent();
+            } catch (e) {
+              console.log('Could not trigger auto-import:', e);
+            }
+          }, 200);
+          // Send current config to editor
+          const currentConfig = document.getElementById('customConfig').value;
+          if (currentConfig.trim()) {
+            const sendConfig = () => {
+              try {
+                const config = JSON.parse(currentConfig);
+                editorIframe.contentWindow.postMessage({
+                  type: 'IMPORT_CONFIG',
+                  payload: { config }
+                }, '*');
+              } catch (e) {
+                console.log('Config not valid JSON, sending as string');
+                editorIframe.contentWindow.postMessage({
+                  type: 'IMPORT_CONFIG',
+                  payload: { config: currentConfig }
+                }, '*');
+              }
+            };
+            // Try immediately if already loaded, otherwise wait
+            setTimeout(sendConfig, 500);
+            editorIframe.onload = sendConfig;
+          }
+          // Keep cube elements visible based on current view mode
+          if (currentViewMode === 'cubenet') {
+            cubeNet.style.display = 'grid';
+            cube3DWrapper.style.display = 'none';
+          } else {
+            cubeNet.style.display = 'none';
+            cube3DWrapper.style.display = 'block';
+          }
+        } else {
+          // Hide editor
+          document.getElementById("cubenetBtn").disabled = false;
+          editorIframe.style.display = 'none';
+          rightPanel.classList.remove('editor-open');
+          // Keep cube elements visible based on current view mode
+          if (currentViewMode === 'cubenet') {
+            cubeNet.style.display = 'grid';
+            cube3DWrapper.style.display = 'none';
+          } else {
+            cubeNet.style.display = 'none';
+            cube3DWrapper.style.display = 'block';
+          }
+        }
+      }
+      
+
+
+      
+      // Listen for editor updates
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'UPDATE_CONFIG' && event.data.payload.config) {
+          const config = event.data.payload.config;
+          document.getElementById('customConfig').value = JSON.stringify(config, null, 2);
+          loadCustomConfig();
+        }
+        if (event.data && event.data.type === 'CLOSE_EDITOR') {
+          toggleEditor();
+        }
+        if (event.data && event.data.type === 'EDITOR_READY') {
+          // Editor is ready, send current config
+          const currentConfig = document.getElementById('customConfig').value;
+          if (currentConfig.trim()) {
+            try {
+              const config = JSON.parse(currentConfig);
+              event.source.postMessage({
+                type: 'IMPORT_CONFIG',
+                payload: { config }
+              }, '*');
+            } catch (e) {
+              event.source.postMessage({
+                type: 'IMPORT_CONFIG',
+                payload: { config: currentConfig }
+              }, '*');
+            }
+          }
+        }
+      });
+      
       // Inicializar
       initCube();
       loadAccordionStates();
       loadSidebarState();
+      
+
       
       // Check for config in URL hash first
       if (window.location.hash) {

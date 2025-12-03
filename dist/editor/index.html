@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Texture Creator - Picture Cube</title>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
     <style>
         * { 
             box-sizing: border-box;
@@ -339,27 +337,7 @@
             transform: translateY(0);
         }
 
-        #share-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
 
-        #share-btn:hover {
-            background: #218838;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.5);
-        }
 
         #confirm-modal {
             display: none;
@@ -392,34 +370,7 @@
             margin-top: 20px;
         }
 
-        #preview-modal {
-            padding: 0 !important;
-            margin: 0 !important;
-            overflow: hidden;
-            background: rgb(81, 105, 99) !important;
-        }
 
-        .ui-dialog {
-            overflow: hidden !important;
-        }
-
-        .ui-dialog .ui-dialog-content {
-            padding: 0 !important;
-            overflow: hidden !important;
-        }
-
-        .ui-resizable-e, .ui-resizable-w {
-            width: 8px !important;
-        }
-
-        .ui-resizable-n, .ui-resizable-s {
-            height: 8px !important;
-        }
-
-        .ui-resizable-se, .ui-resizable-sw, .ui-resizable-ne, .ui-resizable-nw {
-            width: 12px !important;
-            height: 12px !important;
-        }
 
     </style>
 </head>
@@ -523,13 +474,13 @@ $varName" rows="2"></textarea>
             <button onclick="resetAll()" style="background: #dc3545;">Reset</button>
             <button onclick="exportConfig()" class="secondary">Export JSON</button>
             <button onclick="openImportModal()" class="secondary">Import JSON</button>
+            <button onclick="triggerImportFromParent()" style="background: #28a745;">Reload JSON</button>
         </div>
 
         <div class="control-section">
             <h3>Generated JSON</h3>
             <textarea id="json-output" readonly spellcheck="false"></textarea>
-            <button onclick="copyToClipboard()">Copy JSON</button>
-            <button onclick="testInCube()">Test in Cube</button>
+            <button onclick="testInCube()" id="test-cube-btn">Test in Cube</button>
             <label style="display: block; margin-top: 10px;">
                 <input type="checkbox" id="auto-refresh" onchange="toggleAutoRefresh(this.checked)">
                 Auto Refresh
@@ -539,7 +490,8 @@ $varName" rows="2"></textarea>
 
     <div id="toast"></div>
 
-    <button id="share-btn" onclick="shareDesign()">Share Design</button>
+
+    <button id="close-editor-btn" onclick="closeEditorModal()" style="display:none; position:fixed; bottom:20px; right:20px; background:#dc3545; z-index:1000;">✕ Close Editor</button>
 
     <div id="confirm-modal">
         <div class="modal-content">
@@ -575,9 +527,7 @@ $varName" rows="2"></textarea>
         </div>
     </div>
 
-    <div id="preview-modal" title="Cube Preview" style="display: none;">
-        <iframe id="preview-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
-    </div>
+
 
     <script>
         // Toast notification
@@ -1298,9 +1248,6 @@ $varName" rows="2"></textarea>
         function toggleAutoRefresh(enabled) {
             autoRefreshEnabled = enabled;
             localStorage.setItem('autoRefresh', enabled);
-            if (enabled && $('#preview-modal').dialog('instance') && $('#preview-modal').dialog('isOpen')) {
-                testInCube();
-            }
         }
 
         // Syntax highlight JSON
@@ -1328,14 +1275,7 @@ $varName" rows="2"></textarea>
             const config = generateConfig();
             document.getElementById('json-output').value = JSON.stringify(config, null, 2);
             
-            if (autoRefreshEnabled) {
-                clearTimeout(autoRefreshTimeout);
-                autoRefreshTimeout = setTimeout(() => {
-                    if ($('#preview-modal').dialog('instance') && $('#preview-modal').dialog('isOpen')) {
-                        testInCube();
-                    }
-                }, 350);
-            }
+
         }
 
 
@@ -1648,102 +1588,29 @@ $varName" rows="2"></textarea>
             });
         }
 
-        // Copy JSON to clipboard
-        function copyToClipboard() {
-            const textarea = document.getElementById('json-output');
-            textarea.select();
-            document.execCommand('copy');
-            showToast('JSON copied to clipboard!');
-        }
 
-        // Share design
-        function shareDesign() {
-            const config = generateConfig();
-            const base64 = btoa(JSON.stringify(config));
-            const pathParts = window.location.pathname.split('/');
-            pathParts.pop(); // Remove texture-creator.html
-            pathParts.pop(); // Remove TEMP
-            const basePath = pathParts.join('/') || '/';
-            const fullUrl = `${window.location.origin}${basePath}/index.php#${base64}`;
-            
-            navigator.clipboard.writeText(fullUrl).then(() => {
-                showToast('Share link copied to clipboard!');
-            }).catch(() => {
-                const textarea = document.createElement('textarea');
-                textarea.value = fullUrl;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showToast('Share link copied to clipboard!');
-            });
-        }
+
+
 
         // Test in main cube application
         function testInCube() {
+            if (window.parent !== window) {
+                showToast('Already testing in cube!');
+                return;
+            }
             const config = generateConfig();
-            const base64 = btoa(JSON.stringify(config));
-            const url = `../index.php#${base64}`;
-            const iframe = document.getElementById('preview-iframe');
+            const jsonString = JSON.stringify(config);
+            const url = `../index.php`;
             
-            if ($('#preview-modal').dialog('instance') && $('#preview-modal').dialog('isOpen')) {
-                iframe.src = '';
-                setTimeout(() => iframe.src = url, 10);
-            } else {
-                const saved = localStorage.getItem('previewDialogState');
-                let dialogOptions = {
-                    width: Math.min(1200, window.innerWidth * 0.9),
-                    height: Math.min(800, window.innerHeight * 0.9),
-                    modal: false,
-                    resizable: true,
-                    draggable: true,
-                    close: function() {
-                        iframe.src = '';
-                    },
-                    resizeStop: function(event, ui) {
-                        saveDialogState();
-                    },
-                    dragStop: function(event, ui) {
-                        saveDialogState();
-                    }
-                };
-                
-                if (saved) {
-                    try {
-                        const state = JSON.parse(saved);
-                        dialogOptions.width = state.width;
-                        dialogOptions.height = state.height;
-                        dialogOptions.position = { my: 'left top', at: `left+${state.left} top+${state.top}`, of: window };
-                    } catch (e) {}
-                }
-                
-                iframe.src = url;
-                $('#preview-modal').dialog(dialogOptions);
+            // Open in new window/tab instead of modal
+            const newWindow = window.open(url, '_blank');
+            if (newWindow) {
+                // Send config to the new window when it loads
+                newWindow.addEventListener('load', () => {
+                    newWindow.postMessage({ type: 'LOAD_CONFIG', config: config }, '*');
+                });
             }
         }
-
-        function saveDialogState() {
-            const dialog = $('#preview-modal').dialog('widget');
-            const position = dialog.position();
-            const state = {
-                width: dialog.width(),
-                height: dialog.height(),
-                left: position.left,
-                top: position.top
-            };
-            localStorage.setItem('previewDialogState', JSON.stringify(state));
-        }
-
-        function closePreviewModal() {
-            $('#preview-modal').dialog('close');
-        }
-
-        // Listen for ESC from iframe
-        window.addEventListener('message', (e) => {
-            if (e.data === 'closePreview') {
-                closePreviewModal();
-            }
-        })
 
         // Zoom and pan
         function updateTransform() {
@@ -1776,17 +1643,98 @@ $varName" rows="2"></textarea>
             isPanning = false;
         });
 
+        // ==================== PARENT COMMUNICATION ====================
+
+        let isEmbedded = false;
+        let parentWindow = null;
+
+        function setupParentCommunication() {
+            isEmbedded = window.self !== window.top;
+            if (isEmbedded) {
+                parentWindow = window.parent;
+                
+                window.addEventListener('message', (event) => {
+                    const { type, payload } = event.data;
+                    
+                    if (type === 'INIT_EDITOR' && payload.config) {
+                        loadConfig(payload.config);
+                    }
+                });
+                
+                parentWindow.postMessage({ type: 'EDITOR_READY' }, '*');
+                
+                // Trigger auto-import immediately when embedded
+                setTimeout(() => {
+                    try {
+                        const parentConfig = window.parent.document.getElementById('customConfig').value;
+                        if (parentConfig.trim()) {
+                            document.getElementById('import-json').value = parentConfig;
+                            loadFromJSON();
+                        }
+                    } catch (e) {
+                        console.log('Could not access parent config:', e);
+                    }
+                }, 100);
+            }
+        }
+
+        function sendToParent(type, payload) {
+            if (window.parent !== window) {
+                window.parent.postMessage({ type, payload }, '*');
+            }
+        }
+
+        // Override updateJSON to send updates to parent
+        const originalUpdateJSON = updateJSON;
+        updateJSON = function() {
+            originalUpdateJSON();
+            const config = generateConfig();
+            sendToParent('UPDATE_CONFIG', { config });
+        };
+
+        function closeEditorModal() {
+            sendToParent('CLOSE_EDITOR', {});
+        }
+
+        // Expose method to parent window
+        window.triggerImportFromParent = function() {
+            try {
+                const parentConfig = window.parent.document.getElementById('customConfig').value;
+                if (parentConfig.trim()) {
+                    document.getElementById('import-json').value = parentConfig;
+                    loadFromJSON();
+                }
+            } catch (e) {
+                console.log('Could not access parent config:', e);
+            }
+        };
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            setupParentCommunication();
             initCube();
             initDefaultTextures();
             setMode('face');
             updateVarsList();
             
+            if (window.parent !== window) {
+                document.getElementById('close-editor-btn').style.display = 'block';
+                document.getElementById('test-cube-btn').style.display = 'none';
+            } else {
+                document.getElementById('close-editor-btn').style.display = 'none';
+            }
+            
             const savedAutoRefresh = localStorage.getItem('autoRefresh');
             if (savedAutoRefresh === 'true') {
                 document.getElementById('auto-refresh').checked = true;
                 autoRefreshEnabled = true;
+            }
+        });
+        
+        // Also run on window load for iframe reloads
+        window.addEventListener('load', () => {
+            if (window.parent !== window) {
+                setupParentCommunication();
             }
         });
     </script>
