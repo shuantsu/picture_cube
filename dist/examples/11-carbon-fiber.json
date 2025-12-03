@@ -6,7 +6,7 @@
     "yellow": "#f0ff1a",
     "orangered": "#eb5200",
     "crimson": "#ff0a3b",
-    "__definition": "stackable: moyu_logo,star,carbon"
+    "__definition": "stackable: carbon"
   },
   "textures": {
     "carbon_spread": {

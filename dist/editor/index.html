@@ -1194,8 +1194,10 @@ $varName" rows="2"></textarea>
                 config.vars = allVars;
             }
             
-            // Add stackable definition
-            const stackableTextures = Object.keys(textureStackable).filter(name => textureStackable[name]);
+            // Add stackable definition - only include textures that exist in current cube
+            const usedTextures = Object.keys(textureUsage);
+            const stackableTextures = Object.keys(textureStackable)
+                .filter(name => textureStackable[name] && usedTextures.includes(name));
             if (stackableTextures.length > 0) {
                 config.vars = config.vars || {};
                 config.vars.__definition = `stackable: ${stackableTextures.join(',')}`;

@@ -1,7 +1,6 @@
 {
   "vars": {
-    "url": "https://raw.githubusercontent.com/shuantsu/picture_cube_textures/refs/heads/master/MAZE_NEW",
-    "__definition": "stackable: moyu_logo"
+    "url": "https://raw.githubusercontent.com/shuantsu/picture_cube_textures/refs/heads/master/MAZE_NEW"
   },
   "textures": {
     "corner1_spread": {

@@ -2,7 +2,7 @@
   "vars": {
     "red": "#c41e3a",
     "white": "#eee",
-    "__definition": "stackable: moyu_logo,star"
+    "__definition": "stackable: star"
   },
   "textures": {
     "star_spread": {
