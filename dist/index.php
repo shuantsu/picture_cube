@@ -2163,6 +2163,10 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
           loadCustomConfig();
           saveSelectedTexture(filename);
         }
+        if (editorOpen) {
+          const editorIframe = document.getElementById('editor-iframe');
+          editorIframe.contentWindow.triggerImportFromParent();
+        }
       }
 
       function saveSelectedTexture(filename) {

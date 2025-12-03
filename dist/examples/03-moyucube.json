@@ -1,37 +1,111 @@
 {
+  "vars": {
+    "red": "#c41e3a",
+    "white": "#ffffff",
+    "blue": "#0045ad",
+    "orange": "#ff5800",
+    "yellow": "#ffd500",
+    "green": "#009b48",
+    "moyu_logo": "https://filipeteixeira.com.br/rubiksim/moyulogo.svg",
+    "__definition": "stackable: moyu_logo"
+  },
   "textures": {
-    "U": {
-      "background": "radial-gradient(#ffffff 90%, black 95%)"
+    "red_sprite": {
+      "backgroundImage": "radial-gradient($red 90%, black 95%)",
+      "backgroundSize": "300% 300%"
     },
-    "L": {
-      "background": "radial-gradient(#ff5800 90%, black 95%)"
+    "red_spread": {
+      "backgroundImage": "radial-gradient($red 90%, black 95%)",
+      "backgroundSize": "cover"
     },
-    "F": {
-      "background": "radial-gradient(#009b48 90%, black 95%)"
+    "yellow_spread": {
+      "backgroundImage": "radial-gradient($yellow 90%, black 95%)",
+      "backgroundSize": "cover"
     },
-    "R": {
-      "background": "radial-gradient(#c41e3a 90%, black 95%)"
+    "green_spread": {
+      "backgroundImage": "radial-gradient($green 90%, black 95%)",
+      "backgroundSize": "cover"
     },
-    "B": {
-      "background": "radial-gradient(#0045ad 90%, black 95%)"
+    "blue_spread": {
+      "backgroundImage": "radial-gradient($blue 90%, black 95%)",
+      "backgroundSize": "cover"
     },
-    "D": {
-      "background": "radial-gradient(#ffd500 90%, black 95%)"
+    "orange_spread": {
+      "backgroundImage": "radial-gradient($orange 90%, black 95%)",
+      "backgroundSize": "cover"
     },
-    "U_center": {
-      "background": "url('https://filipeteixeira.com.br/rubiksim/moyulogo.svg'), radial-gradient(#ffffff 90%, black 95%)",
-      "backgroundSize": "100%",
-      "backgroundRepeat": "no-repeat",
-      "backgroundPosition": "center"
+    "white_sprite": {
+      "backgroundImage": "radial-gradient($white 90%, black 95%)",
+      "backgroundSize": "300% 300%"
+    },
+    "white_spread": {
+      "backgroundImage": "radial-gradient($white 90%, black 95%)",
+      "backgroundSize": "cover"
+    },
+    "moyu_logo_spread": {
+      "backgroundImage": "url($moyu_logo)",
+      "backgroundSize": "cover"
     }
   },
   "cube": {
-    "U": "textures.U",
-    "L": "textures.L",
-    "F": "textures.F",
-    "R": "textures.R",
-    "B": "textures.B",
-    "D": "textures.D",
-    "U4": "textures.U_center"
+    "R": "textures.red_sprite",
+    "D0": "textures.yellow_spread",
+    "D1": "textures.yellow_spread",
+    "D2": "textures.yellow_spread",
+    "D5": "textures.yellow_spread",
+    "D4": "textures.yellow_spread",
+    "D3": "textures.yellow_spread",
+    "D6": "textures.yellow_spread",
+    "D7": "textures.yellow_spread",
+    "D8": "textures.yellow_spread",
+    "R0": "textures.red_spread",
+    "R1": "textures.red_spread",
+    "R2": "textures.red_spread",
+    "R5": "textures.red_spread",
+    "R4": "textures.red_spread",
+    "R3": "textures.red_spread",
+    "R6": "textures.red_spread",
+    "R7": "textures.red_spread",
+    "R8": "textures.red_spread",
+    "F0": "textures.green_spread",
+    "F3": "textures.green_spread",
+    "F6": "textures.green_spread",
+    "F7": "textures.green_spread",
+    "F4": "textures.green_spread",
+    "F1": "textures.green_spread",
+    "F2": "textures.green_spread",
+    "F5": "textures.green_spread",
+    "F8": "textures.green_spread",
+    "B0": "textures.blue_spread",
+    "B1": "textures.blue_spread",
+    "B2": "textures.blue_spread",
+    "B4": "textures.blue_spread",
+    "B5": "textures.blue_spread",
+    "B8": "textures.blue_spread",
+    "B6": "textures.blue_spread",
+    "B3": "textures.blue_spread",
+    "B7": "textures.blue_spread",
+    "L2": "textures.orange_spread",
+    "L5": "textures.orange_spread",
+    "L8": "textures.orange_spread",
+    "L7": "textures.orange_spread",
+    "L4": "textures.orange_spread",
+    "L1": "textures.orange_spread",
+    "L0": "textures.orange_spread",
+    "L3": "textures.orange_spread",
+    "L6": "textures.orange_spread",
+    "U": "textures.white_sprite",
+    "U0": "textures.white_spread",
+    "U4": [
+      "textures.white_spread",
+      "textures.moyu_logo_spread"
+    ],
+    "U3": "textures.white_spread",
+    "U1": "textures.white_spread",
+    "U2": "textures.white_spread",
+    "U5": "textures.white_spread",
+    "U8": "textures.white_spread",
+    "U7": "textures.white_spread",
+    "U6": "textures.white_spread"
   }
 }

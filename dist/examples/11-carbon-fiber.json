@@ -5,7 +5,8 @@
     "white": "#ffffff",
     "yellow": "#f0ff1a",
     "orangered": "#eb5200",
-    "crimson": "#ff0a3b"
+    "crimson": "#ff0a3b",
+    "__definition": "stackable: moyu_logo,star,Texture1"
   },
   "textures": {
     "Texture1_spread": {
@@ -50,18 +51,6 @@
     "F2": [
       "textures.Texture1_spread"
     ],
-    "F1": [
-      "textures.Texture1_spread"
-    ],
-    "F0": [
-      "textures.Texture1_spread"
-    ],
-    "F3": [
-      "textures.Texture1_spread"
-    ],
-    "F4": [
-      "textures.Texture1_spread"
-    ],
     "F5": [
       "textures.Texture1_spread"
     ],
@@ -74,19 +63,46 @@
     "F6": [
       "textures.Texture1_spread"
     ],
+    "F3": [
+      "textures.Texture1_spread"
+    ],
+    "F4": [
+      "textures.Texture1_spread"
+    ],
+    "F1": [
+      "textures.Texture1_spread"
+    ],
+    "F0": [
+      "textures.Texture1_spread"
+    ],
+    "L2": [
+      "textures.Texture1_spread"
+    ],
+    "L1": [
+      "textures.Texture1_spread"
+    ],
+    "L0": [
+      "textures.Texture1_spread"
+    ],
+    "L3": [
+      "textures.Texture1_spread"
+    ],
+    "L6": [
+      "textures.Texture1_spread"
+    ],
+    "L7": [
+      "textures.Texture1_spread"
+    ],
+    "L8": [
+      "textures.Texture1_spread"
+    ],
+    "L5": [
+      "textures.Texture1_spread"
+    ],
+    "L4": [
+      "textures.Texture1_spread"
+    ],
     "D0": [
-      "textures.Texture1_spread"
-    ],
-    "D3": [
-      "textures.Texture1_spread"
-    ],
-    "D6": [
-      "textures.Texture1_spread"
-    ],
-    "D7": [
-      "textures.Texture1_spread"
-    ],
-    "D4": [
       "textures.Texture1_spread"
     ],
     "D1": [
@@ -98,34 +114,46 @@
     "D5": [
       "textures.Texture1_spread"
     ],
+    "D4": [
+      "textures.Texture1_spread"
+    ],
+    "D3": [
+      "textures.Texture1_spread"
+    ],
+    "D6": [
+      "textures.Texture1_spread"
+    ],
+    "D7": [
+      "textures.Texture1_spread"
+    ],
     "D8": [
       "textures.Texture1_spread"
     ],
     "R6": [
       "textures.Texture1_spread"
     ],
-    "R3": [
+    "R4": [
       "textures.Texture1_spread"
     ],
-    "R0": [
-      "textures.Texture1_spread"
-    ],
-    "R1": [
-      "textures.Texture1_spread"
-    ],
-    "R7": [
+    "R2": [
       "textures.Texture1_spread"
     ],
     "R8": [
       "textures.Texture1_spread"
     ],
+    "R7": [
+      "textures.Texture1_spread"
+    ],
     "R5": [
       "textures.Texture1_spread"
     ],
-    "R4": [
+    "R3": [
       "textures.Texture1_spread"
     ],
-    "R2": [
+    "R1": [
+      "textures.Texture1_spread"
+    ],
+    "R0": [
       "textures.Texture1_spread"
     ],
     "B0": [
@@ -153,33 +181,6 @@
       "textures.Texture1_spread"
     ],
     "B8": [
-      "textures.Texture1_spread"
-    ],
-    "L8": [
-      "textures.Texture1_spread"
-    ],
-    "L4": [
-      "textures.Texture1_spread"
-    ],
-    "L0": [
-      "textures.Texture1_spread"
-    ],
-    "L3": [
-      "textures.Texture1_spread"
-    ],
-    "L6": [
-      "textures.Texture1_spread"
-    ],
-    "L7": [
-      "textures.Texture1_spread"
-    ],
-    "L5": [
-      "textures.Texture1_spread"
-    ],
-    "L2": [
-      "textures.Texture1_spread"
-    ],
-    "L1": [
       "textures.Texture1_spread"
     ]
   }

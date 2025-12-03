@@ -455,6 +455,9 @@
 linear-gradient(45deg, red, blue)
 url('...')
 $varName" rows="2"></textarea>
+            <label style="display: block; margin: 10px 0;">
+                <input type="checkbox" id="is-stackable"> Is stackable (uses array notation)
+            </label>
             <div class="modal-buttons">
                 <button onclick="saveCSSTexture()" style="flex: 1;">Add</button>
                 <button onclick="closeModal()" class="secondary" style="flex: 1;">Cancel</button>
@@ -599,6 +602,7 @@ $varName" rows="2"></textarea>
         let textureLibrary = {}; // Pure texture values (strings)
         let originalTextures = {}; // Original textures with variables
         let textureUsesVars = {}; // Track which textures use vars
+        let textureStackable = {}; // Track which textures are stackable
         let cubeAssignments = {}; // Maps cube positions to texture names or arrays
         let selectedTexture = null;
         let currentMode = 'face';
@@ -730,34 +734,29 @@ $varName" rows="2"></textarea>
                     const isColorOrVar = texValue?.startsWith('#') || varsLibrary[selectedTexture];
                     cubeAssignments[key] = isColorOrVar ? selectedTexture : [selectedTexture];
                 } else if (currentSticker) {
-                    if (Array.isArray(currentSticker)) {
-                        if (currentSticker.length === 1) {
-                            // Inherit[1] → Stack[2] (skip if duplicate)
-                            if (!currentSticker.includes(selectedTexture)) {
-                                cubeAssignments[key].push(selectedTexture);
-                            }
+                    // Simple logic: if stackable, add to array; if not, replace
+                    const isStackable = textureStackable[selectedTexture];
+                    if (isStackable) {
+                        if (Array.isArray(currentSticker)) {
+                            cubeAssignments[key].push(selectedTexture);
                         } else {
-                            // Stack[2] → Replace
-                            cubeAssignments[key] = selectedTexture;
+                            cubeAssignments[key] = [currentSticker, selectedTexture];
                         }
                     } else {
-                        // Single texture → Inherit[1] (skip if same)
-                        if (currentSticker !== selectedTexture) {
-                            const texValue = textureLibrary[selectedTexture];
-                            const isColorOrVar = texValue?.startsWith('#') || varsLibrary[selectedTexture];
-                            cubeAssignments[key] = isColorOrVar ? selectedTexture : [selectedTexture];
-                        }
+                        cubeAssignments[key] = selectedTexture;
                     }
                 } else {
-                    // No face texture, no sticker texture → simple replace
-                    cubeAssignments[key] = selectedTexture;
+                    // No face texture, no sticker texture → simple replace or array if stackable
+                    const isStackable = textureStackable[selectedTexture];
+                    cubeAssignments[key] = isStackable ? [selectedTexture] : selectedTexture;
                 }
             } else {
                 // Assigning to whole face - remove individual sticker assignments
                 for (let i = 0; i < 9; i++) {
                     delete cubeAssignments[`${face}${i}`];
                 }
-                cubeAssignments[face] = selectedTexture;
+                const isStackable = textureStackable[selectedTexture];
+                cubeAssignments[face] = isStackable ? [selectedTexture] : selectedTexture;
             }
             
             updateVisualCube();
@@ -795,9 +794,10 @@ $varName" rows="2"></textarea>
             });
             
             if (bgImages.length > 0) {
-                element.style.backgroundImage = bgImages.join(', ');
-                element.style.backgroundSize = bgSizes.join(', ');
-                element.style.backgroundPosition = bgPositions.join(', ');
+                // Reverse arrays so first texture is bottom layer (CSS stacks first item on top)
+                element.style.backgroundImage = bgImages.reverse().join(', ');
+                element.style.backgroundSize = bgSizes.reverse().join(', ');
+                element.style.backgroundPosition = bgPositions.reverse().join(', ');
                 element.style.backgroundRepeat = 'no-repeat';
             } else if (!hasColor) {
                 element.style.backgroundImage = 'none';
@@ -911,6 +911,7 @@ $varName" rows="2"></textarea>
             document.getElementById('modal-name').value = name;
             document.getElementById('modal-name').disabled = false;
             document.getElementById('modal-background').value = '';
+            document.getElementById('is-stackable').checked = false;
             document.querySelector('#css-modal h3').textContent = 'Add Custom Texture';
             updateGradientPreview();
             document.getElementById('css-modal').classList.add('active');
@@ -977,6 +978,7 @@ $varName" rows="2"></textarea>
                 displayValue = displayValue.slice(5, -2);
             }
             document.getElementById('modal-background').value = displayValue;
+            document.getElementById('is-stackable').checked = textureStackable[name] || false;
             
             document.getElementById('css-modal').classList.add('active');
         }
@@ -1000,6 +1002,8 @@ $varName" rows="2"></textarea>
             // Check if texture uses variables
             const hasVars = textureValue.includes('$');
             
+            const isStackable = document.getElementById('is-stackable').checked;
+            
             if (hasVars) {
                 // Store original with vars and resolved version
                 originalTextures[name] = textureValue;
@@ -1011,6 +1015,8 @@ $varName" rows="2"></textarea>
                 delete originalTextures[name];
                 textureUsesVars[name] = false;
             }
+            
+            textureStackable[name] = isStackable;
             
             // If editing and name changed, update assignments
             if (editingTextureName && editingTextureName !== name) {
@@ -1186,6 +1192,13 @@ $varName" rows="2"></textarea>
             const allVars = { ...varsLibrary, ...colorsToExport };
             if (Object.keys(allVars).length > 0) {
                 config.vars = allVars;
+            }
+            
+            // Add stackable definition
+            const stackableTextures = Object.keys(textureStackable).filter(name => textureStackable[name]);
+            if (stackableTextures.length > 0) {
+                config.vars = config.vars || {};
+                config.vars.__definition = `stackable: ${stackableTextures.join(',')}`;
             }
             
             config.textures = {};
@@ -1497,6 +1510,18 @@ $varName" rows="2"></textarea>
             // Load vars
             if (config.vars) {
                 varsLibrary = { ...config.vars };
+                
+                // Parse stackable definition
+                if (config.vars.__definition && config.vars.__definition.startsWith('stackable:')) {
+                    const stackableList = config.vars.__definition.slice(10).trim();
+                    if (stackableList) {
+                        stackableList.split(',').forEach(name => {
+                            textureStackable[name.trim()] = true;
+                        });
+                    }
+                    delete varsLibrary.__definition;
+                }
+                
                 // Add color vars to texture library
                 Object.entries(config.vars).forEach(([name, value]) => {
                     if (typeof value === 'string' && value.startsWith('#')) {
