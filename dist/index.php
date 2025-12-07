@@ -2,7 +2,10 @@
 <html lang="pt-BR">
   <head>
   <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Picture Cube -- Beta</title>
     <style>
       body.crisp-mode {
@@ -15,6 +18,22 @@
         font-family: Arial, sans-serif;
         touch-action: none;
         overflow-x: hidden;
+      }
+
+      html:fullscreen, html:-webkit-full-screen {
+        width: 100%;
+        height: 100%;
+      }
+
+      body:fullscreen, body:-webkit-full-screen {
+        width: 100%;
+        height: 100%;
+      }
+
+      body:fullscreen #container,
+      body:-webkit-full-screen #container {
+        height: 100vh !important;
+        height: 100dvh !important;
       }
 
       #container {
@@ -43,9 +62,31 @@
         font-size: 18px;
       }
 
+      #togglePanel, #fullscreenBtn {
+        position: fixed;
+        top: 10px;
+        z-index: 1001;
+        background: #333;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 18px;
+      }
+
+      #togglePanel {
+        left: 10px;
+      }
+
+      #fullscreenBtn {
+        left: 60px;
+      }
+
       #controls {
         width: 300px;
         padding: 10px;
+        padding-top: 50px;
         background: #f0f0f0;
         overflow-y: auto;
         transition: transform 0.3s ease;
@@ -53,9 +94,21 @@
         z-index: 1000;
       }
 
+      @media (min-width: 769px) {
+        #controls.hidden {
+          transform: translateX(-100%);
+          width: 0;
+          padding: 0;
+        }
+      }
+
       @media (max-width: 768px) {
         #hamburger {
           display: block;
+        }
+        
+        #togglePanel, #fullscreenBtn {
+          display: none;
         }
         
           .spacer {
@@ -153,6 +206,10 @@
       #right-panel {
         flex: 1;
         background: rgb(81, 105, 99);
+        background-image: url('backgrounds/image.png');
+        background-size: 100%;
+        background-position: center;
+        background-repeat: no-repeat;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -160,6 +217,17 @@
         user-select: none;
         overflow: hidden;
         cursor: grab;
+        transition: background-position 0.1s ease-out;
+      }
+
+      #controls.hidden ~ #right-panel {
+        width: 100%;
+      }
+
+      body:fullscreen #right-panel,
+      body:-webkit-full-screen #right-panel {
+        height: 100vh !important;
+        height: 100dvh !important;
       }
 
       #right-panel:active {
@@ -408,6 +476,28 @@
         transform: rotate(90deg);
       }
 
+      /* Camera preview styles */
+      #cameraPreview {
+        margin: 10px 0;
+      }
+
+      #cameraContainer {
+        display: inline-block;
+      }
+
+      .accordion-content {
+        padding: 15px 10px;
+        display: none;
+      }
+
+      .accordion.open .accordion-content {
+        display: block;
+      }
+
+      .accordion.open .accordion-arrow {
+        transform: rotate(90deg);
+      }
+
       .loading-spinner {
         position: absolute;
         top: 50%;
@@ -496,6 +586,110 @@
       .toast.show {
         opacity: 1;
       }
+
+      /* History Graph */
+      .history-graph {
+        height: 250px;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        margin-bottom: 5px;
+        position: relative;
+        background: darkslateblue;
+        overflow: hidden;
+      }
+
+      /* History Grid */
+      .history-grid {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        overflow: hidden;
+        font-family: monospace;
+        font-size: 12px;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      .history-header {
+        display: grid;
+        grid-template-columns: 80px 1fr 60px;
+        background: #f5f5f5;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+        padding: 4px 0;
+      }
+
+      .history-row {
+        display: grid;
+        grid-template-columns: 80px 1fr 60px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        padding: 2px 0;
+      }
+
+      .history-row:hover {
+        background: #f0f0f0;
+      }
+
+      .history-row.current {
+        background: #e3f2fd;
+      }
+
+      .history-row.selected {
+        background: #fff3e0;
+        border-left: 3px solid #ff6b35;
+      }
+
+      .history-cell {
+        padding: 2px 4px;
+        border-right: 1px solid #eee;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .history-controls {
+        display: flex;
+        gap: 4px;
+        margin: 5px 0;
+      }
+
+      .history-controls button {
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+
+      .bg-thumb {
+        cursor: pointer;
+        border: 2px solid transparent;
+        border-radius: 4px;
+        overflow: hidden;
+        background-position: center;
+        background-size: cover;
+        width: 100%;
+        padding-bottom: 100%;
+        position: relative;
+      }
+
+      .bg-thumb.none {
+        background: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 11px;
+        font-weight: bold;
+        padding-bottom: 0;
+        height: 0;
+        padding-bottom: 100%;
+      }
+
+      .bg-thumb.none::after {
+        content: 'None';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
     </style>
     <script>
 <?php
@@ -512,6 +706,15 @@ if (file_exists('bluetooth.js')) {
 ?>
     </script>
     <script>
+<?php
+if (file_exists('scramble.js')) {
+    echo file_get_contents('scramble.js');
+}
+?>
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@gitgraph/js"></script>
+    <script src="cube-core.js"></script>
+    <script>
       function setRealViewportHeight() {
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         document.documentElement.style.setProperty('--real-vh', `${vh}px`);
@@ -519,6 +722,8 @@ if (file_exists('bluetooth.js')) {
       
       window.addEventListener('resize', setRealViewportHeight);
       window.addEventListener('orientationchange', setRealViewportHeight);
+      document.addEventListener('fullscreenchange', setRealViewportHeight);
+      document.addEventListener('webkitfullscreenchange', setRealViewportHeight);
       setRealViewportHeight();
       
       const defaultTexture = <?php 
@@ -571,11 +776,31 @@ if (file_exists('bluetooth.js')) {
         echo json_encode(json_decode($json, true)); 
       ?>;
     </script>
+    <script>
+      // Suppress MediaPipe console errors
+      const originalError = console.error;
+      console.error = function(...args) {
+        const message = args.join(' ');
+        if (message.includes('face_mesh') || message.includes('MediaPipe') || message.includes('buffer')) {
+          return; // Suppress MediaPipe errors
+        }
+        originalError.apply(console, args);
+      };
+      
+      // Suppress unhandled promise rejections from MediaPipe
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason && (event.reason.message || '').includes('MediaPipe')) {
+          event.preventDefault();
+        }
+      });
+    </script>
   </head>
 
   <body>
 
     <button id="hamburger" onclick="toggleSidebar()" title="Toggle sidebar">☰</button>
+    <button id="togglePanel" onclick="toggleLeftPanel()" title="Toggle panel">☰</button>
+    <button id="fullscreenBtn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
     <div id="container">
       <div id="controls">
         <div class="spacer"></div>
@@ -592,63 +817,63 @@ if (file_exists('bluetooth.js')) {
           <div class="accordion-content">
             <div class="move-grid">
               <!-- Face Moves -->
-              <button onclick="moveU()">U</button>
-              <button onclick="prime(moveU)()">U'</button>
-              <button onclick="double(moveU)()">U2</button>
-              <button onclick="moveD()">D</button>
-              <button onclick="prime(moveD)()">D'</button>
-              <button onclick="double(moveD)()">D2</button>
-              <button onclick="moveR()">R</button>
-              <button onclick="prime(moveR)()">R'</button>
-              <button onclick="double(moveR)()">R2</button>
-              <button onclick="moveL()">L</button>
-              <button onclick="prime(moveL)()">L'</button>
-              <button onclick="double(moveL)()">L2</button>
-              <button onclick="moveF()">F</button>
-              <button onclick="prime(moveF)()">F'</button>
-              <button onclick="double(moveF)()">F2</button>
-              <button onclick="moveB()">B</button>
-              <button onclick="prime(moveB)()">B'</button>
-              <button onclick="double(moveB)()">B2</button>
+              <button onclick="applyMove('U')">U</button>
+              <button onclick="applyMove('U\'')">U'</button>
+              <button onclick="applyMove('U2')">U2</button>
+              <button onclick="applyMove('D')">D</button>
+              <button onclick="applyMove('D\'')">D'</button>
+              <button onclick="applyMove('D2')">D2</button>
+              <button onclick="applyMove('R')">R</button>
+              <button onclick="applyMove('R\'')">R'</button>
+              <button onclick="applyMove('R2')">R2</button>
+              <button onclick="applyMove('L')">L</button>
+              <button onclick="applyMove('L\'')">L'</button>
+              <button onclick="applyMove('L2')">L2</button>
+              <button onclick="applyMove('F')">F</button>
+              <button onclick="applyMove('F\'')">F'</button>
+              <button onclick="applyMove('F2')">F2</button>
+              <button onclick="applyMove('B')">B</button>
+              <button onclick="applyMove('B\'')">B'</button>
+              <button onclick="applyMove('B2')">B2</button>
               <!-- Slice Moves -->
-              <button onclick="moveM()">M</button>
-              <button onclick="moveMPrime()">M'</button>
-              <button onclick="moveM2()">M2</button>
-              <button onclick="moveE()">E</button>
-              <button onclick="moveEPrime()">E'</button>
-              <button onclick="moveE2()">E2</button>
-              <button onclick="moveS()">S</button>
-              <button onclick="moveSPrime()">S'</button>
-              <button onclick="moveS2()">S2</button>
+              <button onclick="applyMove('M')">M</button>
+              <button onclick="applyMove('M\'')">M'</button>
+              <button onclick="applyMove('M2')">M2</button>
+              <button onclick="applyMove('E')">E</button>
+              <button onclick="applyMove('E\'')">E'</button>
+              <button onclick="applyMove('E2')">E2</button>
+              <button onclick="applyMove('S')">S</button>
+              <button onclick="applyMove('S\'')">S'</button>
+              <button onclick="applyMove('S2')">S2</button>
               <!-- Rotations -->
-              <button onclick="rotationX()">X</button>
-              <button onclick="prime(rotationX)()">X'</button>
-              <button onclick="double(rotationX)()">X2</button>
-              <button onclick="rotationY()">Y</button>
-              <button onclick="prime(rotationY)()">Y'</button>
-              <button onclick="double(rotationY)()">Y2</button>
-              <button onclick="rotationZ()">Z</button>
-              <button onclick="prime(rotationZ)()">Z'</button>
-              <button onclick="double(rotationZ)()">Z2</button>
+              <button onclick="applyMove('x')">X</button>
+              <button onclick="applyMove('x\'')">X'</button>
+              <button onclick="applyMove('x2')">X2</button>
+              <button onclick="applyMove('y')">Y</button>
+              <button onclick="applyMove('y\'')">Y'</button>
+              <button onclick="applyMove('y2')">Y2</button>
+              <button onclick="applyMove('z')">Z</button>
+              <button onclick="applyMove('z\'')">Z'</button>
+              <button onclick="applyMove('z2')">Z2</button>
               <!-- Wide Moves -->
-              <button onclick="moveRw()">Rw</button>
-              <button onclick="prime(moveRw)()">Rw'</button>
-              <button onclick="double(moveRw)()">Rw2</button>
-              <button onclick="moveLw()">Lw</button>
-              <button onclick="prime(moveLw)()">Lw'</button>
-              <button onclick="double(moveLw)()">Lw2</button>
-              <button onclick="moveUw()">Uw</button>
-              <button onclick="prime(moveUw)()">Uw'</button>
-              <button onclick="double(moveUw)()">Uw2</button>
-              <button onclick="moveDw()">Dw</button>
-              <button onclick="prime(moveDw)()">Dw'</button>
-              <button onclick="double(moveDw)()">Dw2</button>
-              <button onclick="moveFw()">Fw</button>
-              <button onclick="prime(moveFw)()">Fw'</button>
-              <button onclick="double(moveFw)()">Fw2</button>
-              <button onclick="moveBw()">Bw</button>
-              <button onclick="prime(moveBw)()">Bw'</button>
-              <button onclick="double(moveBw)()">Bw2</button>
+              <button onclick="applyMove('Rw')">Rw</button>
+              <button onclick="applyMove('Rw\'')">Rw'</button>
+              <button onclick="applyMove('Rw2')">Rw2</button>
+              <button onclick="applyMove('Lw')">Lw</button>
+              <button onclick="applyMove('Lw\'')">Lw'</button>
+              <button onclick="applyMove('Lw2')">Lw2</button>
+              <button onclick="applyMove('Uw')">Uw</button>
+              <button onclick="applyMove('Uw\'')">Uw'</button>
+              <button onclick="applyMove('Uw2')">Uw2</button>
+              <button onclick="applyMove('Dw')">Dw</button>
+              <button onclick="applyMove('Dw\'')">Dw'</button>
+              <button onclick="applyMove('Dw2')">Dw2</button>
+              <button onclick="applyMove('Fw')">Fw</button>
+              <button onclick="applyMove('Fw\'')">Fw'</button>
+              <button onclick="applyMove('Fw2')">Fw2</button>
+              <button onclick="applyMove('Bw')">Bw</button>
+              <button onclick="applyMove('Bw\'')">Bw'</button>
+              <button onclick="applyMove('Bw2')">Bw2</button>
             </div>
           </div>
         </div>
@@ -667,6 +892,7 @@ if (file_exists('bluetooth.js')) {
               onkeydown="if(event.ctrlKey && event.key==='Enter') applyAlgorithm()"
             ></textarea>
             <button onclick="applyAlgorithm()">Execute</button>
+            <button onclick="scrambleCube()">Scramble Cube</button>
             <small style="color: #666; font-style: italic"
               >Tip: Press Ctrl+Enter to execute</small
             >
@@ -688,6 +914,63 @@ if (file_exists('bluetooth.js')) {
 
         <div class="accordion">
           <button class="accordion-header" onclick="toggleAccordion(this)">
+            Camera Control
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <button id="cameraBtn" onclick="toggleCamera()">Enable Camera</button>
+            <div id="cameraContainer" style="position: relative; display: none;">
+              <video id="cameraPreview" autoplay muted style="width: 100%; max-width: 280px; border: 2px solid #555; border-radius: 8px;"></video>
+              <div id="headDot" style="position: absolute; width: 10px; height: 10px; background: red; border-radius: 50%; display: none;"></div>
+            </div>
+            <div id="cameraControls" style="display: none; margin-top: 10px;">
+              <select id="cameraSelect" style="width: 100%; margin: 5px 0; padding: 5px;">
+                <option value="">Select Camera...</option>
+              </select>
+              <button onclick="calibrateCamera()">Calibrate</button>
+              <div style="margin: 10px 0;">
+                <label><input type="checkbox" id="sameSensitivity"> Same Value</label>
+                <label><input type="checkbox" id="invertX"> Invert X</label>
+                <label><input type="checkbox" id="invertY"> Invert Y</label>
+              </div>
+              <div style="margin: 10px 0;">
+                <label>Sensitivity X: <span id="sensitivityXValue">60</span></label>
+                <input type="range" id="sensitivityX" min="10" max="120" value="60" style="width: 100%;">
+              </div>
+              <div style="margin: 10px 0;">
+                <label>Sensitivity Y: <span id="sensitivityYValue">40</span></label>
+                <input type="range" id="sensitivityY" min="10" max="120" value="40" style="width: 100%;">
+              </div>
+              <div style="margin: 10px 0;">
+                <label>Offset X: <span id="offsetXValue">0</span></label>
+                <input type="range" id="offsetX" min="-160" max="160" value="0" style="width: 100%;">
+              </div>
+              <div style="margin: 10px 0;">
+                <label>Offset Y: <span id="offsetYValue">0</span></label>
+                <input type="range" id="offsetY" min="-120" max="120" value="0" style="width: 100%;">
+              </div>
+              <div style="margin: 10px 0;">
+                <label><input type="checkbox" id="sameBgSensitivity"> Same Value BG</label>
+                <label><input type="checkbox" id="invertBgX"> Invert BG X</label>
+                <label><input type="checkbox" id="invertBgY"> Invert BG Y</label>
+              </div>
+              <div style="margin: 10px 0;">
+                <label>BG Sensitivity X: <span id="bgSensitivityXValue">30</span></label>
+                <input type="range" id="bgSensitivityX" min="0" max="100" value="30" style="width: 100%;">
+              </div>
+              <div style="margin: 10px 0;">
+                <label>BG Sensitivity Y: <span id="bgSensitivityYValue">30</span></label>
+                <input type="range" id="bgSensitivityY" min="0" max="100" value="30" style="width: 100%;">
+              </div>
+            </div>
+            <div id="cameraStatus" style="margin-top: 10px; font-size: 12px; color: #666;">Camera disabled</div>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
             State
             <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
@@ -696,6 +979,29 @@ if (file_exists('bluetooth.js')) {
           <div class="accordion-content">
             <button onclick="solveCube()">Reset</button>
             <button onclick="openStateModal()">View State</button>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
+            History
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content">
+            <div class="history-controls">
+              <button onclick="clearHistory()">Clear</button>
+            </div>
+            <div class="history-graph" id="historyGraph"></div>
+            <div class="history-grid">
+              <div class="history-header">
+                <div class="history-cell">Time</div>
+                <div class="history-cell">Move</div>
+                <div class="history-cell">#</div>
+              </div>
+              <div id="historyRows"></div>
+            </div>
           </div>
         </div>
 
@@ -755,6 +1061,31 @@ if (file_exists('bluetooth.js')) {
 
         <div class="accordion">
           <button class="accordion-header" onclick="toggleAccordion(this)">
+            Background
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content" style="margin: 0;">
+            <div id="backgroundGallery" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-height: 50vh; overflow-y: auto; overflow-x: hidden; margin: 0;">
+              <div class='bg-thumb none' data-bg='' onclick='selectBackground("")'></div>
+              <?php
+              $backgroundsDir = 'backgrounds/';
+              if (is_dir($backgroundsDir)) {
+                $files = scandir($backgroundsDir);
+                foreach ($files as $file) {
+                  if ($file !== '.' && $file !== '..' && preg_match('/\.(png|jpg|jpeg|gif|webp|svg)$/i', $file)) {
+                    echo "<div class='bg-thumb' data-bg='$file' onclick='selectBackground(\"$file\")' style='background-image:url(\"backgrounds/$file\");'></div>";
+                  }
+                }
+              }
+              ?>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
             Visualization
             <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
@@ -770,9 +1101,15 @@ if (file_exists('bluetooth.js')) {
             <button id="perspectiveBtn" onclick="setViewMode('perspective')">
               3D Perspective
             </button><br /><br />
-            <button id="perspectiveBtn" onclick="window.toggleCrispMode()">
-              Toggle Crisp mode
+            <button id="crispBtn" onclick="window.toggleCrispMode()">
+              Crisp Mode: OFF
+            </button><br /><br />
+            <button id="throttleBtn" onclick="toggleRenderThrottle()">
+              Render Throttle: OFF
             </button>
+            <em style="display: block; margin-top: 5px; font-size: 11px; color: #666;">
+              Limits rendering to 60 FPS for smoother performance during fast solves (bluetooth cube)
+            </em>
           </div>
         </div>
       </div>
@@ -844,6 +1181,9 @@ if (file_exists('bluetooth.js')) {
     <script>
       // ==================== FUNDAMENTOS: X, Y, U + applyStickerRotation ====================
 
+      // Initialize CubeCore
+      const cubeCore = new CubeCore();
+      
       const faces = ["U", "L", "F", "R", "B", "D"];
       const colors = [
         "#ffffff",
@@ -854,10 +1194,14 @@ if (file_exists('bluetooth.js')) {
         "#ffd500",
       ];
 
-      let cubeState = { U: [], L: [], F: [], R: [], B: [], D: [] };
-      let stickerRotations = { U: [], L: [], F: [], R: [], B: [], D: [] };
+      let cubeState = cubeCore.cubeState;
+      let stickerRotations = cubeCore.stickerRotations;
       let stickerIds = { U: [], L: [], F: [], R: [], B: [], D: [] };
-      let stickerTextures = { U: [], L: [], F: [], R: [], B: [], D: [] };
+      let stickerTextures = cubeCore.stickerTextures;
+
+      // Throttle system
+      let renderThrottleEnabled = false;
+      let rafScheduled = false;
 
       // Sistema de texturas
       let textureMode = "standard";
@@ -886,19 +1230,16 @@ if (file_exists('bluetooth.js')) {
       }
 
       function initCube() {
+        cubeCore.init();
+        cubeState = cubeCore.cubeState;
+        stickerRotations = cubeCore.stickerRotations;
+        stickerTextures = cubeCore.stickerTextures;
+        
         faces.forEach((face, faceIndex) => {
-          cubeState[face] = Array(9)
-            .fill(0)
-            .map((_, i) => faceIndex * 9 + i);
-          stickerRotations[face] = Array(9).fill(0);
           stickerIds[face] = Array(9)
             .fill(0)
             .map((_, i) => faceIndex * 9 + i);
-          stickerTextures[face] = Array(9)
-            .fill(0)
-            .map((_, i) => ({ face, index: i }));
 
-          // Inicializar faces 2D e 3D
           const face2D = document.querySelector(
             `.face-2d[data-face="${face}"]`
           );
@@ -912,10 +1253,7 @@ if (file_exists('bluetooth.js')) {
         updateDOM();
       }
 
-      function applyStickerRotation(face, index, rotationIncrement) {
-        stickerRotations[face][index] =
-          (stickerRotations[face][index] + rotationIncrement + 4) % 4;
-      }
+      // Removed - now in CubeCore
 
       // Detectar se sticker precisa de rotação 180° ao mudar de face
       function needsFlip(fromFace, toFace) {
@@ -1192,547 +1530,80 @@ if (file_exists('bluetooth.js')) {
           zoom2D = Math.max(0.5, Math.min(3, zoom2D * (1 - delta * 0.1)));
           update2DZoom();
         } else {
-          cubeSize = Math.max(200, Math.min(800, cubeSize * (1 - delta * 0.1)));
-          const fontSize = Math.max(8, Math.min(32, (cubeSize / 300) * 16));
-          document.documentElement.style.setProperty(
-            "--cube-size",
-            `${cubeSize}px`
-          );
-          document.documentElement.style.setProperty(
-            "--font-size-3d",
-            `${fontSize}px`
-          );
-          saveViewState();
+          // Zoom background if camera is enabled
+          if (cameraEnabled && isCalibrated) {
+            bgZoom += delta > 0 ? -5 : 5;
+            bgZoom = Math.max(50, Math.min(300, bgZoom));
+            saveCameraCalibration();
+          } else {
+            cubeSize = Math.max(200, Math.min(800, cubeSize * (1 - delta * 0.1)));
+            const fontSize = Math.max(8, Math.min(32, (cubeSize / 300) * 16));
+            document.documentElement.style.setProperty(
+              "--cube-size",
+              `${cubeSize}px`
+            );
+            document.documentElement.style.setProperty(
+              "--font-size-3d",
+              `${fontSize}px`
+            );
+            saveViewState();
+          }
         }
       }
 
-      function rotateFaceDataCW(faceData) {
-        return [
-          faceData[6],
-          faceData[3],
-          faceData[0],
-          faceData[7],
-          faceData[4],
-          faceData[1],
-          faceData[8],
-          faceData[5],
-          faceData[2],
-        ];
+      // Removed - now in CubeCore
+
+      // All move functions removed - now in CubeCore
+      // Keeping wrapper for compatibility
+      function moveU() { cubeCore.moveU(); syncState(); }
+      function moveD() { cubeCore.moveD(); syncState(); }
+      function moveR() { cubeCore.moveR(); syncState(); }
+      function moveL() { cubeCore.moveL(); syncState(); }
+      function moveF() { cubeCore.moveF(); syncState(); }
+      function moveB() { cubeCore.moveB(); syncState(); }
+      function rotationX() { cubeCore.rotationX(); syncState(); }
+      function rotationY() { cubeCore.rotationY(); syncState(); }
+      function rotationZ() { cubeCore.rotationZ(); syncState(); }
+      function moveM() { cubeCore.moveM(); syncState(); }
+      function moveMPrime() { cubeCore.moveMPrime(); syncState(); }
+      function moveM2() { cubeCore.moveM2(); syncState(); }
+      function moveE() { cubeCore.moveE(); syncState(); }
+      function moveEPrime() { cubeCore.moveEPrime(); syncState(); }
+      function moveE2() { cubeCore.moveE2(); syncState(); }
+      function moveS() { cubeCore.moveS(); syncState(); }
+      function moveSPrime() { cubeCore.moveSPrime(); syncState(); }
+      function moveS2() { cubeCore.moveS2(); syncState(); }
+      function moveRw() { cubeCore.moveRw(); syncState(); }
+      function moveLw() { cubeCore.moveLw(); syncState(); }
+      function moveUw() { cubeCore.moveUw(); syncState(); }
+      function moveDw() { cubeCore.moveDw(); syncState(); }
+      function moveFw() { cubeCore.moveFw(); syncState(); }
+      function moveBw() { cubeCore.moveBw(); syncState(); }
+      
+      function syncState() {
+        cubeState = cubeCore.cubeState;
+        stickerRotations = cubeCore.stickerRotations;
+        stickerTextures = cubeCore.stickerTextures;
+        
+        if (renderThrottleEnabled && !rafScheduled) {
+          rafScheduled = true;
+          requestAnimationFrame(() => {
+            updateDOM();
+            rafScheduled = false;
+          });
+        } else if (!renderThrottleEnabled) {
+          updateDOM();
+        }
       }
-
-      function rotateFaceDataCCW(faceData) {
-        return [
-          faceData[2],
-          faceData[5],
-          faceData[8],
-          faceData[1],
-          faceData[4],
-          faceData[7],
-          faceData[0],
-          faceData[3],
-          faceData[6],
-        ];
-      }
-
-      function rotateFaceData180(faceData) {
-        return [
-          faceData[8],
-          faceData[7],
-          faceData[6],
-          faceData[5],
-          faceData[4],
-          faceData[3],
-          faceData[2],
-          faceData[1],
-          faceData[0],
-        ];
-      }
-
-      // MOVIMENTO U
-      function moveU() {
-        cubeState.U = rotateFaceDataCW(cubeState.U);
-        stickerRotations.U = rotateFaceDataCW(stickerRotations.U);
-        stickerTextures.U = rotateFaceDataCW(stickerTextures.U); // Rotacionar texturas da face U
-        for (let i = 0; i < 9; i++) applyStickerRotation("U", i, 1);
-
-        const temp = [cubeState.F[0], cubeState.F[1], cubeState.F[2]];
-        const tempRot = [
-          stickerRotations.F[0],
-          stickerRotations.F[1],
-          stickerRotations.F[2],
-        ];
-        const tempTex = [
-          stickerTextures.F[0],
-          stickerTextures.F[1],
-          stickerTextures.F[2],
-        ];
-
-        // F ← R (sem flip)
-        cubeState.F[0] = cubeState.R[0];
-        cubeState.F[1] = cubeState.R[1];
-        cubeState.F[2] = cubeState.R[2];
-        stickerRotations.F[0] = stickerRotations.R[0];
-        stickerRotations.F[1] = stickerRotations.R[1];
-        stickerRotations.F[2] = stickerRotations.R[2];
-        stickerTextures.F[0] = stickerTextures.R[0];
-        stickerTextures.F[1] = stickerTextures.R[1];
-        stickerTextures.F[2] = stickerTextures.R[2];
-
-        // R ← B (sem flip - B para R não precisa)
-        cubeState.R[0] = cubeState.B[0];
-        cubeState.R[1] = cubeState.B[1];
-        cubeState.R[2] = cubeState.B[2];
-        stickerRotations.R[0] = stickerRotations.B[0];
-        stickerRotations.R[1] = stickerRotations.B[1];
-        stickerRotations.R[2] = stickerRotations.B[2];
-        stickerTextures.R[0] = stickerTextures.B[0];
-        stickerTextures.R[1] = stickerTextures.B[1];
-        stickerTextures.R[2] = stickerTextures.B[2];
-
-        // B ← L (sem flip - L para B não precisa)
-        cubeState.B[0] = cubeState.L[0];
-        cubeState.B[1] = cubeState.L[1];
-        cubeState.B[2] = cubeState.L[2];
-        stickerRotations.B[0] = stickerRotations.L[0];
-        stickerRotations.B[1] = stickerRotations.L[1];
-        stickerRotations.B[2] = stickerRotations.L[2];
-        stickerTextures.B[0] = stickerTextures.L[0];
-        stickerTextures.B[1] = stickerTextures.L[1];
-        stickerTextures.B[2] = stickerTextures.L[2];
-
-        // L ← F (sem flip)
-        cubeState.L[0] = temp[0];
-        cubeState.L[1] = temp[1];
-        cubeState.L[2] = temp[2];
-        stickerRotations.L[0] = tempRot[0];
-        stickerRotations.L[1] = tempRot[1];
-        stickerRotations.L[2] = tempRot[2];
-        stickerTextures.L[0] = tempTex[0];
-        stickerTextures.L[1] = tempTex[1];
-        stickerTextures.L[2] = tempTex[2];
-
-        updateDOM();
-      }
-
-      // ROTAÇÃO X
-      function rotationX() {
-        const temp = cubeState.U;
-        const tempRot = [...stickerRotations.U];
-        const tempTex = [...stickerTextures.U];
-
-        cubeState.U = cubeState.F;
-        stickerRotations.U = [...stickerRotations.F];
-        stickerTextures.U = [...stickerTextures.F];
-
-        cubeState.F = cubeState.D;
-        stickerRotations.F = [...stickerRotations.D];
-        stickerTextures.F = [...stickerTextures.D];
-
-        cubeState.D = rotateFaceData180(cubeState.B);
-        stickerRotations.D = rotateFaceData180(stickerRotations.B);
-        stickerTextures.D = rotateFaceData180(stickerTextures.B);
-        for (let i = 0; i < 9; i++) applyStickerRotation("D", i, 2);
-
-        cubeState.B = rotateFaceData180(temp);
-        stickerRotations.B = rotateFaceData180(tempRot);
-        stickerTextures.B = rotateFaceData180(tempTex);
-        for (let i = 0; i < 9; i++) applyStickerRotation("B", i, 2);
-
-        cubeState.L = rotateFaceDataCCW(cubeState.L);
-        stickerRotations.L = rotateFaceDataCCW(stickerRotations.L);
-        stickerTextures.L = rotateFaceDataCCW(stickerTextures.L);
-        for (let i = 0; i < 9; i++) applyStickerRotation("L", i, -1);
-
-        cubeState.R = rotateFaceDataCW(cubeState.R);
-        stickerRotations.R = rotateFaceDataCW(stickerRotations.R);
-        stickerTextures.R = rotateFaceDataCW(stickerTextures.R);
-        for (let i = 0; i < 9; i++) applyStickerRotation("R", i, 1);
-
-        updateDOM();
-      }
-
-      // ROTAÇÃO Y
-      function rotationY() {
-        const temp = cubeState.F;
-        const tempRot = [...stickerRotations.F];
-        const tempTex = [...stickerTextures.F];
-
-        cubeState.F = cubeState.R;
-        stickerRotations.F = [...stickerRotations.R];
-        stickerTextures.F = [...stickerTextures.R];
-
-        cubeState.R = cubeState.B;
-        stickerRotations.R = [...stickerRotations.B];
-        stickerTextures.R = [...stickerTextures.B];
-
-        cubeState.B = cubeState.L;
-        stickerRotations.B = [...stickerRotations.L];
-        stickerTextures.B = [...stickerTextures.L];
-
-        cubeState.L = temp;
-        stickerRotations.L = tempRot;
-        stickerTextures.L = tempTex;
-
-        cubeState.U = rotateFaceDataCW(cubeState.U);
-        stickerRotations.U = rotateFaceDataCW(stickerRotations.U);
-        stickerTextures.U = rotateFaceDataCW(stickerTextures.U);
-        for (let i = 0; i < 9; i++) applyStickerRotation("U", i, 1);
-
-        cubeState.D = rotateFaceDataCCW(cubeState.D);
-        stickerRotations.D = rotateFaceDataCCW(stickerRotations.D);
-        stickerTextures.D = rotateFaceDataCCW(stickerTextures.D);
-        for (let i = 0; i < 9; i++) applyStickerRotation("D", i, -1);
-
-        updateDOM();
-      }
-
-      // CRIAR Z A PARTIR DE X E Y (invertido)
-      function rotationZ() {
-        repeat(rotationY, 3);
-        rotationX();
-        rotationY();
-      }
-
-      // CONSTRUIR TODOS OS MOVIMENTOS A PARTIR DOS FUNDAMENTOS
-      const repeat = (fn, times) => {
-        for (let i = 0; i < times; i++) fn();
-      };
+      
+      const repeat = (fn, times) => { for (let i = 0; i < times; i++) fn(); };
       const prime = (fn) => () => repeat(fn, 3);
       const double = (fn) => () => repeat(fn, 2);
 
-      const moveD = () => {
-        double(rotationX)();
-        moveU();
-        double(rotationX)();
-      };
-      const moveR = () => {
-        prime(rotationZ)();
-        moveU();
-        rotationZ();
-      };
-      const moveL = () => {
-        rotationZ();
-        moveU();
-        prime(rotationZ)();
-      };
-      const moveF = () => {
-        rotationX();
-        moveU();
-        prime(rotationX)();
-      };
-      const moveB = () => {
-        prime(rotationX)();
-        moveU();
-        rotationX();
-      };
-
- 
-      function moveM() {
-        // Direct M' move: reverse direction of M
-        const temp = [cubeState.U[1], cubeState.U[4], cubeState.U[7]];
-        const tempRot = [stickerRotations.U[1], stickerRotations.U[4], stickerRotations.U[7]];
-        const tempTex = [stickerTextures.U[1], stickerTextures.U[4], stickerTextures.U[7]];
-
-        // U ← B (with 180° flip)
-        cubeState.U[1] = cubeState.B[7];
-        cubeState.U[4] = cubeState.B[4];
-        cubeState.U[7] = cubeState.B[1];
-        stickerRotations.U[1] = (stickerRotations.B[7] + 2) % 4;
-        stickerRotations.U[4] = (stickerRotations.B[4] + 2) % 4;
-        stickerRotations.U[7] = (stickerRotations.B[1] + 2) % 4;
-        stickerTextures.U[1] = stickerTextures.B[7];
-        stickerTextures.U[4] = stickerTextures.B[4];
-        stickerTextures.U[7] = stickerTextures.B[1];
-
-        // B ← D (with 180° flip)
-        cubeState.B[7] = cubeState.D[1];
-        cubeState.B[4] = cubeState.D[4];
-        cubeState.B[1] = cubeState.D[7];
-        stickerRotations.B[7] = (stickerRotations.D[1] + 2) % 4;
-        stickerRotations.B[4] = (stickerRotations.D[4] + 2) % 4;
-        stickerRotations.B[1] = (stickerRotations.D[7] + 2) % 4;
-        stickerTextures.B[7] = stickerTextures.D[1];
-        stickerTextures.B[4] = stickerTextures.D[4];
-        stickerTextures.B[1] = stickerTextures.D[7];
-
-        // D ← F
-        cubeState.D[1] = cubeState.F[1];
-        cubeState.D[4] = cubeState.F[4];
-        cubeState.D[7] = cubeState.F[7];
-        stickerRotations.D[1] = stickerRotations.F[1];
-        stickerRotations.D[4] = stickerRotations.F[4];
-        stickerRotations.D[7] = stickerRotations.F[7];
-        stickerTextures.D[1] = stickerTextures.F[1];
-        stickerTextures.D[4] = stickerTextures.F[4];
-        stickerTextures.D[7] = stickerTextures.F[7];
-
-        // F ← U
-        cubeState.F[1] = temp[0];
-        cubeState.F[4] = temp[1];
-        cubeState.F[7] = temp[2];
-        stickerRotations.F[1] = tempRot[0];
-        stickerRotations.F[4] = tempRot[1];
-        stickerRotations.F[7] = tempRot[2];
-        stickerTextures.F[1] = tempTex[0];
-        stickerTextures.F[4] = tempTex[1];
-        stickerTextures.F[7] = tempTex[2];
-
-        updateDOM();
-      }
-
-      // SLICE MOVES
-      function moveMPrime() {
-        // Direct M move: rotate middle slice like L but opposite direction
-        const temp = [cubeState.U[1], cubeState.U[4], cubeState.U[7]];
-        const tempRot = [stickerRotations.U[1], stickerRotations.U[4], stickerRotations.U[7]];
-        const tempTex = [stickerTextures.U[1], stickerTextures.U[4], stickerTextures.U[7]];
-
-        // U ← F
-        cubeState.U[1] = cubeState.F[1];
-        cubeState.U[4] = cubeState.F[4];
-        cubeState.U[7] = cubeState.F[7];
-        stickerRotations.U[1] = stickerRotations.F[1];
-        stickerRotations.U[4] = stickerRotations.F[4];
-        stickerRotations.U[7] = stickerRotations.F[7];
-        stickerTextures.U[1] = stickerTextures.F[1];
-        stickerTextures.U[4] = stickerTextures.F[4];
-        stickerTextures.U[7] = stickerTextures.F[7];
-
-        // F ← D
-        cubeState.F[1] = cubeState.D[1];
-        cubeState.F[4] = cubeState.D[4];
-        cubeState.F[7] = cubeState.D[7];
-        stickerRotations.F[1] = stickerRotations.D[1];
-        stickerRotations.F[4] = stickerRotations.D[4];
-        stickerRotations.F[7] = stickerRotations.D[7];
-        stickerTextures.F[1] = stickerTextures.D[1];
-        stickerTextures.F[4] = stickerTextures.D[4];
-        stickerTextures.F[7] = stickerTextures.D[7];
-
-        // D ← B (with 180° flip)
-        cubeState.D[1] = cubeState.B[7];
-        cubeState.D[4] = cubeState.B[4];
-        cubeState.D[7] = cubeState.B[1];
-        stickerRotations.D[1] = (stickerRotations.B[7] + 2) % 4;
-        stickerRotations.D[4] = (stickerRotations.B[4] + 2) % 4;
-        stickerRotations.D[7] = (stickerRotations.B[1] + 2) % 4;
-        stickerTextures.D[1] = stickerTextures.B[7];
-        stickerTextures.D[4] = stickerTextures.B[4];
-        stickerTextures.D[7] = stickerTextures.B[1];
-
-        // B ← U (with 180° flip)
-        cubeState.B[7] = temp[0];
-        cubeState.B[4] = temp[1];
-        cubeState.B[1] = temp[2];
-        stickerRotations.B[7] = (tempRot[0] + 2) % 4;
-        stickerRotations.B[4] = (tempRot[1] + 2) % 4;
-        stickerRotations.B[1] = (tempRot[2] + 2) % 4;
-        stickerTextures.B[7] = tempTex[0];
-        stickerTextures.B[4] = tempTex[1];
-        stickerTextures.B[1] = tempTex[2];
-
-        updateDOM();
-      }
-
-      function moveM2() {
-        // Direct M2 move: swap opposite middle slices
-        const tempU = [cubeState.U[1], cubeState.U[4], cubeState.U[7]];
-        const tempRotU = [stickerRotations.U[1], stickerRotations.U[4], stickerRotations.U[7]];
-        const tempTexU = [stickerTextures.U[1], stickerTextures.U[4], stickerTextures.U[7]];
-
-        // U ↔ D
-        cubeState.U[1] = cubeState.D[1];
-        cubeState.U[4] = cubeState.D[4];
-        cubeState.U[7] = cubeState.D[7];
-        stickerRotations.U[1] = stickerRotations.D[1];
-        stickerRotations.U[4] = stickerRotations.D[4];
-        stickerRotations.U[7] = stickerRotations.D[7];
-        stickerTextures.U[1] = stickerTextures.D[1];
-        stickerTextures.U[4] = stickerTextures.D[4];
-        stickerTextures.U[7] = stickerTextures.D[7];
-
-        cubeState.D[1] = tempU[0];
-        cubeState.D[4] = tempU[1];
-        cubeState.D[7] = tempU[2];
-        stickerRotations.D[1] = tempRotU[0];
-        stickerRotations.D[4] = tempRotU[1];
-        stickerRotations.D[7] = tempRotU[2];
-        stickerTextures.D[1] = tempTexU[0];
-        stickerTextures.D[4] = tempTexU[1];
-        stickerTextures.D[7] = tempTexU[2];
-
-        // F ↔ B (with 180° flip)
-        const tempF = [cubeState.F[1], cubeState.F[4], cubeState.F[7]];
-        const tempRotF = [stickerRotations.F[1], stickerRotations.F[4], stickerRotations.F[7]];
-        const tempTexF = [stickerTextures.F[1], stickerTextures.F[4], stickerTextures.F[7]];
-
-        cubeState.F[1] = cubeState.B[7];
-        cubeState.F[4] = cubeState.B[4];
-        cubeState.F[7] = cubeState.B[1];
-        stickerRotations.F[1] = (stickerRotations.B[7] + 2) % 4;
-        stickerRotations.F[4] = (stickerRotations.B[4] + 2) % 4;
-        stickerRotations.F[7] = (stickerRotations.B[1] + 2) % 4;
-        stickerTextures.F[1] = stickerTextures.B[7];
-        stickerTextures.F[4] = stickerTextures.B[4];
-        stickerTextures.F[7] = stickerTextures.B[1];
-
-        cubeState.B[7] = tempF[0];
-        cubeState.B[4] = tempF[1];
-        cubeState.B[1] = tempF[2];
-        stickerRotations.B[7] = (tempRotF[0] + 2) % 4;
-        stickerRotations.B[4] = (tempRotF[1] + 2) % 4;
-        stickerRotations.B[1] = (tempRotF[2] + 2) % 4;
-        stickerTextures.B[7] = tempTexF[0];
-        stickerTextures.B[4] = tempTexF[1];
-        stickerTextures.B[1] = tempTexF[2];
-
-        updateDOM();
-      }
-      
-      const moveE = () => {
-        rotationZ();
-        moveM();
-        prime(rotationZ)();
-      };
-      
-      const moveEPrime = () => {
-        prime(rotationZ)();
-        moveM();
-        rotationZ();
-      };
-      
-      const moveE2 = () => {
-        prime(rotationZ)();
-        moveM2();
-        rotationZ();
-      };
-      
-      const moveS = () => {
-        rotationY();
-        moveM();
-        prime(rotationY)();
-      };
-      
-      const moveSPrime = () => {
-        prime(rotationY)();
-        moveM();
-        rotationY();
-      };
-      
-      const moveS2 = () => {
-        prime(rotationY)();
-        moveM2();
-        rotationY();
-      };
-
-      // WIDE MOVES
-      const moveRw = () => {
-        moveL();
-        rotationX();
-      };
-      
-      const moveLw = () => {
-        moveR();
-        prime(rotationX)();
-      };
-      
-      const moveUw = () => {
-        moveD();
-        rotationY();
-      };
-      
-      const moveDw = () => {
-        moveU();
-        prime(rotationY)();
-      };
-      
-      const moveFw = () => {
-        moveB();
-        rotationZ();
-      };
-      
-      const moveBw = () => {
-        moveF();
-        prime(rotationZ)();
-      };
-
-      function applyMove(move) {
-        const moves = {
-          U: moveU,
-          D: moveD,
-          R: moveR,
-          L: moveL,
-          F: moveF,
-          B: moveB,
-          M: moveM,
-          E: moveE,
-          S: moveS,
-          Rw: moveRw,
-          Lw: moveLw,
-          Uw: moveUw,
-          Dw: moveDw,
-          Fw: moveFw,
-          Bw: moveBw,
-          r: moveRw,
-          l: moveLw,
-          u: moveUw,
-          d: moveDw,
-          f: moveFw,
-          b: moveBw,
-          x: rotationX,
-          y: rotationY,
-          z: rotationZ,
-          "U'": prime(moveU),
-          "D'": prime(moveD),
-          "R'": prime(moveR),
-          "L'": prime(moveL),
-          "F'": prime(moveF),
-          "B'": prime(moveB),
-          "M'": moveMPrime,
-          "E'": moveEPrime,
-          "S'": moveSPrime,
-          "Rw'": prime(moveRw),
-          "Lw'": prime(moveLw),
-          "Uw'": prime(moveUw),
-          "Dw'": prime(moveDw),
-          "Fw'": prime(moveFw),
-          "Bw'": prime(moveBw),
-          "r'": prime(moveRw),
-          "l'": prime(moveLw),
-          "u'": prime(moveUw),
-          "d'": prime(moveDw),
-          "f'": prime(moveFw),
-          "b'": prime(moveBw),
-          "x'": prime(rotationX),
-          "y'": prime(rotationY),
-          "z'": prime(rotationZ),
-          U2: double(moveU),
-          D2: double(moveD),
-          R2: double(moveR),
-          L2: double(moveL),
-          F2: double(moveF),
-          B2: double(moveB),
-          M2: moveM2,
-          E2: moveE2,
-          S2: moveS2,
-          Rw2: double(moveRw),
-          Lw2: double(moveLw),
-          Uw2: double(moveUw),
-          Dw2: double(moveDw),
-          Fw2: double(moveFw),
-          Bw2: double(moveBw),
-          r2: double(moveRw),
-          l2: double(moveLw),
-          u2: double(moveUw),
-          d2: double(moveDw),
-          f2: double(moveFw),
-          b2: double(moveBw),
-          x2: double(rotationX),
-          y2: double(rotationY),
-          z2: double(rotationZ),
-        };
-
-        if (moves[move]) moves[move]();
+      function applyMove(move, trackHistory = true) {
+        cubeCore.applyMove(move);
+        syncState();
+        if (trackHistory) addMoveToHistory(move);
       }
 
       function applyAlgorithm() {
@@ -1755,7 +1626,14 @@ if (file_exists('bluetooth.js')) {
         
         // Clean up and split moves
         const moves = alg.trim().split(/\s+/).filter(move => move.length > 0);
-        moves.forEach((move) => applyMove(move));
+        
+        if (moves.length <= 50) {
+          moves.forEach((move) => applyMove(move));
+        } else {
+          moves.forEach((move) => cubeCore.applyMove(move));
+          syncState();
+          addMoveToHistory(`ALG (${moves.length} moves)`);
+        }
       }
 
       function solveCube() {
@@ -1763,6 +1641,7 @@ if (file_exists('bluetooth.js')) {
         if (textureMode !== "standard") {
           updateDOM();
         }
+        addMoveToHistory('RESET');
       }
 
       function loadCustomConfig() {
@@ -2128,6 +2007,35 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
           }
         } catch (e) {}
       }
+
+      function toggleLeftPanel() {
+        const controls = document.getElementById("controls");
+        controls.classList.toggle("hidden");
+        localStorage.setItem('panelHidden', controls.classList.contains('hidden'));
+      }
+
+      function toggleFullscreen() {
+        const elem = document.documentElement;
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          if (elem.requestFullscreen) {
+            elem.requestFullscreen({ navigationUI: 'hide' }).then(() => {
+              setTimeout(setRealViewportHeight, 100);
+            });
+          } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+            setTimeout(setRealViewportHeight, 100);
+          }
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().then(() => {
+              setTimeout(setRealViewportHeight, 100);
+            });
+          } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+            setTimeout(setRealViewportHeight, 100);
+          }
+        }
+      }
       
 
 
@@ -2384,6 +2292,859 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         }
       });
       
+      // Camera control integration
+      let cameraEnabled = false;
+      let faceMesh = null;
+      let cameraStream = null;
+      let camera = null;
+      let calibrationCenter = { x: 0, y: 0 };
+      let isCalibrated = false;
+      let sensitivityX = 60;
+      let sensitivityY = 40;
+      let offsetX = 0;
+      let offsetY = 0;
+      let bgSensitivityX = 30;
+      let bgSensitivityY = 30;
+      let bgZoom = 150;
+      let sameSensitivity = false;
+      let sameBgSensitivity = false;
+      let invertX = false;
+      let invertY = false;
+      let invertBgX = false;
+      let invertBgY = false;
+      let lastUpdateTime = 0;
+      let mediaPipeReady = false;
+      let faceDetected = false;
+      
+      async function loadCameras() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream.getTracks().forEach(track => track.stop());
+          
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const select = document.getElementById('cameraSelect');
+          const videoDevices = devices.filter(d => d.kind === 'videoinput');
+          
+          select.innerHTML = '<option value="">Select Camera...</option>';
+          videoDevices.forEach((device, i) => {
+            const option = document.createElement('option');
+            option.value = device.deviceId;
+            option.text = device.label || `Camera ${i + 1}`;
+            select.appendChild(option);
+          });
+          
+          updateCameraStatus(`Found ${videoDevices.length} cameras`);
+        } catch (e) {
+          updateCameraStatus('Camera permission needed');
+        }
+      }
+      
+      function updateCameraStatus(text) {
+        document.getElementById('cameraStatus').textContent = text;
+      }
+      
+      async function startCamera() {
+        const selectedCamera = document.getElementById('cameraSelect').value;
+        const video = document.getElementById('cameraPreview');
+        
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+        }
+        
+        try {
+          let constraints = { video: { width: 320, height: 240 } };
+          if (selectedCamera) {
+            constraints.video.deviceId = { exact: selectedCamera };
+          }
+          
+          updateCameraStatus('Starting camera...');
+          cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+          video.srcObject = cameraStream;
+          
+          // Load MediaPipe scripts if not already loaded
+          if (!window.FaceMesh) {
+            await loadMediaPipeScripts();
+          }
+          
+          // Initialize MediaPipe Face Mesh with error handling
+          try {
+            faceMesh = new FaceMesh({
+              locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+            });
+            
+            faceMesh.setOptions({
+              maxNumFaces: 1,
+              refineLandmarks: false,
+              minDetectionConfidence: 0.5,
+              minTrackingConfidence: 0.5
+            });
+            
+            faceMesh.onResults(onCameraResults);
+            
+            // Mark MediaPipe as ready after successful initialization
+            mediaPipeReady = true;
+            updateCameraStatus('Face detection ready - position head and calibrate');
+          } catch (e) {
+            updateCameraStatus('Face detection failed to load - camera preview only');
+          }
+          
+          // Wait for video to load
+          await new Promise(resolve => {
+            video.onloadedmetadata = resolve;
+          });
+          
+          // Use MediaPipe Camera for automatic processing
+          camera = new Camera(video, {
+            onFrame: async () => {
+              if (faceMesh && mediaPipeReady) {
+                await faceMesh.send({ image: video });
+              }
+            },
+            width: 320,
+            height: 240
+          });
+          
+          camera.start();
+          
+          const track = cameraStream.getVideoTracks()[0];
+          updateCameraStatus(`Active: ${track.label} - Position head and calibrate`);
+          
+        } catch (error) {
+          mediaPipeReady = false;
+          updateCameraStatus('Camera error: ' + error.message);
+        }
+      }
+      
+      async function loadMediaPipeScripts() {
+        try {
+          const scripts = [
+            'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js',
+            'https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js',
+            'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js',
+            'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js'
+          ];
+          
+          for (const src of scripts) {
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = src;
+              script.onload = resolve;
+              script.onerror = () => reject(new Error(`Failed to load ${src}`));
+              document.head.appendChild(script);
+            });
+          }
+        } catch (error) {
+          throw new Error('MediaPipe scripts failed to load: ' + error.message);
+        }
+      }
+      
+      function onCameraResults(results) {
+        if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+          faceDetected = true;
+          const landmarks = results.multiFaceLandmarks[0];
+          
+          // Get nose tip (landmark 1)
+          const noseTip = landmarks[1];
+          const x = noseTip.x * 320;
+          const y = noseTip.y * 240;
+          
+          // Show head position with red dot
+          const dot = document.getElementById('headDot');
+          dot.style.display = 'block';
+          dot.style.left = x + 'px';
+          dot.style.top = y + 'px';
+          
+          if (isCalibrated) {
+            // Apply offset to camera coordinates
+            const adjustedX = x + offsetX;
+            const adjustedY = y + offsetY;
+            
+            // Calculate movement from calibration center
+            const deltaX = (adjustedX - calibrationCenter.x) / 160;
+            const deltaY = (adjustedY - calibrationCenter.y) / 120;
+            
+            // Apply to cube rotation with inversions
+            cubeRotation.y = 0 - (deltaX * sensitivityX * (invertX ? -1 : 1));
+            cubeRotation.x = -15 + (deltaY * sensitivityY * (invertY ? -1 : 1));
+            
+            const now = Date.now();
+            if (now - lastUpdateTime > 16) { // ~60fps throttling
+              updateCubeRotation();
+              updateBackgroundParallax(x, y);
+              lastUpdateTime = now;
+            }
+          }
+        } else {
+          faceDetected = false;
+          document.getElementById('headDot').style.display = 'none';
+        }
+      }
+      
+      function toggleCamera() {
+        const btn = document.getElementById('cameraBtn');
+        const controls = document.getElementById('cameraControls');
+        const container = document.getElementById('cameraContainer');
+        
+        cameraEnabled = !cameraEnabled;
+        
+        if (cameraEnabled) {
+          btn.textContent = 'Disable Camera';
+          controls.style.display = 'block';
+          container.style.display = 'block';
+          loadCameras().then(() => {
+            if (document.getElementById('cameraSelect').options.length > 1) {
+              startCamera();
+            }
+          });
+          // Switch to 3D mode for camera control
+          if (currentViewMode === 'cubenet') {
+            setViewMode('perspective');
+          }
+        } else {
+          btn.textContent = 'Enable Camera';
+          controls.style.display = 'none';
+          container.style.display = 'none';
+          if (camera) {
+            camera.stop();
+            camera = null;
+          }
+          if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+          }
+          isCalibrated = false;
+          mediaPipeReady = false;
+          faceDetected = false;
+          updateCameraStatus('Camera disabled');
+        }
+      }
+      
+      function calibrateCamera() {
+        if (!cameraEnabled) {
+          updateCameraStatus('Camera not enabled');
+          return;
+        }
+        if (!mediaPipeReady) {
+          updateCameraStatus('Face detection not ready - wait a moment');
+          return;
+        }
+        if (!faceDetected) {
+          updateCameraStatus('No face detected - position yourself in camera view');
+          return;
+        }
+        
+        // Use current head position as calibration center
+        calibrationCenter.x = 160; // Center of 320px width
+        calibrationCenter.y = 120; // Center of 240px height
+        isCalibrated = true;
+        saveCameraCalibration();
+        updateCameraStatus('Calibrated! Move your head to control the cube');
+      }
+      
+      function saveCameraCalibration() {
+        const calibrationData = {
+          calibrationCenter,
+          sensitivityX,
+          sensitivityY,
+          offsetX,
+          offsetY,
+          bgSensitivityX,
+          bgSensitivityY,
+          bgZoom,
+          sameSensitivity,
+          sameBgSensitivity,
+          invertX,
+          invertY,
+          invertBgX,
+          invertBgY,
+          isCalibrated
+        };
+        localStorage.setItem('cameraCalibration', JSON.stringify(calibrationData));
+      }
+      
+      function loadCameraCalibration() {
+        try {
+          const saved = localStorage.getItem('cameraCalibration');
+          if (saved) {
+            const data = JSON.parse(saved);
+            calibrationCenter = data.calibrationCenter || { x: 160, y: 120 };
+            sensitivityX = data.sensitivityX || 60;
+            sensitivityY = data.sensitivityY || 40;
+            offsetX = data.offsetX || 0;
+            offsetY = data.offsetY || 0;
+            bgSensitivityX = data.bgSensitivityX || 30;
+            bgSensitivityY = data.bgSensitivityY || 30;
+            bgZoom = data.bgZoom || 150;
+            sameSensitivity = data.sameSensitivity || false;
+            sameBgSensitivity = data.sameBgSensitivity || false;
+            invertX = data.invertX || false;
+            invertY = data.invertY || false;
+            invertBgX = data.invertBgX || false;
+            invertBgY = data.invertBgY || false;
+            isCalibrated = data.isCalibrated || false;
+            
+            // Update UI elements
+            document.getElementById('sensitivityX').value = sensitivityX;
+            document.getElementById('sensitivityXValue').textContent = sensitivityX;
+            document.getElementById('sensitivityY').value = sensitivityY;
+            document.getElementById('sensitivityYValue').textContent = sensitivityY;
+            document.getElementById('offsetX').value = offsetX;
+            document.getElementById('offsetXValue').textContent = offsetX;
+            document.getElementById('offsetY').value = offsetY;
+            document.getElementById('offsetYValue').textContent = offsetY;
+            document.getElementById('bgSensitivityX').value = bgSensitivityX;
+            document.getElementById('bgSensitivityXValue').textContent = bgSensitivityX;
+            document.getElementById('bgSensitivityY').value = bgSensitivityY;
+            document.getElementById('bgSensitivityYValue').textContent = bgSensitivityY;
+            document.getElementById('sameSensitivity').checked = sameSensitivity;
+            document.getElementById('sameBgSensitivity').checked = sameBgSensitivity;
+            document.getElementById('invertX').checked = invertX;
+            document.getElementById('invertY').checked = invertY;
+            document.getElementById('invertBgX').checked = invertBgX;
+            document.getElementById('invertBgY').checked = invertBgY;
+          }
+        } catch (e) {}
+      }
+      
+      function updateBackgroundParallax(x, y) {
+        const panel = document.getElementById('right-panel');
+        const adjustedX = (x + offsetX - calibrationCenter.x) / 160;
+        const adjustedY = (y + offsetY - calibrationCenter.y) / 120;
+        const bgOffsetX = 50 - (adjustedX * bgSensitivityX * (invertBgX ? -1 : 1));
+        const bgOffsetY = 50 - (adjustedY * bgSensitivityY * (invertBgY ? -1 : 1));
+        panel.style.backgroundPosition = `${bgOffsetX}% ${bgOffsetY}%`;
+        panel.style.backgroundSize = `${bgZoom}%`;
+      }
+      
+      // Camera slider event listeners
+      function initCameraControls() {
+        document.getElementById('sameSensitivity').addEventListener('change', (e) => {
+          sameSensitivity = e.target.checked;
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('sameBgSensitivity').addEventListener('change', (e) => {
+          sameBgSensitivity = e.target.checked;
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('invertX').addEventListener('change', (e) => {
+          invertX = e.target.checked;
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('invertY').addEventListener('change', (e) => {
+          invertY = e.target.checked;
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('invertBgX').addEventListener('change', (e) => {
+          invertBgX = e.target.checked;
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('invertBgY').addEventListener('change', (e) => {
+          invertBgY = e.target.checked;
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('sensitivityX').addEventListener('input', (e) => {
+          sensitivityX = parseInt(e.target.value);
+          document.getElementById('sensitivityXValue').textContent = sensitivityX;
+          if (sameSensitivity) {
+            sensitivityY = sensitivityX;
+            document.getElementById('sensitivityY').value = sensitivityY;
+            document.getElementById('sensitivityYValue').textContent = sensitivityY;
+          }
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('sensitivityY').addEventListener('input', (e) => {
+          sensitivityY = parseInt(e.target.value);
+          document.getElementById('sensitivityYValue').textContent = sensitivityY;
+          if (sameSensitivity) {
+            sensitivityX = sensitivityY;
+            document.getElementById('sensitivityX').value = sensitivityX;
+            document.getElementById('sensitivityXValue').textContent = sensitivityX;
+          }
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('offsetX').addEventListener('input', (e) => {
+          offsetX = parseInt(e.target.value);
+          document.getElementById('offsetXValue').textContent = offsetX;
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('offsetY').addEventListener('input', (e) => {
+          offsetY = parseInt(e.target.value);
+          document.getElementById('offsetYValue').textContent = offsetY;
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('bgSensitivityX').addEventListener('input', (e) => {
+          bgSensitivityX = parseInt(e.target.value);
+          document.getElementById('bgSensitivityXValue').textContent = bgSensitivityX;
+          if (sameBgSensitivity) {
+            bgSensitivityY = bgSensitivityX;
+            document.getElementById('bgSensitivityY').value = bgSensitivityY;
+            document.getElementById('bgSensitivityYValue').textContent = bgSensitivityY;
+          }
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('bgSensitivityY').addEventListener('input', (e) => {
+          bgSensitivityY = parseInt(e.target.value);
+          document.getElementById('bgSensitivityYValue').textContent = bgSensitivityY;
+          if (sameBgSensitivity) {
+            bgSensitivityX = bgSensitivityY;
+            document.getElementById('bgSensitivityX').value = bgSensitivityX;
+            document.getElementById('bgSensitivityXValue').textContent = bgSensitivityX;
+          }
+          saveCameraCalibration();
+        });
+        
+        document.getElementById('cameraSelect').addEventListener('change', () => {
+          if (cameraEnabled) {
+            startCamera();
+          }
+        });
+      }
+
+      // History system - Tree-based (reliable)
+      function uuid() {
+        if (crypto && crypto.randomUUID) return crypto.randomUUID();
+        return 'id-' + Math.random().toString(36).slice(2,9);
+      }
+
+      class MoveNode {
+        constructor(move, parent = null, state = null) {
+          this.id = uuid();
+          this.move = move;
+          this.parent = parent;
+          this.children = [];
+          this.state = state;
+          this.timestamp = new Date().toLocaleTimeString();
+        }
+      }
+
+      let historyRoot = null;
+      let currentNode = null;
+      
+      function initHistory() {
+        const initialState = {
+          cubeState: JSON.parse(JSON.stringify(cubeState)),
+          stickerRotations: JSON.parse(JSON.stringify(stickerRotations)),
+          stickerTextures: JSON.parse(JSON.stringify(stickerTextures))
+        };
+        historyRoot = new MoveNode('START', null, initialState);
+        currentNode = historyRoot;
+      }
+      let historyTransform = { x: 0, y: 0, scale: 1 };
+      let isHistoryPanning = false;
+      let lastHistoryPanPoint = { x: 0, y: 0 };
+
+      function addMoveToHistory(move) {
+        const state = {
+          cubeState: JSON.parse(JSON.stringify(cubeState)),
+          stickerRotations: JSON.parse(JSON.stringify(stickerRotations)),
+          stickerTextures: JSON.parse(JSON.stringify(stickerTextures))
+        };
+        
+        const newNode = new MoveNode(move, currentNode, state);
+        currentNode.children.push(newNode);
+        currentNode = newNode;
+        
+        updateHistoryDisplay();
+      }
+
+      function getPathToNode(node) {
+        const path = [];
+        let cur = node;
+        while (cur) {
+          path.push(cur);
+          cur = cur.parent;
+        }
+        return path.reverse();
+      }
+
+      function findNodeById(root, id) {
+        let found = null;
+        function dfs(n) {
+          if (n.id === id) { found = n; return; }
+          for (const c of n.children) {
+            dfs(c);
+            if (found) return;
+          }
+        }
+        dfs(root);
+        return found;
+      }
+
+      const XSTEP = 120, YSTEP = 60, NODE_W = 80, NODE_H = 32;
+      
+      function layoutTree(root) {
+        let branchCounter = 0;
+        const positions = {};
+
+        function dfs(node, depth, branchIndex) {
+          const x = depth * XSTEP;
+          const y = branchIndex * YSTEP;
+          positions[node.id] = {x, y, node};
+          
+          for (let i = 0; i < node.children.length; i++) {
+            const c = node.children[i];
+            if (i === 0) {
+              dfs(c, depth + 1, branchIndex);
+            } else {
+              branchCounter++;
+              dfs(c, depth + 1, branchCounter);
+            }
+          }
+        }
+
+        dfs(root, 0, 0);
+        return positions;
+      }
+
+      let historyCanvas = null;
+      let historyCtx = null;
+      let historyPositions = {};
+      
+      // Polyfill for roundRect
+      if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+          if (w < 2 * r) r = w / 2;
+          if (h < 2 * r) r = h / 2;
+          this.beginPath();
+          this.moveTo(x + r, y);
+          this.arcTo(x + w, y, x + w, y + h, r);
+          this.arcTo(x + w, y + h, x, y + h, r);
+          this.arcTo(x, y + h, x, y, r);
+          this.arcTo(x, y, x + w, y, r);
+          this.closePath();
+          return this;
+        };
+      }
+      
+      function updateHistoryDisplay() {
+        const container = document.getElementById('historyGraph');
+        
+        if (!historyCanvas) {
+          container.innerHTML = '';
+          historyCanvas = document.createElement('canvas');
+          historyCanvas.id = 'historyCanvas';
+          historyCanvas.style.width = '100%';
+          historyCanvas.style.height = '100%';
+          historyCanvas.style.cursor = 'default';
+          container.appendChild(historyCanvas);
+          historyCtx = historyCanvas.getContext('2d');
+          
+          // Mouse events
+          historyCanvas.addEventListener('mousedown', (e) => {
+            const rect = historyCanvas.getBoundingClientRect();
+            const x = (e.clientX - rect.left - historyTransform.x) / historyTransform.scale;
+            const y = (e.clientY - rect.top - historyTransform.y) / historyTransform.scale;
+            
+            let clicked = false;
+            for (const id in historyPositions) {
+              const p = historyPositions[id];
+              if (x >= p.x && x <= p.x + NODE_W && y >= p.y && y <= p.y + NODE_H) {
+                selectHistoryNode(p.node.id);
+                clicked = true;
+                break;
+              }
+            }
+            
+            if (!clicked && e.button === 0) {
+              isHistoryPanning = true;
+              lastHistoryPanPoint = { x: e.clientX, y: e.clientY };
+              historyCanvas.style.cursor = 'grabbing';
+              e.preventDefault();
+            }
+          });
+          
+          // Touch events
+          let historyTouchStart = null;
+          let historyInitialDistance = 0;
+          let historyInitialScale = 1;
+          
+          historyCanvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+              const touch = e.touches[0];
+              const rect = historyCanvas.getBoundingClientRect();
+              const x = (touch.clientX - rect.left - historyTransform.x) / historyTransform.scale;
+              const y = (touch.clientY - rect.top - historyTransform.y) / historyTransform.scale;
+              
+              let clicked = false;
+              for (const id in historyPositions) {
+                const p = historyPositions[id];
+                if (x >= p.x && x <= p.x + NODE_W && y >= p.y && y <= p.y + NODE_H) {
+                  selectHistoryNode(p.node.id);
+                  clicked = true;
+                  break;
+                }
+              }
+              
+              if (!clicked) {
+                isHistoryPanning = true;
+                historyTouchStart = { x: touch.clientX, y: touch.clientY };
+                lastHistoryPanPoint = { x: touch.clientX, y: touch.clientY };
+              }
+            } else if (e.touches.length === 2) {
+              isHistoryPanning = false;
+              const dx = e.touches[0].clientX - e.touches[1].clientX;
+              const dy = e.touches[0].clientY - e.touches[1].clientY;
+              historyInitialDistance = Math.sqrt(dx * dx + dy * dy);
+              historyInitialScale = historyTransform.scale;
+            }
+          }, { passive: true });
+          
+          historyCanvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1 && isHistoryPanning) {
+              const touch = e.touches[0];
+              const dx = (touch.clientX - lastHistoryPanPoint.x) * 1.2;
+              const dy = (touch.clientY - lastHistoryPanPoint.y) * 1.2;
+              historyTransform.x += dx;
+              historyTransform.y += dy;
+              lastHistoryPanPoint = { x: touch.clientX, y: touch.clientY };
+              renderHistoryCanvas();
+              e.preventDefault();
+            } else if (e.touches.length === 2) {
+              const dx = e.touches[0].clientX - e.touches[1].clientX;
+              const dy = e.touches[0].clientY - e.touches[1].clientY;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              const scale = (distance / historyInitialDistance) * historyInitialScale;
+              historyTransform.scale = Math.max(0.1, Math.min(3, scale));
+              renderHistoryCanvas();
+              e.preventDefault();
+            }
+          }, { passive: false });
+          
+          historyCanvas.addEventListener('touchend', () => {
+            isHistoryPanning = false;
+            historyTouchStart = null;
+          }, { passive: true });
+          
+          historyCanvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = historyCanvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.max(0.1, Math.min(3, historyTransform.scale * scaleFactor));
+            
+            const scaleChange = newScale / historyTransform.scale;
+            historyTransform.x = mouseX - (mouseX - historyTransform.x) * scaleChange;
+            historyTransform.y = mouseY - (mouseY - historyTransform.y) * scaleChange;
+            historyTransform.scale = newScale;
+            
+            renderHistoryCanvas();
+          });
+        }
+        
+        // Set canvas size
+        const rect = container.getBoundingClientRect();
+        historyCanvas.width = rect.width;
+        historyCanvas.height = rect.height;
+        
+        historyPositions = layoutTree(historyRoot);
+        renderHistoryCanvas();
+      }
+      
+      function renderHistoryCanvas() {
+        if (!historyCtx) return;
+        
+        const ctx = historyCtx;
+        ctx.clearRect(0, 0, historyCanvas.width, historyCanvas.height);
+        ctx.save();
+        ctx.translate(historyTransform.x, historyTransform.y);
+        ctx.scale(historyTransform.scale, historyTransform.scale);
+        
+        // Draw edges
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 3;
+        for (const id in historyPositions) {
+          const p = historyPositions[id];
+          for (const child of p.node.children) {
+            const cpos = historyPositions[child.id];
+            if (!cpos) continue;
+            const x1 = p.x + NODE_W, y1 = p.y + NODE_H/2;
+            const x2 = cpos.x, y2 = cpos.y + NODE_H/2;
+            const midX = (x1 + x2) / 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.bezierCurveTo(midX, y1, midX, y2, x2, y2);
+            ctx.stroke();
+          }
+        }
+        
+        // Draw nodes
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        for (const id in historyPositions) {
+          const p = historyPositions[id];
+          const isCurrent = currentNode.id === p.node.id;
+          
+          // Draw rect
+          ctx.fillStyle = isCurrent ? '#2d5016' : '#1a1a1a';
+          ctx.strokeStyle = isCurrent ? '#4caf50' : '#333';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.roundRect(p.x, p.y, NODE_W, NODE_H, 6);
+          ctx.fill();
+          ctx.stroke();
+          
+          // Draw text
+          ctx.fillStyle = '#fff';
+          ctx.fillText(p.node.move === 'START' ? 'START' : p.node.move, p.x + NODE_W/2, p.y + NODE_H/2);
+          
+          // Draw badge
+          if (p.node.children.length > 1) {
+            ctx.fillStyle = '#4caf50';
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText(p.node.children.length, p.x + NODE_W - 8, p.y + 16);
+            ctx.font = '12px monospace';
+            ctx.textAlign = 'center';
+          }
+        }
+        
+        ctx.restore();
+        
+        // Update grid
+        const gridContainer = document.getElementById('historyRows');
+        gridContainer.innerHTML = '';
+        
+        const path = getPathToNode(currentNode);
+        path.forEach((node, index) => {
+          const row = document.createElement('div');
+          row.className = 'history-row' + (node.id === currentNode.id ? ' current' : '');
+          row.onclick = () => selectHistoryNode(node.id);
+          
+          const branchInfo = node.children.length > 1 ? ` <span style="color:#4caf50;font-weight:bold">(${node.children.length})</span>` : '';
+          row.innerHTML = `
+            <div class="history-cell">${node.timestamp}</div>
+            <div class="history-cell">${node.move}${branchInfo}</div>
+            <div class="history-cell">${index}</div>
+          `;
+          
+          gridContainer.appendChild(row);
+        });
+        
+        // Add next nodes if current node has children
+        if (currentNode.children.length > 0) {
+          const nextRow = document.createElement('div');
+          nextRow.className = 'history-row history-next';
+          nextRow.style.background = '#f0f8ff';
+          nextRow.style.borderLeft = '3px solid #4caf50';
+          
+          const timeCell = document.createElement('div');
+          timeCell.className = 'history-cell';
+          timeCell.textContent = '→';
+          
+          const moveCell = document.createElement('div');
+          moveCell.className = 'history-cell';
+          moveCell.style.display = 'flex';
+          moveCell.style.gap = '4px';
+          moveCell.style.flexWrap = 'wrap';
+          moveCell.style.alignItems = 'center';
+          
+          currentNode.children.forEach((child, idx) => {
+            const pill = document.createElement('span');
+            pill.textContent = child.move;
+            pill.style.cssText = 'background:#4caf50;color:white;padding:2px 8px;border-radius:12px;cursor:pointer;font-size:11px;font-weight:bold;';
+            pill.onclick = (e) => {
+              e.stopPropagation();
+              selectHistoryNode(child.id);
+            };
+            pill.onmouseenter = () => pill.style.background = '#45a049';
+            pill.onmouseleave = () => pill.style.background = '#4caf50';
+            moveCell.appendChild(pill);
+          });
+          
+          const indexCell = document.createElement('div');
+          indexCell.className = 'history-cell';
+          indexCell.textContent = '+';
+          
+          nextRow.appendChild(timeCell);
+          nextRow.appendChild(moveCell);
+          nextRow.appendChild(indexCell);
+          gridContainer.appendChild(nextRow);
+        }
+      }
+
+      function selectHistoryNode(nodeId) {
+        const node = findNodeById(historyRoot, nodeId);
+        if (!node) return;
+        if (!node.state) return;
+        
+        currentNode = node;
+        const state = node.state;
+        cubeState = JSON.parse(JSON.stringify(state.cubeState));
+        stickerRotations = JSON.parse(JSON.stringify(state.stickerRotations));
+        stickerTextures = JSON.parse(JSON.stringify(state.stickerTextures));
+        
+        cubeCore.cubeState = cubeState;
+        cubeCore.stickerRotations = stickerRotations;
+        cubeCore.stickerTextures = stickerTextures;
+        
+        updateDOM();
+        updateHistoryDisplay();
+      }
+
+      function clearHistory() {
+        initHistory();
+        historyTransform = { x: 0, y: 0, scale: 1 };
+        updateHistoryDisplay();
+        showToast('History cleared');
+      }
+      
+      // Global mouse events for history panning
+      document.addEventListener('mousemove', (e) => {
+        if (isHistoryPanning) {
+          const dx = (e.clientX - lastHistoryPanPoint.x) * 1.2;
+          const dy = (e.clientY - lastHistoryPanPoint.y) * 1.2;
+          historyTransform.x += dx;
+          historyTransform.y += dy;
+          lastHistoryPanPoint = { x: e.clientX, y: e.clientY };
+          renderHistoryCanvas();
+        }
+      });
+      
+      document.addEventListener('mouseup', () => {
+        if (isHistoryPanning) {
+          isHistoryPanning = false;
+          if (historyCanvas) historyCanvas.style.cursor = 'default';
+        }
+      });
+
+      // Scramble function
+      function scrambleCube() {
+        solveCube();
+        const algUtils = new AlgUtils();
+        algUtils.generateScrambleAlg(30);
+        const scrambleAlg = algUtils.alg;
+        
+        // Put scramble in textarea
+        document.getElementById('alg').value = scrambleAlg;
+        
+        // Execute the scramble
+        const moves = scrambleAlg.trim().split(/\s+/).filter(move => move.length > 0);
+        
+        if (moves.length <= 50) {
+          moves.forEach((move) => applyMove(move));
+        } else {
+          moves.forEach((move) => cubeCore.applyMove(move));
+          syncState();
+          addMoveToHistory(`SCRAMBLE (${moves.length} moves)`);
+        }
+      }
+
       // Bluetooth cube integration
       let bluetoothCube = null;
       
@@ -2431,8 +3192,42 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       
       // Inicializar
       initCube();
+      initHistory();
       loadAccordionStates();
       loadSidebarState();
+      loadCameraCalibration();
+      initCameraControls();
+      
+      // Load crisp mode
+      try {
+        if (localStorage.getItem('crispMode') === 'true') {
+          document.body.classList.add('crisp-mode');
+          const btn = document.getElementById('crispBtn');
+          btn.textContent = 'Crisp Mode: ON';
+          btn.style.background = '#4caf50';
+          btn.style.color = 'white';
+        }
+      } catch (e) {}
+      
+      // Load render throttle
+      try {
+        const saved = localStorage.getItem('renderThrottle');
+        if (saved === 'true') {
+          renderThrottleEnabled = true;
+          const btn = document.getElementById('throttleBtn');
+          btn.textContent = 'Render Throttle: ON';
+          btn.style.background = '#4caf50';
+          btn.style.color = 'white';
+        }
+      } catch (e) {}
+      
+      // Load panel state
+      try {
+        const panelHidden = localStorage.getItem('panelHidden');
+        if (panelHidden === 'true') {
+          document.getElementById('controls').classList.add('hidden');
+        }
+      } catch (e) {}
       
 
       
@@ -2709,8 +3504,49 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       };
       window.toggleCrispMode = () => {
         document.body.classList.toggle('crisp-mode');
-        console.log('ok')
+        const enabled = document.body.classList.contains('crisp-mode');
+        const btn = document.getElementById('crispBtn');
+        btn.textContent = `Crisp Mode: ${enabled ? 'ON' : 'OFF'}`;
+        btn.style.background = enabled ? '#4caf50' : '';
+        btn.style.color = enabled ? 'white' : '';
+        localStorage.setItem('crispMode', enabled);
       };
+      
+      function toggleRenderThrottle() {
+        renderThrottleEnabled = !renderThrottleEnabled;
+        const btn = document.getElementById('throttleBtn');
+        btn.textContent = `Render Throttle: ${renderThrottleEnabled ? 'ON' : 'OFF'}`;
+        btn.style.background = renderThrottleEnabled ? '#4caf50' : '';
+        btn.style.color = renderThrottleEnabled ? 'white' : '';
+        localStorage.setItem('renderThrottle', renderThrottleEnabled);
+        console.log('Render throttle:', renderThrottleEnabled ? 'ENABLED (60 FPS)' : 'DISABLED (unlimited)');
+      }
+      
+      function selectBackground(filename) {
+        const panel = document.getElementById('right-panel');
+        if (filename) {
+          panel.style.backgroundImage = `url('backgrounds/${filename}')`;
+          localStorage.setItem('selectedBackground', filename);
+        } else {
+          panel.style.backgroundImage = '';
+          localStorage.removeItem('selectedBackground');
+        }
+        
+        document.querySelectorAll('.bg-thumb').forEach(t => t.style.border = '2px solid transparent');
+        document.querySelector(`[data-bg="${filename}"]`).style.border = '2px solid #4caf50';
+      }
+      
+      function loadSelectedBackground() {
+        try {
+          const saved = localStorage.getItem('selectedBackground');
+          if (saved) {
+            selectBackground(saved);
+          }
+        } catch (e) {}
+      }
+      
+      // Load background on init
+      loadSelectedBackground();
     </script>
   </body>
 </html>

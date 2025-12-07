@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador Cubo 3x3x3</title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&family=Roboto+Mono&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    :root {
+      --sticker-size: 30px;
+      --cube-size: 300px;
+    }
+
+    #left-panel {
+      overflow-y: auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+      min-width: 500px;
+    }
+
+    #right-panel {
+      flex: 1;
+      background: rgb(81, 105, 99);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      user-select: none;
+      overflow: hidden;
+      cursor: grab;
+    }
+
+    #right-panel:active {
+      cursor: grabbing;
+    }
+
+    /* 2D Net View */
+    #cube-net {
+      display: grid;
+      grid-template-columns: repeat(4, calc(var(--sticker-size) * 3));
+      grid-template-rows: repeat(3, calc(var(--sticker-size) * 3));
+      gap: 4px;
+      margin: 20px auto;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .face-2d {
+      display: grid;
+      grid-template-columns: repeat(3, var(--sticker-size));
+      grid-template-rows: repeat(3, var(--sticker-size));
+      gap: 2px;
+
+      .sticker {
+        outline: 1px solid black;
+      }
+    }
+
+    .sticker {
+      width: var(--sticker-size);
+      height: var(--sticker-size);
+    }
+
+    .face-U {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .face-L {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .face-F {
+      grid-column: 2;
+      grid-row: 2;
+    }
+
+    .face-R {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .face-B {
+      grid-column: 4;
+      grid-row: 2;
+    }
+
+    .face-D {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    /* 3D View */
+    #cube-3d-wrapper {
+      perspective: 1000px;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    #cube-3d-wrapper.orthographic {
+      perspective: none;
+    }
+
+
+
+    /* Modo isométrico desdobrado */
+    .is-3d #cube-3d-wrapper.isometric .face-3d {
+      position: absolute;
+      width: var(--cube-size);
+      height: var(--cube-size);
+    }
+
+    /* Cubo isométrico principal (F, R, U) */
+    .is-3d #cube-3d-wrapper.isometric .face-F {
+      transform: translateZ(calc(var(--cube-size) / 2));
+      left: 50%;
+      top: 50%;
+      margin-left: calc(-var(--cube-size) / 2);
+      margin-top: calc(-var(--cube-size) / 2);
+    }
+
+    .is-3d #cube-3d-wrapper.isometric .face-R {
+      transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2));
+      left: 50%;
+      top: 50%;
+      margin-left: calc(-var(--cube-size) / 2);
+      margin-top: calc(-var(--cube-size) / 2);
+    }
+
+    .is-3d #cube-3d-wrapper.isometric .face-U {
+      transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2));
+      left: 50%;
+      top: 50%;
+      margin-left: calc(-var(--cube-size) / 2);
+      margin-top: calc(-var(--cube-size) / 2);
+    }
+
+    /* Face L desdobrada ao lado esquerdo da F */
+    .is-3d #cube-3d-wrapper.isometric .face-L {
+      transform: translateZ(calc(var(--cube-size) / 2));
+      left: calc(50% - var(--cube-size));
+      top: 50%;
+      margin-left: calc(-var(--cube-size) / 2);
+      margin-top: calc(-var(--cube-size) / 2);
+    }
+
+    /* Face D desdobrada abaixo da F */
+    .is-3d #cube-3d-wrapper.isometric .face-D {
+      transform: translateZ(calc(var(--cube-size) / 2));
+      left: 50%;
+      top: calc(50% + var(--cube-size));
+      margin-left: calc(-var(--cube-size) / 2);
+      margin-top: calc(-var(--cube-size) / 2);
+    }
+
+    /* Face B desdobrada ao lado direito (mesma orientação da R) */
+    .is-3d #cube-3d-wrapper.isometric .face-3d.face-B {
+      transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2)) translateX(var(--cube-size)) !important;
+      left: 50% !important;
+      top: 50% !important;
+      margin-left: calc(-var(--cube-size) / 2) !important;
+      margin-top: calc(-var(--cube-size) / 2) !important;
+    }
+
+    /* Face B desdobrada no mesmo plano horizontal da U */
+    .is-3d #cube-3d-wrapper.isometric .face-B {
+      transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2)) translateX(var(--cube-size));
+      left: 50%;
+      top: calc(50% - var(--cube-size));
+      margin-left: calc(-var(--cube-size) / 2);
+      margin-top: calc(-var(--cube-size) / 2);
+    }
+
+    #cube-3d {
+      position: relative;
+      top: 50%;
+      left: 50%;
+      transform-style: preserve-3d;
+      width: var(--cube-size);
+      height: var(--cube-size);
+      pointer-events: none;
+    }
+
+    .face-3d {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: visible;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 2px;
+      background: #000;
+      padding: 2px;
+    }
+
+    .sticker-3d {
+      border: 1px solid #000;
+    }
+
+    .is-3d #cube-3d .face-U {
+      transform: rotateX(90deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-D {
+      transform: rotateX(-90deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-F {
+      transform: translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-B {
+      transform: rotateY(180deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-L {
+      transform: rotateY(-90deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    .is-3d #cube-3d .face-R {
+      transform: rotateY(90deg) translateZ(calc(var(--cube-size) / 2));
+    }
+
+    /* Controls Styling */
+    textarea,
+    select {
+      font-family: 'Roboto Mono', monospace;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 8px;
+      background-color: #fff;
+      color: #333;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #4285f4;
+      box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+
+    #stateOutput {
+      width: 100%;
+      background-color: #f1f3f4;
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    #algInput {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    #customConfig {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-family: 'Roboto', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin: 5px 5px 5px 0;
+    }
+
+    button:hover {
+      background-color: #3367d6;
+    }
+
+    button:disabled {
+      background-color: #1a73e8;
+      box-shadow: 0 0 15px rgba(26, 115, 232, 0.6), 0 0 30px rgba(26, 115, 232, 0.4);
+      cursor: default;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from {
+        box-shadow: 0 0 15px rgba(26, 115, 232, 0.6), 0 0 30px rgba(26, 115, 232, 0.4);
+      }
+
+      to {
+        box-shadow: 0 0 20px rgba(26, 115, 232, 0.8), 0 0 40px rgba(26, 115, 232, 0.6);
+      }
+    }
+
+    button i {
+      margin-right: 6px;
+    }
+
+    .button-group {
+      margin: 15px 0;
+    }
+
+    h3 {
+      margin-top: 20px;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    /* Hamburger Menu */
+    #hamburger-btn {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: #4285f4;
+      border: none;
+      border-radius: 4px;
+      padding: 10px;
+      cursor: pointer;
+      color: white;
+      font-size: 18px;
+    }
+
+    #hamburger-btn:hover {
+      background: #3367d6;
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+      body {
+        flex-direction: column;
+        padding-top: 60px; /* Add padding to prevent hamburger button overlap */
+      }
+
+      #hamburger-btn {
+        display: block;
+      }
+
+      #left-panel {
+        position: fixed;
+        top: 0;
+        left: -100%;
+        width: 90%;
+        max-width: 400px;
+        height: 100vh;
+        z-index: 999;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        padding-top: 70px; /* Add padding to account for hamburger button */
+      }
+
+      #left-panel.open {
+        left: 0;
+      }
+
+      #right-panel {
+        width: 100%;
+        height: calc(100vh - 60px);
+        margin-top: 60px; /* Add margin to prevent content overlap with hamburger */
+      }
+
+      /* Overlay */
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 998;
+      }
+
+      .overlay.active {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <button id="hamburger-btn">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+  
+  <div class="overlay"></div>
+  
+  <div id="left-panel">
+    <h2>3x3x3 Simulator</h2>
+
+    <h3>Algorithm Input</h3>
+    <textarea id="algInput" placeholder="Enter algorithms (ex: R U R' U' F2 D' x y z)
+Use Ctrl+Enter to execute"></textarea>
+    <select id="algMode">
+      <option value="continue">Continue from Current State</option>
+      <option value="solved">Start from Solved Cube</option>
+      <option value="lastLoaded">Start from Last Loaded State</option>
+    </select>
+    <button id="applyAlgBtn"><i class="fa-solid fa-play"></i>Apply Algorithm</button>
+
+    <h3>Custom Cube Configuration</h3>
+    <textarea id="customConfig" placeholder='{
+  "mode": "face_textures",
+  "textures": {
+    "U": { "background": "linear-gradient(45deg, red, yellow)" },
+    "L": { "background": "linear-gradient(90deg, orange, red)" },
+    "F": { "background": "linear-gradient(135deg, green, blue)" },
+    "R": { "background": "linear-gradient(180deg, red, purple)" },
+    "B": { "background": "linear-gradient(225deg, blue, cyan)" },
+    "D": { "background": "linear-gradient(270deg, yellow, orange)" }
+  }
+}'>{
+  "mode": "face_textures",
+  "textures": {
+    "U": { 
+      "backgroundImage": "radial-gradient(circle, white 50%, transparent 50%), conic-gradient(from -45deg at center, blue 0deg 90deg, red 90deg 180deg, green 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "U_center": {
+      "background": "radial-gradient(circle, white 50%, transparent 50%), conic-gradient(from -45deg at center, blue 0deg 90deg, red 90deg 180deg, green 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "L": { 
+      "backgroundImage": "radial-gradient(circle, orange 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, green 90deg 180deg, yellow 180deg 270deg, blue 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "L_center": {
+      "background": "radial-gradient(circle, orange 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, green 90deg 180deg, yellow 180deg 270deg, blue 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "F": { 
+      "backgroundImage": "radial-gradient(circle, green 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, red 90deg 180deg, yellow 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "F_center": {
+      "background": "radial-gradient(circle, green 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, red 90deg 180deg, yellow 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "R": { 
+      "backgroundImage": "radial-gradient(circle, red 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, blue 90deg 180deg, yellow 180deg 270deg, green 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "R_center": {
+      "background": "radial-gradient(circle, red 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, blue 90deg 180deg, yellow 180deg 270deg, green 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "B": { 
+      "backgroundImage": "radial-gradient(circle, blue 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, orange 90deg 180deg, yellow 180deg 270deg, red 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "B_center": {
+      "background": "radial-gradient(circle, blue 50%, transparent 50%), conic-gradient(from -45deg at center, white 0deg 90deg, orange 90deg 180deg, yellow 180deg 270deg, red 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    },
+    "D": { 
+      "backgroundImage": "radial-gradient(circle, yellow 50%, transparent 50%), conic-gradient(from -45deg at center, green 0deg 90deg, red 90deg 180deg, blue 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "300% 300%"
+    },
+    "D_center": {
+      "background": "radial-gradient(circle, yellow 50%, transparent 50%), conic-gradient(from -45deg at center, green 0deg 90deg, red 90deg 180deg, blue 180deg 270deg, orange 270deg 360deg)",
+      "backgroundSize": "100% 100%"
+    }
+  }
+}
+</textarea>
+    <button id="loadConfigBtn"><i class="fa-solid fa-magic-wand-sparkles"></i>Load Custom Cube</button>
+
+    <h3>State Management</h3>
+    <textarea id="stateOutput" placeholder="Cube state in JSON"></textarea>
+    <div class="button-group">
+      <button id="saveBtn"><i class="fa-solid fa-floppy-disk"></i>Save State</button>
+      <button id="loadBtn"><i class="fa-solid fa-upload"></i>Load State</button>
+      <button id="solveBtn" style="background-color: #ea4335;"><i class="fa-solid fa-rotate-left"></i>Reset
+        Cube</button>
+    </div>
+
+    <h3>View Modes</h3>
+    <div class="button-group">
+      <button id="cubenetBtn" class="view-btn" style="background-color: #4285f4;"><i class="fa-solid fa-th"></i>Cube
+        Net</button>
+      <button id="isometricBtn" class="view-btn" style="background-color: #34a853;"><i
+          class="fa-solid fa-arrows-rotate"></i>Unfolded Ortographic</button><br />
+      <button id="perspectiveBtn" disabled class="view-btn" style="background-color: #e6a800;"><i
+          class="fa-solid fa-cube"></i>3D Perspective</button>
+      <button id="orthographicBtn" class="view-btn" style="background-color: #ea4335;"><i
+          class="fa-solid fa-camera"></i>3D
+        Orthographic</button>
+    </div>
+  </div>
+
+  <div id="right-panel">
+    <div id="cube-net">
+      <div class="face-2d face-U" data-face="U"></div>
+      <div class="face-2d face-L" data-face="L"></div>
+      <div class="face-2d face-F" data-face="F"></div>
+      <div class="face-2d face-R" data-face="R"></div>
+      <div class="face-2d face-B" data-face="B"></div>
+      <div class="face-2d face-D" data-face="D"></div>
+    </div>
+
+    <div id="cube-3d-wrapper">
+      <div id="cube-3d">
+        <div class="face-3d face-U" data-face="U"></div>
+        <div class="face-3d face-D" data-face="D"></div>
+        <div class="face-3d face-F" data-face="F"></div>
+        <div class="face-3d face-B" data-face="B"></div>
+        <div class="face-3d face-L" data-face="L"></div>
+        <div class="face-3d face-R" data-face="R"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== CAMADA 1: REPRESENTAÇÃO VISUAL ====================
+
+    // ==================== CONFIGURAÇÃO DUAL ====================
+    
+    const CubeConfig = {
+      mode: 'standard', // 'standard', 'custom_indices', 'face_textures'
+      
+      // Modo padrão (compatibilidade)
+      standardColors: {
+        'U': '#ffffff', 'L': '#ff5800', 'F': '#009b48',
+        'R': '#c41e3a', 'B': '#0045ad', 'D': '#ffd500'
+      },
+      
+      // FEATURE 1: Índices customizados
+      customStickers: {
+        0: { background: '#ffffff' },
+        1: { background: '#ff5800' },
+        2: { background: '#009b48' },
+        3: { background: '#c41e3a' },
+        4: { background: '#0045ad' },
+        5: { background: '#ffd500' }
+      },
+      
+      // FEATURE 2: Texturas por face
+      faceTextures: {
+        'U': { background: '#ffffff' },
+        'L': { background: '#ff5800' },
+        'F': { background: '#009b48' },
+        'R': { background: '#c41e3a' },
+        'B': { background: '#0045ad' },
+        'D': { background: '#ffd500' }
+      },
+      
+      faces: ['U', 'L', 'F', 'R', 'B', 'D']
+    };
+
+    function createStickers(faceElement, is3D = false) {
+      faceElement.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const sticker = document.createElement('div');
+        sticker.className = is3D ? 'sticker-3d' : 'sticker';
+        sticker.dataset.index = i;
+        faceElement.appendChild(sticker);
+      }
+    }
+
+    // ==================== SISTEMA DE STICKERS UNIFICADO ====================
+    
+    function setStickerStyle(face, index, stickerData) {
+      const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
+      const face3D = document.querySelector(`.face-3d[data-face="${face}"]`);
+
+      [face2D, face3D].forEach(faceElement => {
+        if (faceElement) {
+          const sticker = faceElement.children[index];
+          if (sticker) {
+            applyStickerToElement(sticker, stickerData, face, index);
+          }
+        }
+      });
+    }
+    
+                        function applyStickerToElement(element, stickerData, face, index) {
+      // Limpar estilos anteriores
+      element.style.background = '';
+      element.style.backgroundImage = '';
+      element.style.backgroundSize = '';
+      element.style.backgroundPosition = '';
+      element.style.backgroundRepeat = '';
+      element.style.transform = '';
+      
+      if (CubeConfig.mode === 'standard') {
+        // Modo compatibilidade: stickerData é uma cor simples
+        element.style.backgroundColor = stickerData;
+        
+      } else if (CubeConfig.mode === 'custom_indices') {
+        // FEATURE 1: Aplicar estilo do índice
+        const style = CubeConfig.customStickers[stickerData.stickerIndex];
+        if (style) {
+          Object.assign(element.style, style);
+        }
+        
+      } else if (CubeConfig.mode === 'face_textures') {
+        // FEATURE 2: Aplicar sprite da textura
+        const texture = CubeConfig.faceTextures[stickerData.faceTexture];
+        const centerTexture = CubeConfig.faceTextures[stickerData.faceTexture + '_center'];
+        
+        // Se for o centro (índice 4) e existir textura específica para centro
+        if (index === 4 && centerTexture) {
+          if (centerTexture.background) {
+            element.style.background = centerTexture.background;
+          }
+          if (centerTexture.backgroundSize) {
+            element.style.backgroundSize = centerTexture.backgroundSize;
+          }
+        } else if (texture) {
+          // Para imagens, usar sistema de sprites
+          if (texture.backgroundImage) {
+            const sprite = generateSprite(stickerData.spritePosition, texture);
+            Object.assign(element.style, sprite);
+          } else if (texture.background) {
+            // Para gradientes/cores sólidas, aplicar diretamente
+            element.style.background = texture.background;
+            if (texture.backgroundSize) {
+              element.style.backgroundSize = texture.backgroundSize;
+            }
+          }
+        }
+      }
+
+                        // Aplicar rotação individual do sticker
+                        let totalRotation = 0;
+                        if (face && index !== undefined && stickerRotations[face] && stickerRotations[face][index]) {
+                          totalRotation += stickerRotations[face][index] * 90;
+                        }
+
+                        if (totalRotation !== 0) {
+                          element.style.transform = `rotate(${totalRotation}deg)`;
+      }
+    }
+    
+    function generateSprite(position, texture) {
+      const row = Math.floor(position / 3);
+      const col = position % 3;
+      
+      // Corrigir: usar posições positivas e ordem correta
+      return {
+        backgroundImage: texture.backgroundImage || '',
+        backgroundPosition: `${col * 50}% ${row * 50}%`,
+        backgroundSize: '300% 300%',
+        backgroundRepeat: 'no-repeat'
+      };
+    }
+    
+    // Função de compatibilidade
+    function setColor(face, index, color) {
+      setStickerStyle(face, index, color);
+    }
+
+    // Inicializa faces 2D
+    CubeConfig.faces.forEach(face => {
+      const faceElement = document.querySelector(`.face-2d[data-face="${face}"]`);
+      createStickers(faceElement, false);
+    });
+
+    // Inicializa faces 3D
+    CubeConfig.faces.forEach(face => {
+      const faceElement = document.querySelector(`.face-3d[data-face="${face}"]`);
+      createStickers(faceElement, true);
+    });
+
+    // ==================== CAMADA 2: ESTADO INTERNO UNIFICADO ====================
+    
+    // Estado interno do cubo - armazena dados completos dos stickers
+    let cubeState = {
+      U: [], L: [], F: [], R: [], B: [], D: []
+    };
+    
+                        // Array de rotações individuais dos stickers (0-3, mod 4)
+                        let stickerRotations = {
+                          U: Array(9).fill(0), L: Array(9).fill(0), F: Array(9).fill(0),
+                          R: Array(9).fill(0), B: Array(9).fill(0), D: Array(9).fill(0)
+                        };
+                      
+    // Inicializar estado vazio
+    function initializeCubeState() {
+      CubeConfig.faces.forEach(face => {
+        cubeState[face] = Array(9).fill(null).map(() => ({
+          mode: CubeConfig.mode,
+          stickerIndex: 0,
+          faceTexture: face,
+          spritePosition: 0,
+          rotation: 0
+        }));
+        stickerRotations[face] = Array(9).fill(0);
+      });
+    }
+    
+    // Compatibilidade com sistema antigo
+    const colorMap = {
+      'white': 0, 'orange': 1, 'green': 2, 'red': 3, 'blue': 4, 'yellow': 5
+    };
+    const reverseColorMap = Object.fromEntries(
+      Object.entries(colorMap).map(([k, v]) => [v, k])
+    );
+
+    function serializeCube() {
+      const state = {
+        mode: CubeConfig.mode,
+        rotations: stickerRotations
+      };
+      
+      if (CubeConfig.mode === 'custom_indices') {
+        state.stickers = CubeConfig.customStickers;
+        // Apenas salvar posições que diferem do padrão
+        state.positions = {};
+        CubeConfig.faces.forEach(face => {
+          const positions = cubeState[face].map(s => s.stickerIndex);
+          const defaultIndex = CubeConfig.faces.indexOf(face);
+          if (!positions.every(p => p === defaultIndex)) {
+            state.positions[face] = positions;
+          }
+        });
+      } else if (CubeConfig.mode === 'face_textures') {
+        state.textures = CubeConfig.faceTextures;
+        // Para texturas, só salvar se houve movimentos
+        const hasMovements = CubeConfig.faces.some(face => 
+          cubeState[face].some((s, i) => s.faceTexture !== face || s.spritePosition !== i)
+        );
+        if (hasMovements) {
+          state.positions = {};
+          CubeConfig.faces.forEach(face => {
+            state.positions[face] = cubeState[face].map(s => `${s.faceTexture}:${s.spritePosition}`);
+          });
+        }
+      }
+      
+      return JSON.stringify(state, null, 2);
+    }
+
+    function deserializeCube(jsonString) {
+      try {
+        const state = JSON.parse(jsonString);
+        
+        if (state.mode) {
+          // Formato otimizado
+          CubeConfig.mode = state.mode;
+          
+          // Restaurar rotações
+          if (state.rotations) {
+            stickerRotations = state.rotations;
+          } else {
+            CubeConfig.faces.forEach(face => {
+              stickerRotations[face] = Array(9).fill(0);
+            });
+          }
+          
+          if (state.mode === 'custom_indices') {
+            CubeConfig.customStickers = state.stickers || {};
+            initializeCubeState();
+            
+            // Aplicar posições customizadas
+            CubeConfig.faces.forEach(face => {
+              const positions = state.positions?.[face] || Array(9).fill(CubeConfig.faces.indexOf(face));
+              for (let i = 0; i < 9; i++) {
+                cubeState[face][i].stickerIndex = positions[i];
+              }
+            });
+            
+          } else if (state.mode === 'face_textures') {
+            CubeConfig.faceTextures = state.textures || {};
+            initializeCubeState();
+            
+            // Aplicar posições se houver
+            if (state.positions) {
+              CubeConfig.faces.forEach(face => {
+                const positions = state.positions[face] || [];
+                for (let i = 0; i < 9; i++) {
+                  if (positions[i]) {
+                    const [faceTexture, spritePosition] = positions[i].split(':');
+                    cubeState[face][i].faceTexture = faceTexture;
+                    cubeState[face][i].spritePosition = parseInt(spritePosition);
+                  }
+                }
+              });
+            }
+          }
+          
+          applyCubeStateToDOM();
+          
+        } else {
+          // Formato antigo: compatibilidade
+          CubeConfig.mode = 'standard';
+          CubeConfig.faces.forEach(face => {
+            if (state[face]) {
+              state[face].forEach((colorCode, index) => {
+                const color = reverseColorMap[colorCode] || 'white';
+                setColor(face, index, color);
+              });
+            }
+          });
+        }
+      } catch (error) {
+        alert('Erro ao carregar estado: ' + error.message);
+      }
+    }
+
+    let lastState = null;
+
+    function printState() {
+      document.getElementById('stateOutput').value = serializeCube();
+    }
+
+    function loadState() {
+      const state = document.getElementById('stateOutput').value;
+      if (state) {
+        deserializeCube(state);
+        update3DView();
+        lastState = state;
+      }
+    }
+
+    function loadLastState() {
+      if (lastState) {
+        deserializeCube(lastState);
+        update3DView();
+      } else {
+        solveCube();
+      }
+    }
+
+    function solveCube() {
+      // Usar esquema Rubik padrão com nova notação
+      CubeConfig.mode = 'custom_indices';
+      CubeConfig.customStickers = {
+        0: { background: '#ffffff' },   // U
+        1: { background: '#ff5800' },  // L  
+        2: { background: '#009b48' },   // F
+        3: { background: '#c41e3a' },     // R
+        4: { background: '#0045ad' },    // B
+        5: { background: '#ffd500' }   // D
+      };
+      
+      // Inicializar estado interno
+      initializeCubeState();
+      
+      CubeConfig.faces.forEach(face => {
+        const faceIndex = CubeConfig.faces.indexOf(face);
+        for (let i = 0; i < 9; i++) {
+          cubeState[face][i] = {
+            mode: 'custom_indices',
+            stickerIndex: faceIndex,
+            rotation: 0
+          };
+          setStickerStyle(face, i, cubeState[face][i]);
+        }
+      });
+      update3DView();
+    }
+
+    // ==================== CAMADA 3: ROTAÇÕES DE FACE ====================
+
+    function rotateFaceCW(faceArray) {
+      return [
+        faceArray[6], faceArray[3], faceArray[0],
+        faceArray[7], faceArray[4], faceArray[1],
+        faceArray[8], faceArray[5], faceArray[2]
+      ];
+    }
+    
+    // Funções para rotacionar dados completos dos stickers
+    function rotateFaceDataCW(faceData) {
+      return [
+        faceData[6], faceData[3], faceData[0],
+        faceData[7], faceData[4], faceData[1],
+        faceData[8], faceData[5], faceData[2]
+      ];
+    }
+    
+    function rotateFaceDataCCW(faceData) {
+      return [
+        faceData[2], faceData[5], faceData[8],
+        faceData[1], faceData[4], faceData[7],
+        faceData[0], faceData[3], faceData[6]
+      ];
+    }
+    
+    function rotateFaceData180(faceData) {
+      return [
+        faceData[8], faceData[7], faceData[6],
+        faceData[5], faceData[4], faceData[3],
+        faceData[2], faceData[1], faceData[0]
+      ];
+    }
+    
+    // Aplicar estado interno ao DOM
+    function applyCubeStateToDOM() {
+      CubeConfig.faces.forEach(face => {
+        for (let i = 0; i < 9; i++) {
+          setStickerStyle(face, i, cubeState[face][i]);
+        }
+      });
+    }
+
+    function rotateFaceCCW(faceArray) {
+      return [
+        faceArray[2], faceArray[5], faceArray[8],
+        faceArray[1], faceArray[4], faceArray[7],
+        faceArray[0], faceArray[3], faceArray[6]
+      ];
+    }
+
+    function rotateFace180(faceArray) {
+      return [
+        faceArray[8], faceArray[7], faceArray[6],
+        faceArray[5], faceArray[4], faceArray[3],
+        faceArray[2], faceArray[1], faceArray[0]
+      ];
+    }
+
+    // ==================== CAMADA 4: CICLOS DE STICKERS ====================
+
+    function cycleStickers(positions) {
+      const cube = JSON.parse(serializeCube());
+      const temp = cube[positions[0][0]][positions[0][1]];
+
+      for (let i = 0; i < positions.length - 1; i++) {
+        const [fromFace, fromIndex] = positions[i + 1];
+        const [toFace, toIndex] = positions[i];
+        cube[toFace][toIndex] = cube[fromFace][fromIndex];
+      }
+
+      const [lastFace, lastIndex] = positions[positions.length - 1];
+      cube[lastFace][lastIndex] = temp;
+
+      deserializeCube(JSON.stringify(cube));
+    }
+
+    // ==================== CAMADA 5: MOVIMENTOS BÁSICOS ====================
+
+      // Detectar se sticker precisa de rotação 180° ao mudar de face
+      function needsFlip(fromFace, toFace) {
+        const faceB = 'B';
+        const facesUDF = ['U', 'D', 'F'];
+        return (fromFace === faceB && facesUDF.includes(toFace)) || 
+               (facesUDF.includes(fromFace) && toFace === faceB);
+      }
+
+      // Aplicar rotação individual a um sticker específico
+      function applyStickerRotation(face, index, rotationIncrement) {
+        if (!stickerRotations[face] || stickerRotations[face][index] === undefined) {
+          console.warn(`Sticker inválido: ${face}[${index}]`);
+          return;
+        }
+        stickerRotations[face][index] = (stickerRotations[face][index] + rotationIncrement + 4) % 4;
+      }
+
+      // Rotacionar face no sentido horário (incrementa rotação dos stickers)
+      function rotateFaceStickers(face, clockwise = true) {
+        const increment = clockwise ? 1 : -1;
+        for (let i = 0; i < 9; i++) {
+        applyStickerRotation(face, i, increment);
+      }
+    }
+
+    function moveR() {
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.R = rotateFaceCW(cube.R);
+        const temp = [cube.F[2], cube.F[5], cube.F[8]];
+        cube.F[2] = cube.D[2]; cube.F[5] = cube.D[5]; cube.F[8] = cube.D[8];
+        cube.D[2] = cube.B[6]; cube.D[5] = cube.B[3]; cube.D[8] = cube.B[0];
+        cube.B[6] = cube.U[2]; cube.B[3] = cube.U[5]; cube.B[0] = cube.U[8];
+        cube.U[2] = temp[0]; cube.U[5] = temp[1]; cube.U[8] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.R = rotateFaceDataCW(cubeState.R);
+        stickerRotations.R = rotateFaceCW(stickerRotations.R);
+        for (let i = 0; i < 9; i++) applyStickerRotation('R', i, 1);
+        
+        const temp = [cubeState.F[2], cubeState.F[5], cubeState.F[8]];
+        const tempRot = [stickerRotations.F[2], stickerRotations.F[5], stickerRotations.F[8]];
+        
+        cubeState.F[2] = cubeState.D[2]; cubeState.F[5] = cubeState.D[5]; cubeState.F[8] = cubeState.D[8];
+        stickerRotations.F[2] = stickerRotations.D[2]; stickerRotations.F[5] = stickerRotations.D[5]; stickerRotations.F[8] = stickerRotations.D[8];
+        
+        cubeState.D[2] = cubeState.B[6]; cubeState.D[5] = cubeState.B[3]; cubeState.D[8] = cubeState.B[0];
+        stickerRotations.D[2] = (stickerRotations.B[6] + 2) % 4; stickerRotations.D[5] = (stickerRotations.B[3] + 2) % 4; stickerRotations.D[8] = (stickerRotations.B[0] + 2) % 4;
+        
+        cubeState.B[6] = cubeState.U[2]; cubeState.B[3] = cubeState.U[5]; cubeState.B[0] = cubeState.U[8];
+        stickerRotations.B[6] = (stickerRotations.U[2] + 2) % 4; stickerRotations.B[3] = (stickerRotations.U[5] + 2) % 4; stickerRotations.B[0] = (stickerRotations.U[8] + 2) % 4;
+        
+        cubeState.U[2] = temp[0]; cubeState.U[5] = temp[1]; cubeState.U[8] = temp[2];
+        stickerRotations.U[2] = tempRot[0]; stickerRotations.U[5] = tempRot[1]; stickerRotations.U[8] = tempRot[2];
+
+        applyCubeStateToDOM();
+      }
+    }
+
+    function moveL() {
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.L = rotateFaceCW(cube.L);
+        const temp = [cube.F[0], cube.F[3], cube.F[6]];
+        cube.F[0] = cube.U[0]; cube.F[3] = cube.U[3]; cube.F[6] = cube.U[6];
+        cube.U[0] = cube.B[8]; cube.U[3] = cube.B[5]; cube.U[6] = cube.B[2];
+        cube.B[8] = cube.D[0]; cube.B[5] = cube.D[3]; cube.B[2] = cube.D[6];
+        cube.D[0] = temp[0]; cube.D[3] = temp[1]; cube.D[6] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.L = rotateFaceDataCW(cubeState.L);
+        stickerRotations.L = rotateFaceCW(stickerRotations.L);
+        for (let i = 0; i < 9; i++) applyStickerRotation('L', i, 1);
+        
+        const temp = [cubeState.F[0], cubeState.F[3], cubeState.F[6]];
+        const tempRot = [stickerRotations.F[0], stickerRotations.F[3], stickerRotations.F[6]];
+        
+        cubeState.F[0] = cubeState.U[0]; cubeState.F[3] = cubeState.U[3]; cubeState.F[6] = cubeState.U[6];
+        stickerRotations.F[0] = stickerRotations.U[0]; stickerRotations.F[3] = stickerRotations.U[3]; stickerRotations.F[6] = stickerRotations.U[6];
+        
+        cubeState.U[0] = cubeState.B[8]; cubeState.U[3] = cubeState.B[5]; cubeState.U[6] = cubeState.B[2];
+        stickerRotations.U[0] = (stickerRotations.B[8] + 2) % 4; stickerRotations.U[3] = (stickerRotations.B[5] + 2) % 4; stickerRotations.U[6] = (stickerRotations.B[2] + 2) % 4;
+        
+        cubeState.B[8] = cubeState.D[0]; cubeState.B[5] = cubeState.D[3]; cubeState.B[2] = cubeState.D[6];
+        stickerRotations.B[8] = (stickerRotations.D[0] + 2) % 4; stickerRotations.B[5] = (stickerRotations.D[3] + 2) % 4; stickerRotations.B[2] = (stickerRotations.D[6] + 2) % 4;
+        
+        cubeState.D[0] = temp[0]; cubeState.D[3] = temp[1]; cubeState.D[6] = temp[2];
+        stickerRotations.D[0] = tempRot[0]; stickerRotations.D[3] = tempRot[1]; stickerRotations.D[6] = tempRot[2];
+
+        applyCubeStateToDOM();
+      }
+    }
+
+    function moveU() {
+      rotateFaceStickers('U', true);
+      
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.U = rotateFaceCW(cube.U);
+        const temp = [cube.F[0], cube.F[1], cube.F[2]];
+        cube.F[0] = cube.R[0]; cube.F[1] = cube.R[1]; cube.F[2] = cube.R[2];
+        cube.R[0] = cube.B[0]; cube.R[1] = cube.B[1]; cube.R[2] = cube.B[2];
+        cube.B[0] = cube.L[0]; cube.B[1] = cube.L[1]; cube.B[2] = cube.L[2];
+        cube.L[0] = temp[0]; cube.L[1] = temp[1]; cube.L[2] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.U = rotateFaceDataCW(cubeState.U);
+
+        const temp = [cubeState.F[0], cubeState.F[1], cubeState.F[2]];
+        const tempRot = [stickerRotations.F[0], stickerRotations.F[1], stickerRotations.F[2]];
+        
+        cubeState.F[0] = cubeState.R[0]; cubeState.F[1] = cubeState.R[1]; cubeState.F[2] = cubeState.R[2];
+        stickerRotations.F[0] = stickerRotations.R[0]; stickerRotations.F[1] = stickerRotations.R[1]; stickerRotations.F[2] = stickerRotations.R[2];
+        
+        cubeState.R[0] = cubeState.B[0]; cubeState.R[1] = cubeState.B[1]; cubeState.R[2] = cubeState.B[2];
+        stickerRotations.R[0] = stickerRotations.B[0]; stickerRotations.R[1] = stickerRotations.B[1]; stickerRotations.R[2] = stickerRotations.B[2];
+        
+        cubeState.B[0] = cubeState.L[0]; cubeState.B[1] = cubeState.L[1]; cubeState.B[2] = cubeState.L[2];
+        stickerRotations.B[0] = stickerRotations.L[0]; stickerRotations.B[1] = stickerRotations.L[1]; stickerRotations.B[2] = stickerRotations.L[2];
+        
+        cubeState.L[0] = temp[0]; cubeState.L[1] = temp[1]; cubeState.L[2] = temp[2];
+        stickerRotations.L[0] = tempRot[0]; stickerRotations.L[1] = tempRot[1]; stickerRotations.L[2] = tempRot[2];
+
+        applyCubeStateToDOM();
+      }
+    }
+
+    function moveD() {
+      rotateFaceStickers('D', true);
+      
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.D = rotateFaceCW(cube.D);
+        const temp = [cube.F[6], cube.F[7], cube.F[8]];
+        cube.F[6] = cube.L[6]; cube.F[7] = cube.L[7]; cube.F[8] = cube.L[8];
+        cube.L[6] = cube.B[6]; cube.L[7] = cube.B[7]; cube.L[8] = cube.B[8];
+        cube.B[6] = cube.R[6]; cube.B[7] = cube.R[7]; cube.B[8] = cube.R[8];
+        cube.R[6] = temp[0]; cube.R[7] = temp[1]; cube.R[8] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.D = rotateFaceDataCW(cubeState.D);
+
+        const temp = [cubeState.F[6], cubeState.F[7], cubeState.F[8]];
+        const tempRot = [stickerRotations.F[6], stickerRotations.F[7], stickerRotations.F[8]];
+        
+        cubeState.F[6] = cubeState.L[6]; cubeState.F[7] = cubeState.L[7]; cubeState.F[8] = cubeState.L[8];
+        stickerRotations.F[6] = stickerRotations.L[6]; stickerRotations.F[7] = stickerRotations.L[7]; stickerRotations.F[8] = stickerRotations.L[8];
+        
+        cubeState.L[6] = cubeState.B[6]; cubeState.L[7] = cubeState.B[7]; cubeState.L[8] = cubeState.B[8];
+        stickerRotations.L[6] = stickerRotations.B[6]; stickerRotations.L[7] = stickerRotations.B[7]; stickerRotations.L[8] = stickerRotations.B[8];
+        
+        cubeState.B[6] = cubeState.R[6]; cubeState.B[7] = cubeState.R[7]; cubeState.B[8] = cubeState.R[8];
+        stickerRotations.B[6] = stickerRotations.R[6]; stickerRotations.B[7] = stickerRotations.R[7]; stickerRotations.B[8] = stickerRotations.R[8];
+        
+        cubeState.R[6] = temp[0]; cubeState.R[7] = temp[1]; cubeState.R[8] = temp[2];
+        stickerRotations.R[6] = tempRot[0]; stickerRotations.R[7] = tempRot[1]; stickerRotations.R[8] = tempRot[2];
+
+        applyCubeStateToDOM();
+      }
+    }
+
+    function moveF() {
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.F = rotateFaceCW(cube.F);
+        const temp = [cube.U[6], cube.U[7], cube.U[8]];
+        cube.U[6] = cube.L[8]; cube.U[7] = cube.L[5]; cube.U[8] = cube.L[2];
+        cube.L[2] = cube.D[0]; cube.L[5] = cube.D[1]; cube.L[8] = cube.D[2];
+        cube.D[0] = cube.R[6]; cube.D[1] = cube.R[3]; cube.D[2] = cube.R[0];
+        cube.R[0] = temp[0]; cube.R[3] = temp[1]; cube.R[6] = temp[2];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.F = rotateFaceDataCW(cubeState.F);
+        stickerRotations.F = rotateFaceCW(stickerRotations.F);
+        for (let i = 0; i < 9; i++) applyStickerRotation('F', i, 1);
+        
+        const temp = [cubeState.U[6], cubeState.U[7], cubeState.U[8]];
+        const tempRot = [stickerRotations.U[6], stickerRotations.U[7], stickerRotations.U[8]];
+        
+        cubeState.U[6] = cubeState.L[8]; cubeState.U[7] = cubeState.L[5]; cubeState.U[8] = cubeState.L[2];
+        stickerRotations.U[6] = (stickerRotations.L[8] + 1) % 4; stickerRotations.U[7] = (stickerRotations.L[5] + 1) % 4; stickerRotations.U[8] = (stickerRotations.L[2] + 1) % 4;
+        
+        cubeState.L[2] = cubeState.D[0]; cubeState.L[5] = cubeState.D[1]; cubeState.L[8] = cubeState.D[2];
+        stickerRotations.L[2] = (stickerRotations.D[0] + 1) % 4; stickerRotations.L[5] = (stickerRotations.D[1] + 1) % 4; stickerRotations.L[8] = (stickerRotations.D[2] + 1) % 4;
+        
+        cubeState.D[0] = cubeState.R[6]; cubeState.D[1] = cubeState.R[3]; cubeState.D[2] = cubeState.R[0];
+        stickerRotations.D[0] = (stickerRotations.R[6] + 1) % 4; stickerRotations.D[1] = (stickerRotations.R[3] + 1) % 4; stickerRotations.D[2] = (stickerRotations.R[0] + 1) % 4;
+        
+        cubeState.R[0] = temp[0]; cubeState.R[3] = temp[1]; cubeState.R[6] = temp[2];
+        stickerRotations.R[0] = (tempRot[0] + 1) % 4; stickerRotations.R[3] = (tempRot[1] + 1) % 4; stickerRotations.R[6] = (tempRot[2] + 1) % 4;
+
+        applyCubeStateToDOM();
+      }
+    }
+
+    function moveB() {
+      if (CubeConfig.mode === 'standard') {
+        const cube = JSON.parse(serializeCube());
+        cube.B = rotateFaceCW(cube.B);
+        const temp = [cube.U[0], cube.U[1], cube.U[2]];
+        cube.U[0] = cube.R[2]; cube.U[1] = cube.R[5]; cube.U[2] = cube.R[8];
+        cube.R[2] = cube.D[8]; cube.R[5] = cube.D[7]; cube.R[8] = cube.D[6];
+        cube.D[6] = cube.L[0]; cube.D[7] = cube.L[3]; cube.D[8] = cube.L[6];
+        cube.L[0] = temp[2]; cube.L[3] = temp[1]; cube.L[6] = temp[0];
+        deserializeCube(JSON.stringify(cube));
+      } else {
+        cubeState.B = rotateFaceDataCW(cubeState.B);
+        stickerRotations.B = rotateFaceCW(stickerRotations.B);
+        for (let i = 0; i < 9; i++) applyStickerRotation('B', i, 1);
+        
+        const temp = [cubeState.U[0], cubeState.U[1], cubeState.U[2]];
+        const tempRot = [stickerRotations.U[0], stickerRotations.U[1], stickerRotations.U[2]];
+        
+        cubeState.U[0] = cubeState.R[2]; cubeState.U[1] = cubeState.R[5]; cubeState.U[2] = cubeState.R[8];
+        stickerRotations.U[0] = (stickerRotations.R[2] + 3) % 4; stickerRotations.U[1] = (stickerRotations.R[5] + 3) % 4; stickerRotations.U[2] = (stickerRotations.R[8] + 3) % 4;
+        
+        cubeState.R[2] = cubeState.D[8]; cubeState.R[5] = cubeState.D[7]; cubeState.R[8] = cubeState.D[6];
+        stickerRotations.R[2] = (stickerRotations.D[8] + 3) % 4; stickerRotations.R[5] = (stickerRotations.D[7] + 3) % 4; stickerRotations.R[8] = (stickerRotations.D[6] + 3) % 4;
+        
+        cubeState.D[6] = cubeState.L[0]; cubeState.D[7] = cubeState.L[3]; cubeState.D[8] = cubeState.L[6];
+        stickerRotations.D[6] = (stickerRotations.L[0] + 3) % 4; stickerRotations.D[7] = (stickerRotations.L[3] + 3) % 4; stickerRotations.D[8] = (stickerRotations.L[6] + 3) % 4;
+        
+        cubeState.L[0] = temp[2]; cubeState.L[3] = temp[1]; cubeState.L[6] = temp[0];
+        stickerRotations.L[0] = (tempRot[2] + 3) % 4; stickerRotations.L[3] = (tempRot[1] + 3) % 4; stickerRotations.L[6] = (tempRot[0] + 3) % 4;
+
+        applyCubeStateToDOM();
+      }
+    }
+
+    // ==================== LAYER 6: CUBE ROTATIONS ====================
+
+    const rotations = {
+      x: () => {
+        rotateFaceStickers('L', false);
+        rotateFaceStickers('R', true);
+        
+        if (CubeConfig.mode === 'standard') {
+          const cube = JSON.parse(serializeCube());
+          const temp = cube.U;
+          cube.U = cube.F;
+          cube.F = cube.D;
+          cube.D = rotateFace180(cube.B);
+          cube.B = rotateFace180(temp);
+          cube.L = rotateFaceCCW(cube.L);
+          cube.R = rotateFaceCW(cube.R);
+          deserializeCube(JSON.stringify(cube));
+        } else {
+          const temp = cubeState.U;
+          const tempRot = [...stickerRotations.U];
+          
+          cubeState.U = cubeState.F;
+          stickerRotations.U = [...stickerRotations.F];
+          
+          cubeState.F = cubeState.D;
+          stickerRotations.F = [...stickerRotations.D];
+          
+          cubeState.D = rotateFaceData180(cubeState.B);
+          stickerRotations.D = rotateFaceData180(stickerRotations.B).map(r => (r + 2) % 4);
+          
+          cubeState.B = rotateFaceData180(temp);
+          stickerRotations.B = rotateFaceData180(tempRot).map(r => (r + 2) % 4);
+          
+          cubeState.L = rotateFaceDataCCW(cubeState.L);
+          cubeState.R = rotateFaceDataCW(cubeState.R);
+
+          applyCubeStateToDOM();
+        }
+      },
+      y: () => {
+        rotateFaceStickers('U', true);
+        rotateFaceStickers('D', false);
+        
+        if (CubeConfig.mode === 'standard') {
+          const cube = JSON.parse(serializeCube());
+          const temp = cube.F;
+          cube.F = cube.R;
+          cube.R = cube.B;
+          cube.B = cube.L;
+          cube.L = temp;
+          cube.U = rotateFaceCW(cube.U);
+          cube.D = rotateFaceCCW(cube.D);
+          deserializeCube(JSON.stringify(cube));
+        } else {
+          const temp = cubeState.F;
+          const tempRot = [...stickerRotations.F];
+          
+          cubeState.F = cubeState.R;
+          stickerRotations.F = [...stickerRotations.R];
+          
+          cubeState.R = cubeState.B;
+          stickerRotations.R = [...stickerRotations.B];
+          
+          cubeState.B = cubeState.L;
+          stickerRotations.B = [...stickerRotations.L];
+          
+          cubeState.L = temp;
+          stickerRotations.L = tempRot;
+          
+          cubeState.U = rotateFaceDataCW(cubeState.U);
+          cubeState.D = rotateFaceDataCCW(cubeState.D);
+
+          applyCubeStateToDOM();
+        }
+      },
+      z: () => {
+        rotateFaceStickers('F', true);
+        rotateFaceStickers('B', false);
+        
+        if (CubeConfig.mode === 'standard') {
+          const cube = JSON.parse(serializeCube());
+          const temp = cube.U;
+          cube.U = rotateFaceCCW(cube.L);
+          cube.L = rotateFaceCW(cube.D);
+          cube.D = rotateFaceCCW(cube.R);
+          cube.R = rotateFaceCW(temp);
+          cube.F = rotateFaceCW(cube.F);
+          cube.B = rotateFaceCCW(cube.B);
+          deserializeCube(JSON.stringify(cube));
+        } else {
+          const temp = cubeState.U;
+          const tempRot = [...stickerRotations.U];
+          
+          cubeState.U = rotateFaceDataCCW(cubeState.L);
+          stickerRotations.U = rotateFaceDataCCW(stickerRotations.L).map(r => (r + 1) % 4);
+          
+          cubeState.L = rotateFaceDataCW(cubeState.D);
+          stickerRotations.L = rotateFaceDataCW(stickerRotations.D).map(r => (r + 1) % 4);
+          
+          cubeState.D = rotateFaceDataCCW(cubeState.R);
+          stickerRotations.D = rotateFaceDataCCW(stickerRotations.R).map(r => (r + 1) % 4);
+          
+          cubeState.R = rotateFaceDataCW(temp);
+          stickerRotations.R = rotateFaceDataCW(tempRot).map(r => (r + 1) % 4);
+          
+          cubeState.F = rotateFaceDataCW(cubeState.F);
+          cubeState.B = rotateFaceDataCCW(cubeState.B);
+
+          applyCubeStateToDOM();
+        }
+      }
+    };
+
+    // ==================== LAYER 7: NOTATION PARSER ====================
+
+    // Helper functions
+    const repeat = (fn, times) => { for (let i = 0; i < times; i++) fn(); };
+    const prime = (fn) => () => repeat(fn, 3);
+    const double = (fn) => () => repeat(fn, 2);
+
+    const MPrime = () => { prime(moveR)(); moveL(); rotations.x(); };
+    const M = () => { moveR(); prime(moveL)(); prime(rotations.x)(); };
+    
+    // Slices E e S adaptados
+    const E = () => { prime(moveU)(); moveD(); rotations.y(); };
+    const S = () => { prime(moveF)(); moveB(); rotations.z(); };
+    const RwMove = () => { MPrime(); moveR(); };
+    const LwMove = () => { M(); moveL(); };
+
+    function applyMove(move) {
+      const baseMoves = { 'R': moveR, 'L': moveL, 'U': moveU, 'D': moveD, 'F': moveF, 'B': moveB, 'x': rotations.x, 'y': rotations.y, 'z': rotations.z };
+
+      const moveMap = {};
+      Object.entries(baseMoves).forEach(([key, fn]) => {
+        moveMap[key] = fn;
+        moveMap[key + "'"] = prime(fn);
+        moveMap[key + '2'] = double(fn);
+      });
+
+      const sliceMoves = {
+        'M': M, 'E': E, 'S': S
+      };
+      Object.entries(sliceMoves).forEach(([key, fn]) => {
+        moveMap[key] = fn;
+        moveMap[key + "'"] = prime(fn);
+        moveMap[key + '2'] = double(fn);
+      });
+      moveMap["M'"] = MPrime;
+
+      const FwMove = () => { prime(rotations.y)(); RwMove(); rotations.y(); };
+      const BwMove = () => { prime(rotations.y)(); LwMove(); rotations.y(); };
+      const UwMove = () => { prime(rotations.x)(); prime(rotations.y)(); RwMove(); rotations.y(); rotations.x(); };
+      const DwMove = () => { prime(rotations.x)(); prime(rotations.y)(); LwMove(); rotations.y(); rotations.x(); };
+
+      const wideMoves = {
+        'Rw': RwMove, 'r': RwMove, 'Lw': LwMove, 'l': LwMove,
+        'Fw': FwMove, 'f': FwMove, 'Bw': BwMove, 'b': BwMove,
+        'Uw': UwMove, 'u': UwMove, 'Dw': DwMove, 'd': DwMove
+      };
+      Object.entries(wideMoves).forEach(([key, fn]) => {
+        moveMap[key] = fn;
+        moveMap[key + "'"] = prime(fn);
+        moveMap[key + '2'] = double(fn);
+      });
+
+
+      if (moveMap[move]) {
+        moveMap[move]();
+      }
+    }
+
+    function applyAlgorithm(alg) {
+      if (!alg) return;
+      const moves = alg.trim().split(/\s+/);
+      moves.forEach(move => applyMove(move));
+    }
+
+    // ==================== LAYER 8: 3D VISUALIZATION ====================
+
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let cubeRotation = { x: -25, y: -45 };
+    let cubeSize = 150;
+    let zoom2D = 1;
+    let panOffset = { x: 0, y: 0 };
+    let currentViewMode = 'perspective'; // Inicializar com valor padrão
+
+    // Estados salvos para cada modo
+    let savedStates = {
+      cubenet: { zoom: 2.5 },
+      free3d: { rotation: { x: -25, y: -45 }, size: 300 },
+      isometric: { rotation: { x: -35.264, y: -45 }, size: 150 }
+    };
+
+    function update3DView() {
+      if (typeof currentViewMode !== 'undefined' && currentViewMode === 'cubenet') return;
+
+      CubeConfig.faces.forEach(face => {
+        const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
+        const face3D = document.querySelector(`.face-3d[data-face="${face}"]`);
+
+        if (face2D && face3D) {
+          Array.from(face2D.children).forEach((sticker, i) => {
+            if (face3D.children[i]) {
+              // Copiar todos os estilos de background
+              face3D.children[i].style.background = sticker.style.background;
+              face3D.children[i].style.backgroundImage = sticker.style.backgroundImage;
+              face3D.children[i].style.backgroundSize = sticker.style.backgroundSize;
+              face3D.children[i].style.backgroundPosition = sticker.style.backgroundPosition;
+              face3D.children[i].style.backgroundRepeat = sticker.style.backgroundRepeat;
+              face3D.children[i].style.transform = sticker.style.transform;
+            }
+          });
+        }
+      });
+    }
+
+    function setViewMode(mode) {
+      // Salvar estado atual
+      if (currentViewMode === 'cubenet') {
+        savedStates.cubenet.zoom = zoom2D;
+      } else if (currentViewMode === 'perspective' || currentViewMode === 'orthographic') {
+        savedStates.free3d.rotation = { ...cubeRotation };
+        savedStates.free3d.size = cubeSize;
+      } else if (currentViewMode === 'isometric') {
+        savedStates.isometric.rotation = { ...cubeRotation };
+        savedStates.isometric.size = cubeSize;
+      }
+
+      const cubeNet = document.getElementById('cube-net');
+      const cube3DWrapper = document.getElementById('cube-3d-wrapper');
+      const cube3D = document.getElementById('cube-3d');
+      const wrapper = cube3DWrapper;
+
+      // Limpar classes e estilos
+      document.body.classList.remove('is-3d');
+      wrapper.classList.remove('orthographic', 'isometric');
+      cube3D.style.transform = '';
+      cubeNet.style.transform = '';
+
+      currentViewMode = mode;
+
+      if (mode === 'cubenet') {
+        cubeNet.style.display = 'grid';
+        cube3DWrapper.style.display = 'none';
+        zoom2D = savedStates.cubenet.zoom;
+        panOffset = { x: 0, y: 0 };
+        update2DZoom();
+      } else {
+        cubeNet.style.display = 'none';
+        cube3DWrapper.style.display = 'block';
+        document.body.classList.add('is-3d');
+
+        if (mode === 'perspective' || mode === 'orthographic') {
+          cubeRotation = { ...savedStates.free3d.rotation };
+          cubeSize = savedStates.free3d.size;
+        } else if (mode === 'isometric') {
+          cubeRotation = { x: -35.264, y: -45 };
+          cubeSize = 150;
+          panOffset = { x: 0, y: 0 };
+        }
+
+        if (mode === 'orthographic') wrapper.classList.add('orthographic');
+        if (mode === 'isometric') {
+          wrapper.classList.add('isometric');
+          wrapper.classList.add('orthographic');
+        }
+
+        document.documentElement.style.setProperty('--cube-size', `${cubeSize}px`);
+        update3DView();
+        updateCubeRotation();
+      }
+    }
+
+    function updateCubeRotation() {
+      const cube = document.getElementById('cube-3d');
+      cube.style.transition = 'none';
+
+      if (currentViewMode === 'isometric') {
+        cube.style.transform = `
+          translate(calc(-50% + ${panOffset.x}px), calc(-50% + ${panOffset.y}px))
+          rotateX(${cubeRotation.x}deg)
+          rotateY(${cubeRotation.y}deg)
+        `;
+      } else {
+        cube.style.transform = `
+          translate(-50%, -50%)
+          rotateX(${cubeRotation.x}deg)
+          rotateY(${cubeRotation.y}deg)
+        `;
+      }
+    }
+
+    function update2DZoom() {
+      const cubeNet = document.getElementById('cube-net');
+      cubeNet.style.transform = `translate(calc(-50% + ${panOffset.x}px), calc(-50% + ${panOffset.y}px)) scale(${zoom2D})`;
+    }
+
+    function handleMouseDown(e) {
+      if (e.target.id !== 'right-panel' && !e.target.closest('#right-panel')) return;
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+      document.getElementById('right-panel').style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+
+    function handleMouseMove(e) {
+      if (!isDragging) return;
+
+      const deltaMove = {
+        x: e.clientX - previousMousePosition.x,
+        y: e.clientY - previousMousePosition.y
+      };
+
+      if (currentViewMode === 'cubenet') {
+        panOffset.x += deltaMove.x;
+        panOffset.y += deltaMove.y;
+        update2DZoom();
+      } else if (currentViewMode === 'isometric') {
+        panOffset.x += deltaMove.x;
+        panOffset.y += deltaMove.y;
+        updateCubeRotation();
+      } else {
+        cubeRotation.x -= deltaMove.y * 0.5;
+        cubeRotation.y += deltaMove.x * 0.5;
+        cubeRotation.x = Math.max(-90, Math.min(90, cubeRotation.x));
+        updateCubeRotation();
+      }
+
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    }
+
+    function handleMouseUp() {
+      isDragging = false;
+      document.getElementById('right-panel').style.cursor = 'grab';
+    }
+
+    function handleWheel(e) {
+      if (e.target.closest('#left-panel')) return;
+
+      e.preventDefault();
+
+      const delta = Math.sign(e.deltaY);
+
+      if (currentViewMode === 'cubenet') {
+        zoom2D = Math.max(0.5, Math.min(3, zoom2D * (1 - delta * 0.1)));
+        update2DZoom();
+      } else {
+        cubeSize = Math.max(200, Math.min(800, cubeSize * (1 - delta * 0.1)));
+        document.documentElement.style.setProperty('--cube-size', `${cubeSize}px`);
+      }
+    }
+
+
+
+    // ==================== LAYER 9: EVENT LISTENERS ====================
+
+    document.getElementById('saveBtn').onclick = printState;
+    document.getElementById('loadBtn').onclick = loadState;
+    document.getElementById('solveBtn').onclick = solveCube;
+      document.getElementById('loadConfigBtn').onclick = loadCustomConfig;
+
+      function loadCustomConfig() {
+        try {
+          const config = JSON.parse(document.getElementById('customConfig').value);
+
+          if (config.mode === 'face_textures') {
+            // Modo texturas por face
+            CubeConfig.mode = 'face_textures';
+            CubeConfig.faceTextures = config.textures || {};
+
+            // Aplicar texturas
+            initializeCubeState();
+            CubeConfig.faces.forEach(face => {
+              for (let i = 0; i < 9; i++) {
+                cubeState[face][i] = {
+                  mode: 'face_textures',
+                  faceTexture: face,
+                  spritePosition: i,
+                  rotation: 0
+                };
+                setStickerStyle(face, i, cubeState[face][i]);
+              }
+            });
+
+          } else if (config.mode === 'custom_indices') {
+            // Modo índices customizados
+            CubeConfig.mode = 'custom_indices';
+            CubeConfig.customStickers = config.stickers || {};
+
+            // Aplicar estado inicial se fornecido
+            initializeCubeState();
+            const initialState = config.initialState || {};
+
+            CubeConfig.faces.forEach(face => {
+              const faceState = initialState[face] || Array(9).fill(CubeConfig.faces.indexOf(face));
+              for (let i = 0; i < 9; i++) {
+                cubeState[face][i] = {
+                  mode: 'custom_indices',
+                  stickerIndex: faceState[i],
+                  rotation: 0
+                };
+                setStickerStyle(face, i, cubeState[face][i]);
+              }
+            });
+          }
+
+          update3DView();
+
+        } catch (error) {
+          alert('Erro no JSON: ' + error.message);
+        }
+      }
+    function setActiveButton(activeId) {
+      document.querySelectorAll('.view-btn').forEach(btn => btn.disabled = false);
+      document.getElementById(activeId).disabled = true;
+    }
+
+    document.getElementById('cubenetBtn').onclick = () => { setViewMode('cubenet'); setActiveButton('cubenetBtn'); };
+    document.getElementById('perspectiveBtn').onclick = () => { setViewMode('perspective'); setActiveButton('perspectiveBtn'); };
+    document.getElementById('orthographicBtn').onclick = () => { setViewMode('orthographic'); setActiveButton('orthographicBtn'); };
+    document.getElementById('isometricBtn').onclick = () => { setViewMode('isometric'); setActiveButton('isometricBtn'); };
+
+    document.getElementById('applyAlgBtn').onclick = () => {
+      const mode = document.getElementById('algMode').value;
+      if (mode === 'solved') {
+        // Usar configuração customizada se houver, senão Rubik padrão
+        const customConfig = document.getElementById('customConfig').value.trim();
+        if (customConfig) {
+          loadCustomConfig();
+        } else {
+          solveCube();
+        }
+      }
+      if (mode === 'lastLoaded') loadLastState();
+
+      const alg = document.getElementById('algInput').value;
+      applyAlgorithm(alg);
+      update3DView();
+    };
+
+    document.getElementById('algInput').onkeydown = (e) => {
+      if (e.ctrlKey && e.key === 'Enter') {
+        document.getElementById('applyAlgBtn').click();
+        e.preventDefault();
+      }
+    };
+
+    const rightPanel = document.getElementById('right-panel');
+    rightPanel.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    rightPanel.addEventListener('wheel', handleWheel, { passive: false });
+
+
+    // ==================== HAMBURGER MENU ====================
+    
+    const hamburgerBtn = document.getElementById('hamburger-btn');
+    const leftPanel = document.getElementById('left-panel');
+    const overlay = document.querySelector('.overlay');
+    
+    function toggleMenu() {
+      leftPanel.classList.toggle('open');
+      overlay.classList.toggle('active');
+    }
+    
+    hamburgerBtn.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', toggleMenu);
+    
+    // Close menu when clicking on a button in the panel (mobile UX)
+    leftPanel.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON' && window.innerWidth <= 768) {
+        setTimeout(toggleMenu, 300); // Small delay for better UX
+      }
+    });
+
+    // ==================== INICIALIZAÇÃO ====================
+
+    solveCube();
+                  setViewMode('cubenet'); // Inicia em 3D perspective
+                  document.getElementById('loadConfigBtn').onclick();
+  </script>
+</body>
+
+</html>
