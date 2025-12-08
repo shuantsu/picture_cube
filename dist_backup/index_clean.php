@@ -13,6 +13,10 @@
     <script src="bluetooth.js"></script>
     <script src="scramble.js"></script>
     <script src="cube-core.js"></script>
+    <script src="cube-view.js"></script>
+    <script src="renderers/cubenet-renderer.js"></script>
+    <script src="renderers/perspective-renderer.js"></script>
+    <script src="renderers/isometric-renderer.js"></script>
     <script>
       function setRealViewportHeight() {
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -343,6 +347,31 @@
 
         <div class="accordion">
           <button class="accordion-header" onclick="toggleAccordion(this)">
+            Background
+            <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </button>
+          <div class="accordion-content" style="margin: 0;">
+            <div id="backgroundGallery" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-height: 50vh; overflow-y: auto; overflow-x: hidden; margin: 0;">
+              <div class='bg-thumb none' data-bg='' onclick='selectBackground("")'></div>
+              <?php
+              $backgroundsDir = 'backgrounds/';
+              if (is_dir($backgroundsDir)) {
+                $files = scandir($backgroundsDir);
+                foreach ($files as $file) {
+                  if ($file !== '.' && $file !== '..' && preg_match('/\.(png|jpg|jpeg|gif|webp|svg)$/i', $file)) {
+                    echo "<div class='bg-thumb' data-bg='$file' onclick='selectBackground(\"$file\")' style='background-image:url(\"backgrounds/$file\");'></div>";
+                  }
+                }
+              }
+              ?>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion">
+          <button class="accordion-header" onclick="toggleAccordion(this)">
             Visualization
             <svg class="accordion-arrow" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
@@ -358,8 +387,8 @@
             <button id="perspectiveBtn" onclick="setViewMode('perspective')">
               3D Perspective
             </button><br /><br />
-            <button id="perspectiveBtn" onclick="window.toggleCrispMode()">
-              Toggle Crisp mode
+            <button id="crispBtn" onclick="window.toggleCrispMode()">
+              Crisp Mode: OFF
             </button><br /><br />
             <button id="throttleBtn" onclick="toggleRenderThrottle()">
               Render Throttle: OFF
@@ -476,6 +505,11 @@
       let panOffset = { x: 0, y: 0 };
       let isDragging = false;
       let previousMousePosition = { x: 0, y: 0 };
+
+      // View system
+      let cubeView = null;
+      let currentRenderer = null;
+      const rightPanel = document.getElementById("right-panel");
 
       function createStickers(faceElement, is3D = false) {
         faceElement.innerHTML = "";
@@ -626,87 +660,101 @@
       }
 
       function updateDOM() {
-        faces.forEach((face, faceIndex) => {
-          const face2D = document.querySelector(
-            `.face-2d[data-face="${face}"]`
-          );
-          const face3D = document.querySelector(
-            `.face-3d[data-face="${face}"]`
-          );
-
-          [face2D, face3D].forEach((faceElement) => {
-            if (faceElement) {
-              for (let i = 0; i < 9; i++) {
-                const sticker = faceElement.children[i];
-                const stickerId = cubeState[face][i];
-                applyStickerStyle(sticker, face, i, stickerId);
+        if (cubeView && currentRenderer) {
+          const textureConfig = {
+            textureMode,
+            faceTextures,
+            customStickers,
+            stickerTextures,
+            textureLibrary,
+            cubeAssignments
+          };
+          cubeView.render(cubeState, stickerRotations, stickerTextures, textureConfig);
+        } else {
+          // Fallback to legacy rendering
+          faces.forEach((face, faceIndex) => {
+            const face2D = document.querySelector(`.face-2d[data-face="${face}"]`);
+            const face3D = document.querySelector(`.face-3d[data-face="${face}"]`);
+            [face2D, face3D].forEach((faceElement) => {
+              if (faceElement) {
+                for (let i = 0; i < 9; i++) {
+                  const sticker = faceElement.children[i];
+                  const stickerId = cubeState[face][i];
+                  applyStickerStyle(sticker, face, i, stickerId);
+                }
               }
-            }
+            });
           });
-        });
+        }
       }
 
       function setViewMode(mode) {
-        const cubeNet = document.getElementById("cube-net");
-        const cube3DWrapper = document.getElementById("cube-3d-wrapper");
-        const cube3D = document.getElementById("cube-3d");
-
         currentViewMode = mode;
         localStorage.setItem('viewMode', mode);
 
-        // Reset button states
-        document.getElementById("cubenetBtn").disabled = false;
-        document.getElementById("perspectiveBtn").disabled = false;
-        document.getElementById("orthographicBtn").disabled = false;
+        // Hide all renderers
+        if (currentRenderer) currentRenderer.hide();
 
+        // Create and show new renderer
+        const container = document.getElementById("right-panel");
         if (mode === "cubenet") {
-          cubeNet.style.display = "grid";
-          cube3DWrapper.style.display = "none";
-          document.body.classList.remove("is-3d");
-          cube3DWrapper.classList.remove("perspective");
+          currentRenderer = new CubeNetRenderer(container);
+          currentRenderer.setZoom(zoom2D);
+          currentRenderer.setPan(panOffset.x, panOffset.y);
           document.getElementById("cubenetBtn").disabled = true;
-          update2DZoom();
+          document.getElementById("perspectiveBtn").disabled = false;
+          document.getElementById("orthographicBtn").disabled = false;
         } else if (mode === "perspective") {
-          cubeNet.style.display = "none";
-          cube3DWrapper.style.display = "block";
-          document.body.classList.add("is-3d");
-          cube3DWrapper.classList.add("perspective");
+          currentRenderer = new PerspectiveRenderer(container);
+          currentRenderer.setRotation(cubeRotation.x, cubeRotation.y);
+          currentRenderer.setSize(cubeSize);
+          document.getElementById("cubenetBtn").disabled = false;
           document.getElementById("perspectiveBtn").disabled = true;
-          document.documentElement.style.setProperty(
-            "--cube-size",
-            `${cubeSize}px`
-          );
-          updateCubeRotation();
+          document.getElementById("orthographicBtn").disabled = false;
         } else if (mode === "orthographic") {
-          cubeNet.style.display = "none";
-          cube3DWrapper.style.display = "block";
-          document.body.classList.add("is-3d");
-          cube3DWrapper.classList.remove("perspective");
+          currentRenderer = new IsometricRenderer(container);
+          currentRenderer.setRotation(cubeRotation.x, cubeRotation.y);
+          currentRenderer.setSize(cubeSize);
+          document.getElementById("cubenetBtn").disabled = false;
+          document.getElementById("perspectiveBtn").disabled = false;
           document.getElementById("orthographicBtn").disabled = true;
-          document.documentElement.style.setProperty(
-            "--cube-size",
-            `${cubeSize}px`
-          );
-          updateCubeRotation();
         }
+
+        currentRenderer.show();
+        cubeView = new CubeView(container, currentRenderer);
+        updateDOM();
+
         if (editorOpen) {
           document.getElementById("cubenetBtn").disabled = true;
         }
       }
 
       function updateCubeRotation() {
-        const cube = document.getElementById("cube-3d");
-        cube.style.transform = `
-        translate(-50%, -50%)
-        rotateX(${cubeRotation.x}deg)
-        rotateY(${cubeRotation.y}deg)
-      `;
+        if (cubeView && currentRenderer && currentRenderer.setRotation) {
+          cubeView.setRotation(cubeRotation.x, cubeRotation.y);
+        } else {
+          const cube = document.getElementById("cube-3d");
+          if (cube) {
+            cube.style.transform = `
+            translate(-50%, -50%)
+            rotateX(${cubeRotation.x}deg)
+            rotateY(${cubeRotation.y}deg)
+          `;
+          }
+        }
         saveViewState();
       }
 
       function update2DZoom() {
-        const cubeNet = document.getElementById("cube-net");
-        cubeNet.style.transform = `translate(calc(-50% + ${panOffset.x}px), calc(-50% + ${panOffset.y}px)) scale(${zoom2D})`;
+        if (cubeView && currentRenderer && currentRenderer.setZoom) {
+          cubeView.setZoom(zoom2D);
+          cubeView.setPan(panOffset.x, panOffset.y);
+        } else {
+          const cubeNet = document.getElementById("cube-net");
+          if (cubeNet) {
+            cubeNet.style.transform = `translate(calc(-50% + ${panOffset.x}px), calc(-50% + ${panOffset.y}px)) scale(${zoom2D})`;
+          }
+        }
         saveViewState();
       }
 
@@ -883,11 +931,14 @@
         
         // Clean up and split moves
         const moves = alg.trim().split(/\s+/).filter(move => move.length > 0);
-        moves.forEach((move) => {
-          cubeCore.applyMove(move);
+        
+        if (moves.length <= 50) {
+          moves.forEach((move) => applyMove(move));
+        } else {
+          moves.forEach((move) => cubeCore.applyMove(move));
           syncState();
-          addMoveToHistory(move);
-        });
+          addMoveToHistory(`ALG (${moves.length} moves)`);
+        }
       }
 
       function solveCube() {
@@ -1157,7 +1208,6 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       }
 
       // Event listeners
-      const rightPanel = document.getElementById("right-panel");
       rightPanel.addEventListener("mousedown", handleMouseDown);
       rightPanel.addEventListener("touchstart", handleTouchStart, { passive: true });
       document.addEventListener("mousemove", handleMouseMove);
@@ -1982,8 +2032,18 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         }
       }
 
-      let historyRoot = new MoveNode('START', null, null);
-      let currentNode = historyRoot;
+      let historyRoot = null;
+      let currentNode = null;
+      
+      function initHistory() {
+        const initialState = {
+          cubeState: JSON.parse(JSON.stringify(cubeState)),
+          stickerRotations: JSON.parse(JSON.stringify(stickerRotations)),
+          stickerTextures: JSON.parse(JSON.stringify(stickerTextures))
+        };
+        historyRoot = new MoveNode('START', null, initialState);
+        currentNode = historyRoot;
+      }
       let historyTransform = { x: 0, y: 0, scale: 1 };
       let isHistoryPanning = false;
       let lastHistoryPanPoint = { x: 0, y: 0 };
@@ -2108,6 +2168,68 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
             }
           });
           
+          // Touch events
+          let historyTouchStart = null;
+          let historyInitialDistance = 0;
+          let historyInitialScale = 1;
+          
+          historyCanvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+              const touch = e.touches[0];
+              const rect = historyCanvas.getBoundingClientRect();
+              const x = (touch.clientX - rect.left - historyTransform.x) / historyTransform.scale;
+              const y = (touch.clientY - rect.top - historyTransform.y) / historyTransform.scale;
+              
+              let clicked = false;
+              for (const id in historyPositions) {
+                const p = historyPositions[id];
+                if (x >= p.x && x <= p.x + NODE_W && y >= p.y && y <= p.y + NODE_H) {
+                  selectHistoryNode(p.node.id);
+                  clicked = true;
+                  break;
+                }
+              }
+              
+              if (!clicked) {
+                isHistoryPanning = true;
+                historyTouchStart = { x: touch.clientX, y: touch.clientY };
+                lastHistoryPanPoint = { x: touch.clientX, y: touch.clientY };
+              }
+            } else if (e.touches.length === 2) {
+              isHistoryPanning = false;
+              const dx = e.touches[0].clientX - e.touches[1].clientX;
+              const dy = e.touches[0].clientY - e.touches[1].clientY;
+              historyInitialDistance = Math.sqrt(dx * dx + dy * dy);
+              historyInitialScale = historyTransform.scale;
+            }
+          }, { passive: true });
+          
+          historyCanvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1 && isHistoryPanning) {
+              const touch = e.touches[0];
+              const dx = (touch.clientX - lastHistoryPanPoint.x) * 1.2;
+              const dy = (touch.clientY - lastHistoryPanPoint.y) * 1.2;
+              historyTransform.x += dx;
+              historyTransform.y += dy;
+              lastHistoryPanPoint = { x: touch.clientX, y: touch.clientY };
+              renderHistoryCanvas();
+              e.preventDefault();
+            } else if (e.touches.length === 2) {
+              const dx = e.touches[0].clientX - e.touches[1].clientX;
+              const dy = e.touches[0].clientY - e.touches[1].clientY;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              const scale = (distance / historyInitialDistance) * historyInitialScale;
+              historyTransform.scale = Math.max(0.1, Math.min(3, scale));
+              renderHistoryCanvas();
+              e.preventDefault();
+            }
+          }, { passive: false });
+          
+          historyCanvas.addEventListener('touchend', () => {
+            isHistoryPanning = false;
+            historyTouchStart = null;
+          }, { passive: true });
+          
           historyCanvas.addEventListener('wheel', (e) => {
             e.preventDefault();
             const rect = historyCanvas.getBoundingClientRect();
@@ -2204,8 +2326,6 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         
         const path = getPathToNode(currentNode);
         path.forEach((node, index) => {
-          if (node.move === 'START') return;
-          
           const row = document.createElement('div');
           row.className = 'history-row' + (node.id === currentNode.id ? ' current' : '');
           row.onclick = () => selectHistoryNode(node.id);
@@ -2264,7 +2384,8 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
 
       function selectHistoryNode(nodeId) {
         const node = findNodeById(historyRoot, nodeId);
-        if (!node || !node.state) return;
+        if (!node) return;
+        if (!node.state) return;
         
         currentNode = node;
         const state = node.state;
@@ -2272,13 +2393,16 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         stickerRotations = JSON.parse(JSON.stringify(state.stickerRotations));
         stickerTextures = JSON.parse(JSON.stringify(state.stickerTextures));
         
+        cubeCore.cubeState = cubeState;
+        cubeCore.stickerRotations = stickerRotations;
+        cubeCore.stickerTextures = stickerTextures;
+        
         updateDOM();
         updateHistoryDisplay();
       }
 
       function clearHistory() {
-        historyRoot = new MoveNode('START', null, null);
-        currentNode = historyRoot;
+        initHistory();
         historyTransform = { x: 0, y: 0, scale: 1 };
         updateHistoryDisplay();
         showToast('History cleared');
@@ -2313,11 +2437,16 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         // Put scramble in textarea
         document.getElementById('alg').value = scrambleAlg;
         
-        // Execute the scramble without tracking individual moves
+        // Execute the scramble
         const moves = scrambleAlg.trim().split(/\s+/).filter(move => move.length > 0);
-        moves.forEach((move) => cubeCore.applyMove(move));
-        syncState();
-        addMoveToHistory('SCRAMBLE');
+        
+        if (moves.length <= 50) {
+          moves.forEach((move) => applyMove(move));
+        } else {
+          moves.forEach((move) => cubeCore.applyMove(move));
+          syncState();
+          addMoveToHistory(`SCRAMBLE (${moves.length} moves)`);
+        }
       }
 
       // Bluetooth cube integration
@@ -2367,10 +2496,34 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       
       // Inicializar
       initCube();
+      initHistory();
       loadAccordionStates();
       loadSidebarState();
       loadCameraCalibration();
       initCameraControls();
+      
+      // Load crisp mode
+      try {
+        if (localStorage.getItem('crispMode') === 'true') {
+          document.body.classList.add('crisp-mode');
+          const btn = document.getElementById('crispBtn');
+          btn.textContent = 'Crisp Mode: ON';
+          btn.style.background = '#4caf50';
+          btn.style.color = 'white';
+        }
+      } catch (e) {}
+      
+      // Load render throttle
+      try {
+        const saved = localStorage.getItem('renderThrottle');
+        if (saved === 'true') {
+          renderThrottleEnabled = true;
+          const btn = document.getElementById('throttleBtn');
+          btn.textContent = 'Render Throttle: ON';
+          btn.style.background = '#4caf50';
+          btn.style.color = 'white';
+        }
+      } catch (e) {}
       
       // Load panel state
       try {
@@ -2655,7 +2808,12 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
       };
       window.toggleCrispMode = () => {
         document.body.classList.toggle('crisp-mode');
-        console.log('ok')
+        const enabled = document.body.classList.contains('crisp-mode');
+        const btn = document.getElementById('crispBtn');
+        btn.textContent = `Crisp Mode: ${enabled ? 'ON' : 'OFF'}`;
+        btn.style.background = enabled ? '#4caf50' : '';
+        btn.style.color = enabled ? 'white' : '';
+        localStorage.setItem('crispMode', enabled);
       };
       
       function toggleRenderThrottle() {
@@ -2664,8 +2822,35 @@ ${stickerRotations.L[6]} ${stickerRotations.L[7]} ${stickerRotations.L[8]}   ${s
         btn.textContent = `Render Throttle: ${renderThrottleEnabled ? 'ON' : 'OFF'}`;
         btn.style.background = renderThrottleEnabled ? '#4caf50' : '';
         btn.style.color = renderThrottleEnabled ? 'white' : '';
+        localStorage.setItem('renderThrottle', renderThrottleEnabled);
         console.log('Render throttle:', renderThrottleEnabled ? 'ENABLED (60 FPS)' : 'DISABLED (unlimited)');
       }
+      
+      function selectBackground(filename) {
+        const panel = document.getElementById('right-panel');
+        if (filename) {
+          panel.style.backgroundImage = `url('backgrounds/${filename}')`;
+          localStorage.setItem('selectedBackground', filename);
+        } else {
+          panel.style.backgroundImage = '';
+          localStorage.removeItem('selectedBackground');
+        }
+        
+        document.querySelectorAll('.bg-thumb').forEach(t => t.style.border = '2px solid transparent');
+        document.querySelector(`[data-bg="${filename}"]`).style.border = '2px solid #4caf50';
+      }
+      
+      function loadSelectedBackground() {
+        try {
+          const saved = localStorage.getItem('selectedBackground');
+          if (saved) {
+            selectBackground(saved);
+          }
+        } catch (e) {}
+      }
+      
+      // Load background on init
+      loadSelectedBackground();
     </script>
       <script src="js/app.js"></script>
   </body>

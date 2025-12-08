@@ -7,7 +7,20 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Picture Cube -- Beta</title>
-      <link rel="stylesheet" href="css/style.css">
+  
+    <link rel="stylesheet" href="css/style.css">
+
+    <script src="marked.min.js"></script>
+    <script src="bluetooth.js"></script>
+
+    <script src="cube-core.js"></script>
+
+    <script src="cube-view.js"></script>
+    <script src="renderers/cubenet-renderer.js"></script>
+    <script src="renderers/perspective-renderer.js"></script>
+    <script src="renderers/isometric-renderer.js"></script>
+
+    <script src="scramble.js"></script>
   </head>
 
   <body>
@@ -29,22 +42,66 @@
             </svg>
           </button>
           <div class="accordion-content">
-            <div class="move-grid" id="moveGrid"></div>
-            <script>
-              (function(){
-                const moves = ['U','D','R','L','F','B','M','E','S','x','y','z','Rw','Lw','Uw','Dw','Fw','Bw'];
-                const grid = document.getElementById('moveGrid');
-                moves.forEach(m => {
-                  ['', "'", '2'].forEach(mod => {
-                    const move = m + mod;
-                    const btn = document.createElement('button');
-                    btn.onclick = () => applyMove(move);
-                    btn.textContent = move.replace("'", "'");
-                    grid.appendChild(btn);
-                  });
-                });
-              })();
-            </script>
+            <div class="move-grid">
+              <!-- Face Moves -->
+              <button onclick="applyMove('U')">U</button>
+              <button onclick="applyMove('U\'')">U'</button>
+              <button onclick="applyMove('U2')">U2</button>
+              <button onclick="applyMove('D')">D</button>
+              <button onclick="applyMove('D\'')">D'</button>
+              <button onclick="applyMove('D2')">D2</button>
+              <button onclick="applyMove('R')">R</button>
+              <button onclick="applyMove('R\'')">R'</button>
+              <button onclick="applyMove('R2')">R2</button>
+              <button onclick="applyMove('L')">L</button>
+              <button onclick="applyMove('L\'')">L'</button>
+              <button onclick="applyMove('L2')">L2</button>
+              <button onclick="applyMove('F')">F</button>
+              <button onclick="applyMove('F\'')">F'</button>
+              <button onclick="applyMove('F2')">F2</button>
+              <button onclick="applyMove('B')">B</button>
+              <button onclick="applyMove('B\'')">B'</button>
+              <button onclick="applyMove('B2')">B2</button>
+              <!-- Slice Moves -->
+              <button onclick="applyMove('M')">M</button>
+              <button onclick="applyMove('M\'')">M'</button>
+              <button onclick="applyMove('M2')">M2</button>
+              <button onclick="applyMove('E')">E</button>
+              <button onclick="applyMove('E\'')">E'</button>
+              <button onclick="applyMove('E2')">E2</button>
+              <button onclick="applyMove('S')">S</button>
+              <button onclick="applyMove('S\'')">S'</button>
+              <button onclick="applyMove('S2')">S2</button>
+              <!-- Rotations -->
+              <button onclick="applyMove('x')">X</button>
+              <button onclick="applyMove('x\'')">X'</button>
+              <button onclick="applyMove('x2')">X2</button>
+              <button onclick="applyMove('y')">Y</button>
+              <button onclick="applyMove('y\'')">Y'</button>
+              <button onclick="applyMove('y2')">Y2</button>
+              <button onclick="applyMove('z')">Z</button>
+              <button onclick="applyMove('z\'')">Z'</button>
+              <button onclick="applyMove('z2')">Z2</button>
+              <!-- Wide Moves -->
+              <button onclick="applyMove('Rw')">Rw</button>
+              <button onclick="applyMove('Rw\'')">Rw'</button>
+              <button onclick="applyMove('Rw2')">Rw2</button>
+              <button onclick="applyMove('Lw')">Lw</button>
+              <button onclick="applyMove('Lw\'')">Lw'</button>
+              <button onclick="applyMove('Lw2')">Lw2</button>
+              <button onclick="applyMove('Uw')">Uw</button>
+              <button onclick="applyMove('Uw\'')">Uw'</button>
+              <button onclick="applyMove('Uw2')">Uw2</button>
+              <button onclick="applyMove('Dw')">Dw</button>
+              <button onclick="applyMove('Dw\'')">Dw'</button>
+              <button onclick="applyMove('Dw2')">Dw2</button>
+              <button onclick="applyMove('Fw')">Fw</button>
+              <button onclick="applyMove('Fw\'')">Fw'</button>
+              <button onclick="applyMove('Fw2')">Fw2</button>
+              <button onclick="applyMove('Bw')">Bw</button>
+              <button onclick="applyMove('Bw\'')">Bw'</button>
+              <button onclick="applyMove('Bw2')">Bw2</button>
+            </div>
           </div>
         </div>
 
@@ -161,7 +218,6 @@
           </button>
           <div class="accordion-content">
             <div class="history-controls">
-              <label><input type="checkbox" id="historyEnabled" onchange="toggleHistoryTracking()"> Track History</label>
               <button onclick="clearHistory()">Clear</button>
             </div>
             <div class="history-graph" id="historyGraph"></div>
@@ -186,6 +242,24 @@
           <div class="accordion-content">
             <select id="exampleSelect" onchange="loadExample()">
               <option value="">Select an example...</option>
+              <?php
+              $examplesDir = 'examples/';
+              $examples = [];
+              if (is_dir($examplesDir)) {
+                $files = scandir($examplesDir);
+                foreach ($files as $file) {
+                  if (pathinfo($file, PATHINFO_EXTENSION) === 'json') {
+                    $name = pathinfo($file, PATHINFO_FILENAME);
+                    $json = file_get_contents($examplesDir . $file);
+                    $json = stripJsonComments($json);
+                    $content = json_decode($json, true);
+                    $examples[$file] = $content;
+                    $selected = ($file === '05-pochman_supercube.json') ? ' selected' : '';
+                    echo "<option value='$file'$selected>$name</option>";
+                  }
+                }
+              }
+              ?>
             </select>
           </div>
         </div>
@@ -222,6 +296,17 @@
           <div class="accordion-content" style="margin: 0;">
             <div id="backgroundGallery" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; max-height: 50vh; overflow-y: auto; overflow-x: hidden; margin: 0;">
               <div class='bg-thumb none' data-bg='' onclick='selectBackground("")'></div>
+              <?php
+              $backgroundsDir = 'backgrounds/';
+              if (is_dir($backgroundsDir)) {
+                $files = scandir($backgroundsDir);
+                foreach ($files as $file) {
+                  if ($file !== '.' && $file !== '..' && preg_match('/\.(png|jpg|jpeg|gif|webp|svg)$/i', $file)) {
+                    echo "<div class='bg-thumb' data-bg='$file' onclick='selectBackground(\"$file\")' style='background-image:url(\"backgrounds/$file\");'></div>";
+                  }
+                }
+              }
+              ?>
             </div>
           </div>
         </div>
@@ -286,6 +371,17 @@
       <div class="modal-content">
         <span class="close" onclick="closeInstructionsModal()">&times;</span>
         <div id="instructionsContent">Loading...</div>
+        <script>
+          <?php
+          if (file_exists('texture-instructions.md')) {
+            $markdown = file_get_contents('texture-instructions.md');
+            echo 'const markdownContent = ' . json_encode($markdown) . ';';
+            echo 'document.getElementById("instructionsContent").innerHTML = marked.parse(markdownContent);';
+          } else {
+            echo 'document.getElementById("instructionsContent").innerHTML = "<p>Instructions file not found.</p>";';
+          }
+          ?>
+        </script>
       </div>
     </div>
 
@@ -308,17 +404,68 @@
     <div id="toast" class="toast"></div>
 
 
-    <script src="js/marked.min.js"></script>
-    <script src="js/bluetooth.js"></script>
-    <script src="js/cube-core.js"></script>
-    <script src="js/cube-view.js"></script>
-    <script src="js/cubenet-renderer.js"></script>
-    <script src="js/perspective-renderer.js"></script>
-    <script src="js/isometric-renderer.js"></script>
-    <script src="js/scramble.js"></script>
-    <script src="js/texture-instructions.js"></script>
-    <script src="js/backgrounds.js"></script>
-    <script src="js/texture-manager.js"></script>
+<script>
+  const defaultTexture = <?php 
+        function stripJsonComments($json) {
+          $result = '';
+          $inString = false;
+          $inComment = false;
+          $inBlockComment = false;
+          $len = strlen($json);
+          for ($i = 0; $i < $len; $i++) {
+            $char = $json[$i];
+            $next = ($i + 1 < $len) ? $json[$i + 1] : '';
+            if ($inBlockComment) {
+              if ($char === '*' && $next === '/') {
+                $inBlockComment = false;
+                $i++;
+              }
+              continue;
+            }
+            if ($inComment) {
+              if ($char === "\n") {
+                $inComment = false;
+                $result .= $char;
+              }
+              continue;
+            }
+            if ($char === '"' && ($i === 0 || $json[$i - 1] !== '\\')) {
+              $inString = !$inString;
+              $result .= $char;
+              continue;
+            }
+            if (!$inString) {
+              if ($char === '/' && $next === '/') {
+                $inComment = true;
+                $i++;
+                continue;
+              }
+              if ($char === '/' && $next === '*') {
+                $inBlockComment = true;
+                $i++;
+                continue;
+              }
+            }
+            $result .= $char;
+          }
+          return $result;
+        }
+        $json = file_get_contents('examples/05-pochman_supercube.json');
+        $json = stripJsonComments($json);
+        echo json_encode(json_decode($json, true)); 
+      ?>;
+
+
+
+  const examples = <?php echo json_encode($examples); ?>;
+const examplesRaw = <?php 
+  $rawExamples = [];
+  foreach ($examples as $file => $content) {
+    $rawExamples[$file] = file_get_contents($examplesDir . $file);
+  }
+  echo json_encode($rawExamples);
+?>;
+</script>
     <script src="js/app.js"></script>
   </body>
 </html>
