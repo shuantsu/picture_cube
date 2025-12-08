@@ -18,11 +18,13 @@ php -S localhost:8000 -t dist/
 
 ## Features
 
-- Interactive 3D cube with mouse/touch controls
-- Algorithm execution (standard notation)
-- Custom texture system with JSON configuration
-- Multiple view modes (2D net, 3D orthographic, 3D perspective)
-- Example texture presets included
+- Create your own sticker mods with the Textures Editor, you can even create "impossible cubes" to annoy your friends
+- 12 handcrafted textures already included
+- Head tracking with video camera for cube movement with beautiful background paralax effect
+- Giiker cube bluetooth cube support (more bluetooth cubes planned in the future)
+- Full solve history with "branching" feature allow for exploration of different solutions
+- Extremely performant (600k movements per seconds are possible)
+- Under development. More cool things are planned, stay tuned!!
 
 ## Live Demo
 
