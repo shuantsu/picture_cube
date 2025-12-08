@@ -1,0 +1,39 @@
+{
+  "vars": {
+    "red": "#c41e3a",
+    "white": "#eee",
+    "__definition": "stackable: star"
+  },
+  "textures": {
+    "star_spread": {
+      "backgroundImage": "url('https://raw.githubusercontent.com/shuantsu/picture_cube_textures/refs/heads/master/STARCUBE/star.svg')",
+      "backgroundSize": "cover"
+    }
+  },
+  "cube": {
+    "U": "$red",
+    "F": "$red",
+    "R": "$red",
+    "L": "$white",
+    "D": "$white",
+    "B": "$white",
+    "U1": [
+      "textures.star_spread"
+    ],
+    "F3": [
+      "textures.star_spread"
+    ],
+    "R7": [
+      "textures.star_spread"
+    ],
+    "B3": [
+      "textures.star_spread"
+    ],
+    "L1": [
+      "textures.star_spread"
+    ],
+    "D1": [
+      "textures.star_spread"
+    ]
+  }
+}

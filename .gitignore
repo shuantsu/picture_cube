@@ -51,7 +51,6 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
-*.old
 *.orig
 *.tmp
 backup/
@@ -91,7 +90,6 @@ upload.php
 # Cache directories
 cache/
 tmp/
-temp/
 *.cache
 
 # Session files

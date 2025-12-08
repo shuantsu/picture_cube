@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TensorFlow Head Tracking</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #222;
+            color: white;
+            display: flex;
+            height: 100vh;
+        }
+        
+        #camera-panel {
+            width: 320px;
+            padding: 20px;
+            background: #333;
+        }
+        
+        #video {
+            width: 100%;
+            border: 2px solid #555;
+            border-radius: 8px;
+        }
+        
+        #cube-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+        
+        #cube {
+            width: 200px;
+            height: 200px;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease;
+        }
+        
+        .face {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .front { background: #ff0000; transform: translateZ(100px); }
+        .back { background: #ff8800; transform: rotateY(180deg) translateZ(100px); }
+        .right { background: #0000ff; transform: rotateY(90deg) translateZ(100px); }
+        .left { background: #00ff00; transform: rotateY(-90deg) translateZ(100px); }
+        .top { background: #ffff00; transform: rotateX(90deg) translateZ(100px); }
+        .bottom { background: #ffffff; color: black; transform: rotateX(-90deg) translateZ(100px); }
+        
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #444;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        button, select {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #555;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #666;
+        }
+        
+        #head-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: red;
+            border-radius: 50%;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="camera-panel">
+        <select id="cameraSelect">
+            <option value="">Select Camera...</option>
+        </select>
+        
+        <div style="position: relative;">
+            <video id="video" autoplay muted></video>
+            <div id="head-dot"></div>
+        </div>
+        
+        <button onclick="startCamera()">Start Camera</button>
+        <button onclick="calibrate()">Calibrate (Press Space)</button>
+        
+        <div id="status">
+            Status: Select camera and click Start
+        </div>
+    </div>
+    
+    <div id="cube-panel">
+        <div id="cube">
+            <div class="face front">F</div>
+            <div class="face back">B</div>
+            <div class="face right">R</div>
+            <div class="face left">L</div>
+            <div class="face top">U</div>
+            <div class="face bottom">D</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection"></script>
+
+    <script>
+        let detector = null;
+        let calibrationCenter = { x: 0, y: 0 };
+        let isCalibrated = false;
+        let cubeRotation = { x: -20, y: -30 };
+        let animationId = null;
+
+        function updateStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+
+        async function loadCameras() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(track => track.stop());
+                
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const select = document.getElementById('cameraSelect');
+                const videoDevices = devices.filter(d => d.kind === 'videoinput');
+                
+                videoDevices.forEach((device, i) => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Camera ${i + 1}`;
+                    select.appendChild(option);
+                });
+                
+                updateStatus(`Found ${videoDevices.length} cameras`);
+            } catch (e) {
+                updateStatus('Camera permission needed');
+            }
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('video');
+            const selectedCamera = document.getElementById('cameraSelect').value;
+            
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            try {
+                let constraints = { video: { width: 320, height: 240 } };
+                if (selectedCamera) {
+                    constraints.video.deviceId = { exact: selectedCamera };
+                }
+                
+                updateStatus('Loading face detection model...');
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                
+                await video.play();
+                
+                detector = await faceLandmarksDetection.createDetector(
+                    faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
+                    { runtime: 'tfjs' }
+                );
+                
+                const track = stream.getVideoTracks()[0];
+                updateStatus(`Active: ${track.label} - Position head and calibrate`);
+                
+                detectFaces();
+                
+            } catch (error) {
+                updateStatus('Error: ' + error.message);
+            }
+        }
+
+        async function detectFaces() {
+            const video = document.getElementById('video');
+            
+            if (detector && video.readyState >= 2) {
+                try {
+                    const faces = await detector.estimateFaces(video);
+                    
+                    if (faces.length > 0) {
+                        const face = faces[0];
+                        const noseTip = face.keypoints[1];
+                        const x = noseTip.x;
+                        const y = noseTip.y;
+                        
+                        const dot = document.getElementById('head-dot');
+                        dot.style.display = 'block';
+                        dot.style.left = x + 'px';
+                        dot.style.top = y + 'px';
+                        
+                        if (isCalibrated) {
+                            const deltaX = (x - calibrationCenter.x) / 160;
+                            const deltaY = (y - calibrationCenter.y) / 120;
+                            
+                            cubeRotation.y = -30 + (deltaX * 60);
+                            cubeRotation.x = -20 - (deltaY * 40);
+                            
+                            updateCube();
+                            updateStatus(`Head: ${deltaX.toFixed(2)}, ${deltaY.toFixed(2)} | Cube: ${cubeRotation.x.toFixed(0)}°, ${cubeRotation.y.toFixed(0)}°`);
+                        }
+                    } else {
+                        document.getElementById('head-dot').style.display = 'none';
+                        if (!isCalibrated) {
+                            updateStatus('No face detected');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Face detection error:', error);
+                }
+            }
+            
+            animationId = requestAnimationFrame(detectFaces);
+        }
+
+        function calibrate() {
+            const dot = document.getElementById('head-dot');
+            if (dot.style.display === 'block') {
+                calibrationCenter.x = parseFloat(dot.style.left);
+                calibrationCenter.y = parseFloat(dot.style.top);
+                isCalibrated = true;
+                updateStatus('Calibrated! Move your head to control the cube');
+            } else {
+                updateStatus('No face detected for calibration');
+            }
+        }
+
+        function updateCube() {
+            const cube = document.getElementById('cube');
+            cube.style.transform = `rotateX(${cubeRotation.x}deg) rotateY(${cubeRotation.y}deg)`;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                calibrate();
+            }
+        });
+
+        updateCube();
+        loadCameras();
+    </script>
+</body>
+</html>

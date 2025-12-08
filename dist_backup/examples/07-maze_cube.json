@@ -1,0 +1,87 @@
+{
+  "vars": {
+    "url": "https://raw.githubusercontent.com/shuantsu/picture_cube_textures/refs/heads/master/MAZE_NEW"
+  },
+  "textures": {
+    "corner1_spread": {
+      "backgroundImage": "url('$url/maze_corner1.svg')",
+      "backgroundSize": "cover"
+    },
+    "corner2_spread": {
+      "backgroundImage": "url('$url/maze_corner2.svg')",
+      "backgroundSize": "cover"
+    },
+    "corner3_spread": {
+      "backgroundImage": "url('$url/maze_corner3.svg')",
+      "backgroundSize": "cover"
+    },
+    "line2_spread": {
+      "backgroundImage": "url('$url/maze_line2.svg')",
+      "backgroundSize": "cover"
+    },
+    "corner4_spread": {
+      "backgroundImage": "url('$url/maze_corner4.svg')",
+      "backgroundSize": "cover"
+    },
+    "line1_spread": {
+      "backgroundImage": "url('$url/maze_line1.svg')",
+      "backgroundSize": "cover"
+    }
+  },
+  "cube": {
+    "U1": "textures.corner1_spread",
+    "L7": "textures.corner1_spread",
+    "L5": "textures.corner1_spread",
+    "F8": "textures.corner1_spread",
+    "F1": "textures.corner1_spread",
+    "U6": "textures.corner2_spread",
+    "U8": "textures.corner1_spread",
+    "U7": "textures.corner3_spread",
+    "U4": "textures.line2_spread",
+    "U3": "textures.line2_spread",
+    "U5": "textures.corner3_spread",
+    "U2": "textures.corner4_spread",
+    "U0": "textures.corner4_spread",
+    "F0": "textures.corner4_spread",
+    "F2": "textures.line2_spread",
+    "F5": "textures.corner2_spread",
+    "F4": "textures.corner3_spread",
+    "F7": "textures.corner4_spread",
+    "F3": "textures.line2_spread",
+    "F6": "textures.line2_spread",
+    "L8": "textures.line2_spread",
+    "L2": "textures.corner2_spread",
+    "L4": "textures.line1_spread",
+    "L1": "textures.line1_spread",
+    "L0": "textures.line1_spread",
+    "L3": "textures.line1_spread",
+    "L6": "textures.line1_spread",
+    "D0": "textures.corner2_spread",
+    "D3": "textures.corner1_spread",
+    "D6": "textures.corner3_spread",
+    "D7": "textures.corner1_spread",
+    "D8": "textures.corner4_spread",
+    "D4": "textures.corner3_spread",
+    "D5": "textures.line1_spread",
+    "D1": "textures.line2_spread",
+    "D2": "textures.corner3_spread",
+    "R8": "textures.line2_spread",
+    "R7": "textures.line2_spread",
+    "R6": "textures.line2_spread",
+    "R3": "textures.line2_spread",
+    "R4": "textures.corner4_spread",
+    "R0": "textures.corner4_spread",
+    "R5": "textures.corner1_spread",
+    "R1": "textures.corner2_spread",
+    "R2": "textures.corner3_spread",
+    "B3": "textures.corner3_spread",
+    "B8": "textures.corner3_spread",
+    "B2": "textures.line1_spread",
+    "B1": "textures.corner4_spread",
+    "B0": "textures.corner1_spread",
+    "B4": "textures.corner2_spread",
+    "B6": "textures.corner4_spread",
+    "B7": "textures.corner1_spread",
+    "B5": "textures.corner4_spread"
+  }
+}

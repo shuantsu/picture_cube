@@ -1,0 +1,10 @@
+{
+  "textures": {
+    "default": "#888888",
+    "special": "#ffd700"
+  },
+  "cube": {
+    "*": "default",
+    "U4": "special"
+  }
+}

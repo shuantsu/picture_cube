@@ -1,0 +1,15 @@
+{
+  "textures": {
+    "gradient": {
+      "background": "linear-gradient(45deg, #c41e3a 0%, #ff5800 100%)"
+    },
+    "radial": {
+      "background": "radial-gradient(circle, #ffffff 50%, #0045ad 100%)"
+    }
+  },
+  "cube": {
+    "U": "gradient",
+    "L": "radial",
+    "F": {"background": "conic-gradient(from 0deg, red, yellow, green, blue, red)"}
+  }
+}

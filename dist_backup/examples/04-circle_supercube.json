@@ -1,0 +1,74 @@
+{
+  "vars": {
+    "U_grad": "radial-gradient(circle, #ffffff 50%, transparent 50%), conic-gradient(from -45deg at center, #0045ad 0deg 90deg, #c41e3a 90deg 180deg, #009b48 180deg 270deg, #ff5800 270deg 360deg)",
+    "L_grad": "radial-gradient(circle, #ff5800 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #009b48 90deg 180deg, #ffd500 180deg 270deg, #0045ad 270deg 360deg)",
+    "F_grad": "radial-gradient(circle, #009b48 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #c41e3a 90deg 180deg, #ffd500 180deg 270deg, #ff5800 270deg 360deg)",
+    "R_grad": "radial-gradient(circle, #c41e3a 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #0045ad 90deg 180deg, #ffd500 180deg 270deg, #009b48 270deg 360deg)",
+    "B_grad": "radial-gradient(circle, #0045ad 50%, transparent 50%), conic-gradient(from -45deg at center, #ffffff 0deg 90deg, #ff5800 90deg 180deg, #ffd500 180deg 270deg, #c41e3a 270deg 360deg)",
+    "D_grad": "radial-gradient(circle, #ffd500 50%, transparent 50%), conic-gradient(from -45deg at center, #009b48 0deg 90deg, #c41e3a 90deg 180deg, #0045ad 180deg 270deg, #ff5800 270deg 360deg)"
+  },
+  "textures": {
+    "U_sprite": {
+      "backgroundImage": "$U_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "U_spread": {
+      "backgroundImage": "$U_grad",
+      "backgroundSize": "cover"
+    },
+    "L_sprite": {
+      "backgroundImage": "$L_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "L_spread": {
+      "backgroundImage": "$L_grad",
+      "backgroundSize": "cover"
+    },
+    "F_sprite": {
+      "backgroundImage": "$F_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "F_spread": {
+      "backgroundImage": "$F_grad",
+      "backgroundSize": "cover"
+    },
+    "R_sprite": {
+      "backgroundImage": "$R_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "R_spread": {
+      "backgroundImage": "$R_grad",
+      "backgroundSize": "cover"
+    },
+    "B_sprite": {
+      "backgroundImage": "$B_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "B_spread": {
+      "backgroundImage": "$B_grad",
+      "backgroundSize": "cover"
+    },
+    "D_sprite": {
+      "backgroundImage": "$D_grad",
+      "backgroundSize": "300% 300%"
+    },
+    "D_spread": {
+      "backgroundImage": "$D_grad",
+      "backgroundSize": "cover"
+    }
+  },
+  "cube": {
+    "U": "textures.U_sprite",
+    "L": "textures.L_sprite",
+    "F": "textures.F_sprite",
+    "R": "textures.R_sprite",
+    "B": "textures.B_sprite",
+    "D": "textures.D_sprite",
+    "U4": "textures.U_spread",
+    "L4": "textures.L_spread",
+    "F4": "textures.F_spread",
+    "R4": "textures.R_spread",
+    "B4": "textures.B_spread",
+    "D4": "textures.D_spread"
+  }
+}

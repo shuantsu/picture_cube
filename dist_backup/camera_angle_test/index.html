@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Camera Angle Test</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #222;
+            color: white;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #camera-panel {
+            width: 320px;
+            padding: 20px;
+            background: #333;
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+            overflow-y: auto;
+            height: 100vh;
+        }
+        
+        #camera-panel.hidden {
+            transform: translateX(-100%);
+            position: absolute;
+        }
+        
+        #toggle-panel {
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #555;
+            color: white;
+            border: none;
+            padding: 10px 8px;
+            cursor: pointer;
+            z-index: 1000;
+            border-radius: 0 8px 8px 0;
+            transition: left 0.3s ease;
+            width: auto;
+            margin: 0;
+            font-size: 16px;
+        }
+        
+        #toggle-panel:hover {
+            background: #666;
+        }
+        
+        #toggle-panel.panel-hidden {
+            left: 0;
+        }
+        
+        #toggle-panel.panel-visible {
+            left: 360px;
+        }
+        
+        #video {
+            width: 100%;
+            border: 2px solid #555;
+            border-radius: 8px;
+        }
+        
+        #cube-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+            background-image: url('image.png');
+            background-size: 150%;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-position 0.1s ease-out;
+            width: 100%;
+            height: 100vh;
+        }
+        
+        #cube {
+            width: 200px;
+            height: 200px;
+            transform-style: preserve-3d;
+        }
+        
+        .face {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .front { background: #00ff08; transform: translateZ(100px); }
+        .back { background: #1900ff; transform: rotateY(180deg) translateZ(100px); }
+        .right { background: #ff000d; transform: rotateY(90deg) translateZ(100px); }
+        .left { background: #ff8c00; transform: rotateY(-90deg) translateZ(100px); }
+        .top { background: #ffffff; transform: rotateX(90deg) translateZ(100px); }
+        .bottom { background: #eaff00; color: black; transform: rotateX(-90deg) translateZ(100px); }
+        
+        #status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #444;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #555;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #666;
+        }
+        
+        #head-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: red;
+            border-radius: 50%;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="toggle-panel" class="panel-visible">◀</button>
+    <div id="camera-panel">
+        <video id="video" autoplay muted></video>
+        <canvas id="canvas" style="display: none;"></canvas>
+        <div style="position: relative;">
+            <div id="head-dot"></div>
+        </div>
+        
+        <select id="cameraSelect" style="width: 100%; padding: 10px; margin: 5px 0; background: #555; color: white; border: none; border-radius: 4px;">
+            <option value="">Select Camera...</option>
+        </select>
+        <button onclick="startCamera()">Start Camera</button>
+        <button onclick="calibrate()">Calibrate (Press Space)</button>
+        
+        <label><input type="checkbox" id="sameSensitivity"> Same Value</label>
+        <label><input type="checkbox" id="invertX"> Invert X</label>
+        <label><input type="checkbox" id="invertY"> Invert Y</label><br/>
+        
+        <label for="sensitivityX">Sensitivity X: <span id="sensitivityXValue">60</span></label>
+        <input type="range" id="sensitivityX" min="10" max="120" value="60" style="width: 100%; margin: 5px 0;">
+        
+        <label for="sensitivityY">Sensitivity Y: <span id="sensitivityYValue">40</span></label>
+        <input type="range" id="sensitivityY" min="10" max="120" value="40" style="width: 100%; margin: 5px 0;">
+        
+        <label for="offsetX">Offset X: <span id="offsetXValue">0</span></label>
+        <input type="range" id="offsetX" min="-160" max="160" value="0" style="width: 100%; margin: 5px 0;">
+        
+        <label for="offsetY">Offset Y: <span id="offsetYValue">0</span></label>
+        <input type="range" id="offsetY" min="-120" max="120" value="0" style="width: 100%; margin: 5px 0;">
+        
+        <label><input type="checkbox" id="sameBgSensitivity"> Same Value BG</label>
+        <label><input type="checkbox" id="invertBgX"> Invert BG X</label>
+        <label><input type="checkbox" id="invertBgY"> Invert BG Y</label><br/>
+        
+        <label for="bgSensitivityX">BG Sensitivity X: <span id="bgSensitivityXValue">30</span></label>
+        <input type="range" id="bgSensitivityX" min="0" max="100" value="30" style="width: 100%; margin: 5px 0;">
+        
+        <label for="bgSensitivityY">BG Sensitivity Y: <span id="bgSensitivityYValue">30</span></label>
+        <input type="range" id="bgSensitivityY" min="0" max="100" value="30" style="width: 100%; margin: 5px 0;">
+        
+        <div id="status">
+            Status: Click Start Camera
+        </div>
+    </div>
+    
+    <div id="cube-panel">
+        <div id="cube">
+            <div class="face front">F</div>
+            <div class="face back">B</div>
+            <div class="face right">R</div>
+            <div class="face left">L</div>
+            <div class="face top">U</div>
+            <div class="face bottom">D</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+    <script>
+        let camera = null;
+        let faceMesh = null;
+        let calibrationCenter = { x: 0, y: 0 };
+        let isCalibrated = false;
+        let cubeRotation = { x: -15, y: 0 };
+        let sensitivityX = 60;
+        let sensitivityY = 40;
+        let offsetX = 0;
+        let offsetY = 0;
+        let bgSensitivityX = 30;
+        let bgSensitivityY = 30;
+        let bgZoom = 150;
+        let sameSensitivity = false;
+        let sameBgSensitivity = false;
+        let invertX = false;
+        let invertY = false;
+        let invertBgX = false;
+        let invertBgY = false;
+        let panelVisible = true;
+        let lastUpdateTime = 0;
+
+        function loadCalibration() {
+            const saved = localStorage.getItem('cubeCalibration');
+            if (saved) {
+                const data = JSON.parse(saved);
+                calibrationCenter = data.calibrationCenter || { x: 0, y: 0 };
+                isCalibrated = data.isCalibrated || false;
+                sensitivityX = data.sensitivityX || 60;
+                sensitivityY = data.sensitivityY || 40;
+                offsetX = data.offsetX || 0;
+                offsetY = data.offsetY || 0;
+                bgSensitivityX = data.bgSensitivityX || 30;
+                bgSensitivityY = data.bgSensitivityY || 30;
+                bgZoom = data.bgZoom || 150;
+                sameSensitivity = data.sameSensitivity || false;
+                sameBgSensitivity = data.sameBgSensitivity || false;
+                invertX = data.invertX || false;
+                invertY = data.invertY || false;
+                invertBgX = data.invertBgX || false;
+                invertBgY = data.invertBgY || false;
+                panelVisible = data.panelVisible !== undefined ? data.panelVisible : true;
+                
+                document.getElementById('sensitivityX').value = sensitivityX;
+                document.getElementById('sensitivityY').value = sensitivityY;
+                document.getElementById('offsetX').value = offsetX;
+                document.getElementById('offsetY').value = offsetY;
+                document.getElementById('bgSensitivityX').value = bgSensitivityX;
+                document.getElementById('bgSensitivityY').value = bgSensitivityY;
+                document.getElementById('sameSensitivity').checked = sameSensitivity;
+                document.getElementById('sameBgSensitivity').checked = sameBgSensitivity;
+                document.getElementById('invertX').checked = invertX;
+                document.getElementById('invertY').checked = invertY;
+                document.getElementById('invertBgX').checked = invertBgX;
+                document.getElementById('invertBgY').checked = invertBgY;
+                
+                if (!panelVisible) {
+                    document.getElementById('camera-panel').classList.add('hidden');
+                    document.getElementById('toggle-panel').classList.remove('panel-visible');
+                    document.getElementById('toggle-panel').classList.add('panel-hidden');
+                    document.getElementById('toggle-panel').textContent = '▶';
+                }
+                
+                document.getElementById('sensitivityXValue').textContent = sensitivityX;
+                document.getElementById('sensitivityYValue').textContent = sensitivityY;
+                document.getElementById('offsetXValue').textContent = offsetX;
+                document.getElementById('offsetYValue').textContent = offsetY;
+                document.getElementById('bgSensitivityXValue').textContent = bgSensitivityX;
+                document.getElementById('bgSensitivityYValue').textContent = bgSensitivityY;
+            }
+        }
+
+        function saveCalibration() {
+            localStorage.setItem('cubeCalibration', JSON.stringify({
+                calibrationCenter,
+                isCalibrated,
+                sensitivityX,
+                sensitivityY,
+                offsetX,
+                offsetY,
+                bgSensitivityX,
+                bgSensitivityY,
+                bgZoom,
+                sameSensitivity,
+                sameBgSensitivity,
+                invertX,
+                invertY,
+                invertBgX,
+                invertBgY,
+                panelVisible
+            }));
+        }
+
+        async function loadCameras() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(track => track.stop());
+                
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const select = document.getElementById('cameraSelect');
+                const videoDevices = devices.filter(d => d.kind === 'videoinput');
+                
+                videoDevices.forEach((device, i) => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.text = device.label || `Unknown Camera ${i + 1}`;
+                    select.appendChild(option);
+                });
+                
+                updateStatus(`Found ${videoDevices.length} cameras`);
+            } catch (e) {
+                updateStatus('Camera permission needed');
+            }
+        }
+
+        function updateStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('video');
+            const selectedCamera = document.getElementById('cameraSelect').value;
+            
+            // Stop existing stream first
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+            if (camera) {
+                camera.stop();
+            }
+            
+            try {
+                let constraints = { video: { width: 320, height: 240 } };
+                if (selectedCamera) {
+                    constraints.video.deviceId = { exact: selectedCamera };
+                }
+                
+                updateStatus('Starting camera: ' + (document.getElementById('cameraSelect').selectedOptions[0]?.text || 'Default'));
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                
+                // Initialize MediaPipe Face Mesh
+                faceMesh = new FaceMesh({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+                });
+                
+                faceMesh.setOptions({
+                    maxNumFaces: 1,
+                    refineLandmarks: false,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+                
+                faceMesh.onResults(onResults);
+                
+                // Wait for video to load
+                await new Promise(resolve => {
+                    video.onloadedmetadata = resolve;
+                });
+                
+                camera = new Camera(video, {
+                    onFrame: async () => {
+                        await faceMesh.send({ image: video });
+                    },
+                    width: 320,
+                    height: 240
+                });
+                
+                camera.start();
+                const track = stream.getVideoTracks()[0];
+                updateStatus(`Active: ${track.label} (ID: ${track.getSettings().deviceId?.slice(-8)}) - Position head and calibrate`);
+                
+            } catch (error) {
+                updateStatus('Camera access denied: ' + error.message);
+            }
+        }
+
+        function onResults(results) {
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+                
+                // Get nose tip (landmark 1)
+                const noseTip = landmarks[1];
+                const x = noseTip.x * 320;
+                const y = noseTip.y * 240;
+                
+                // Show head position
+                const dot = document.getElementById('head-dot');
+                dot.style.display = 'block';
+                dot.style.left = x + 'px';
+                dot.style.top = y + 'px';
+                
+                if (isCalibrated) {
+                    // Apply offset to camera coordinates
+                    const adjustedX = x + offsetX;
+                    const adjustedY = y + offsetY;
+                    
+                    // Calculate movement from calibration center
+                    const deltaX = (adjustedX - calibrationCenter.x) / 160; // Normalize to -1 to 1
+                    const deltaY = (adjustedY - calibrationCenter.y) / 120;
+                    
+                    // Apply to cube rotation
+                    cubeRotation.y = 0 - (deltaX * sensitivityX * (invertX ? -1 : 1));
+                    cubeRotation.x = -15 + (deltaY * sensitivityY * (invertY ? -1 : 1));
+                    
+                    const now = Date.now();
+                    if (now - lastUpdateTime > 16) { // ~60fps throttling
+                        updateCube();
+                        const bgPos = updateBackground(x, y);
+                        lastUpdateTime = now;
+                        updateStatus(`Head: ${deltaX.toFixed(2)}, ${deltaY.toFixed(2)} | Cube: ${cubeRotation.x.toFixed(0)}°, ${cubeRotation.y.toFixed(0)}° | BG: ${bgPos.x.toFixed(1)}%, ${bgPos.y.toFixed(1)}%`);
+                    }
+                }
+            } else {
+                document.getElementById('head-dot').style.display = 'none';
+                if (!isCalibrated) {
+                    updateStatus('No face detected');
+                }
+            }
+        }
+
+        function calibrate() {
+            const dot = document.getElementById('head-dot');
+            if (dot.style.display === 'block') {
+                calibrationCenter.x = parseFloat(dot.style.left);
+                calibrationCenter.y = parseFloat(dot.style.top);
+                isCalibrated = true;
+                saveCalibration();
+                updateStatus('Calibrated! Move your head to control the cube');
+            } else {
+                updateStatus('No face detected for calibration');
+            }
+        }
+
+        function updateCube() {
+            const cube = document.getElementById('cube');
+            cube.style.transform = `rotateX(${cubeRotation.x}deg) rotateY(${cubeRotation.y}deg)`;
+        }
+
+        function updateBackground(x, y) {
+            const panel = document.getElementById('cube-panel');
+            const adjustedX = (x + offsetX - calibrationCenter.x) / 160;
+            const adjustedY = (y + offsetY - calibrationCenter.y) / 120;
+            const bgOffsetX = 50 - (adjustedX * bgSensitivityX * (invertBgX ? -1 : 1));
+            const bgOffsetY = 50 - (adjustedY * bgSensitivityY * (invertBgY ? -1 : 1));
+            panel.style.backgroundPosition = `${bgOffsetX}% ${bgOffsetY}%`;
+            panel.style.backgroundSize = `${bgZoom}%`;
+            return { x: bgOffsetX, y: bgOffsetY };
+        }
+
+        // Slider event listeners
+        document.getElementById('sameSensitivity').addEventListener('change', (e) => {
+            sameSensitivity = e.target.checked;
+            saveCalibration();
+        });
+        
+        document.getElementById('sameBgSensitivity').addEventListener('change', (e) => {
+            sameBgSensitivity = e.target.checked;
+            saveCalibration();
+        });
+        
+        document.getElementById('invertX').addEventListener('change', (e) => {
+            invertX = e.target.checked;
+            saveCalibration();
+        });
+        
+        document.getElementById('invertY').addEventListener('change', (e) => {
+            invertY = e.target.checked;
+            saveCalibration();
+        });
+        
+        document.getElementById('invertBgX').addEventListener('change', (e) => {
+            invertBgX = e.target.checked;
+            saveCalibration();
+        });
+        
+        document.getElementById('invertBgY').addEventListener('change', (e) => {
+            invertBgY = e.target.checked;
+            saveCalibration();
+        });
+        
+        document.getElementById('sensitivityX').addEventListener('input', (e) => {
+            sensitivityX = parseInt(e.target.value);
+            document.getElementById('sensitivityXValue').textContent = sensitivityX;
+            if (sameSensitivity) {
+                sensitivityY = sensitivityX;
+                document.getElementById('sensitivityY').value = sensitivityY;
+                document.getElementById('sensitivityYValue').textContent = sensitivityY;
+            }
+            saveCalibration();
+        });
+        
+        document.getElementById('sensitivityY').addEventListener('input', (e) => {
+            sensitivityY = parseInt(e.target.value);
+            document.getElementById('sensitivityYValue').textContent = sensitivityY;
+            if (sameSensitivity) {
+                sensitivityX = sensitivityY;
+                document.getElementById('sensitivityX').value = sensitivityX;
+                document.getElementById('sensitivityXValue').textContent = sensitivityX;
+            }
+            saveCalibration();
+        });
+        
+        document.getElementById('offsetX').addEventListener('input', (e) => {
+            offsetX = parseInt(e.target.value);
+            document.getElementById('offsetXValue').textContent = offsetX;
+            saveCalibration();
+        });
+        
+        document.getElementById('offsetY').addEventListener('input', (e) => {
+            offsetY = parseInt(e.target.value);
+            document.getElementById('offsetYValue').textContent = offsetY;
+            saveCalibration();
+        });
+        
+        document.getElementById('bgSensitivityX').addEventListener('input', (e) => {
+            bgSensitivityX = parseInt(e.target.value);
+            document.getElementById('bgSensitivityXValue').textContent = bgSensitivityX;
+            if (sameBgSensitivity) {
+                bgSensitivityY = bgSensitivityX;
+                document.getElementById('bgSensitivityY').value = bgSensitivityY;
+                document.getElementById('bgSensitivityYValue').textContent = bgSensitivityY;
+            }
+            saveCalibration();
+        });
+        
+        document.getElementById('bgSensitivityY').addEventListener('input', (e) => {
+            bgSensitivityY = parseInt(e.target.value);
+            document.getElementById('bgSensitivityYValue').textContent = bgSensitivityY;
+            if (sameBgSensitivity) {
+                bgSensitivityX = bgSensitivityY;
+                document.getElementById('bgSensitivityX').value = bgSensitivityX;
+                document.getElementById('bgSensitivityXValue').textContent = bgSensitivityX;
+            }
+            saveCalibration();
+        });
+
+        // Toggle panel
+        document.getElementById('toggle-panel').addEventListener('click', () => {
+            panelVisible = !panelVisible;
+            const panel = document.getElementById('camera-panel');
+            const btn = document.getElementById('toggle-panel');
+            
+            if (panelVisible) {
+                panel.classList.remove('hidden');
+                btn.classList.remove('panel-hidden');
+                btn.classList.add('panel-visible');
+                btn.textContent = '◀';
+            } else {
+                panel.classList.add('hidden');
+                btn.classList.remove('panel-visible');
+                btn.classList.add('panel-hidden');
+                btn.textContent = '▶';
+            }
+            saveCalibration();
+        });
+        
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                calibrate();
+            }
+        });
+        
+        // Mouse wheel zoom
+        document.getElementById('cube-panel').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            bgZoom += e.deltaY > 0 ? -5 : 5;
+            bgZoom = Math.max(50, Math.min(300, bgZoom));
+            saveCalibration();
+        });
+
+        // Initialize cube position
+        loadCalibration();
+        updateCube();
+        loadCameras();
+    </script>
+</body>
+</html>

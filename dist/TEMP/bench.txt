@@ -1,0 +1,46 @@
+=== CUBE CORE BENCHMARK ===
+
+TEST 1: Single Move Repetition (10k each)
+  U   x10k: 16.41ms
+  R   x10k: 17.42ms
+  F   x10k: 15.69ms
+  M   x10k: 9.89ms
+  E   x10k: 9.14ms
+  S   x10k: 47.76ms
+  x   x10k: 21.52ms
+  y   x10k: 14.12ms
+  z   x10k: 43.96ms
+  Rw  x10k: 26.07ms
+
+TEST 2: Random Sequences
+  1k random moves: 6.70ms
+  10k random moves: 44.67ms
+  100k random moves: 214.25ms
+
+TEST 3: Common Algorithms (1k repetitions)
+  Sexy Move: 19.58ms
+  T-Perm: 20.74ms
+  Sune: 4.26ms
+  Sledgehammer: 11.12ms
+
+TEST 4: State Operations
+  getState x10k: 22.38ms
+  setState x10k: 25.75ms
+
+TEST 5: Complex Moves (10k each)
+  Rw  x10k: 33.91ms
+  Lw  x10k: 25.49ms
+  Uw  x10k: 21.63ms
+  Dw  x10k: 35.45ms
+  Fw  x10k: 55.31ms
+  Bw  x10k: 27.95ms
+  E   x10k: 7.12ms
+  S   x10k: 37.83ms
+  M   x10k: 12.00ms
+
+TEST 6: Stress Test
+  1M random moves: 1702.50ms
+
+=== SUMMARY ===
+Average per move: 0.0017ms
+Moves per second: 587370
