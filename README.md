@@ -2,7 +2,10 @@
 
 A 3D Rubik's cube simulator with custom texture support and multiple visualization modes.
 
-![Desktop View](desktop.png)
+[![Youtube Video](video.png)](https://www.youtube.com/watch?v=OOUIykqF7zs)
+
+![Stickers editor](thumb1.png)
+
 ![Mobile View](mobile.png)
 
 ## Setup
