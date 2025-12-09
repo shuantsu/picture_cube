@@ -273,6 +273,9 @@
           </button>
           <div class="accordion-content" style="margin: 0;">
             <div style="margin: 10px 0;">
+              <label>BG Color: <input type="color" id="bgColorPicker" style="width: 50px; height: 36px; cursor: pointer;" oninput="applyBackgroundColor()"></label>
+            </div>
+            <div style="margin: 10px 0;">
               <label>BG Width: <span id="bgWidthValue">100</span>%</label>
               <input type="range" id="bgWidth" min="50" max="200" value="100" style="width: 100%;">
             </div>

@@ -70,18 +70,38 @@
     if (!file) {
       panel.style.backgroundImage = '';
       localStorage.setItem('selectedBackground', '');
+      localStorage.removeItem('backgroundColor');
       document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('selected'));
       document.querySelector('.bg-thumb.none').classList.add('selected');
       return;
     }
     panel.style.backgroundImage = `url('backgrounds/${file}')`;
     localStorage.setItem('selectedBackground', file);
+    localStorage.removeItem('backgroundColor');
     document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('selected'));
     const thumb = document.querySelector(`[data-bg="${file}"]`);
     if (thumb) thumb.classList.add('selected');
   }
 
+  function applyBackgroundColor() {
+    const color = document.getElementById('bgColorPicker').value;
+    const panel = document.getElementById('right-panel');
+    panel.style.backgroundImage = '';
+    panel.style.backgroundColor = color;
+    localStorage.setItem('backgroundColor', color);
+    localStorage.removeItem('selectedBackground');
+    document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('selected'));
+  }
+  window.applyBackgroundColor = applyBackgroundColor;
+
   const savedBg = localStorage.getItem('selectedBackground');
-  if (savedBg) selectBackground(savedBg);
-  else document.querySelector('.bg-thumb.none').classList.add('selected');
+  const savedColor = localStorage.getItem('backgroundColor');
+  if (savedColor) {
+    document.getElementById('right-panel').style.backgroundColor = savedColor;
+    document.getElementById('bgColorPicker').value = savedColor;
+  } else if (savedBg) {
+    selectBackground(savedBg);
+  } else {
+    document.querySelector('.bg-thumb.none').classList.add('selected');
+  }
   
