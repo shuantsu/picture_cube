@@ -484,11 +484,6 @@ $varName" rows="2"></textarea>
         <div class="control-section">
             <h3>Generated JSON</h3>
             <textarea id="json-output" readonly spellcheck="false"></textarea>
-            <button onclick="testInCube()" id="test-cube-btn">Test in Cube</button>
-            <label style="display: block; margin-top: 10px;">
-                <input type="checkbox" id="auto-refresh" onchange="toggleAutoRefresh(this.checked)">
-                Auto Refresh
-            </label>
         </div>
     </div>
 
@@ -1258,13 +1253,7 @@ $varName" rows="2"></textarea>
             return config;
         }
 
-        let autoRefreshEnabled = false;
-        let autoRefreshTimeout = null;
 
-        function toggleAutoRefresh(enabled) {
-            autoRefreshEnabled = enabled;
-            localStorage.setItem('autoRefresh', enabled);
-        }
 
         // Syntax highlight JSON
         function syntaxHighlight(json) {
@@ -1620,25 +1609,7 @@ $varName" rows="2"></textarea>
 
 
 
-        // Test in main cube application
-        function testInCube() {
-            if (window.parent !== window) {
-                showToast('Already testing in cube!');
-                return;
-            }
-            const config = generateConfig();
-            const jsonString = JSON.stringify(config);
-            const url = `../index.php`;
-            
-            // Open in new window/tab instead of modal
-            const newWindow = window.open(url, '_blank');
-            if (newWindow) {
-                // Send config to the new window when it loads
-                newWindow.addEventListener('load', () => {
-                    newWindow.postMessage({ type: 'LOAD_CONFIG', config: config }, '*');
-                });
-            }
-        }
+
 
         // Zoom and pan
         function updateTransform() {
@@ -1787,16 +1758,9 @@ $varName" rows="2"></textarea>
             
             if (window.parent !== window) {
                 document.getElementById('close-editor-btn').style.display = 'block';
-                document.getElementById('test-cube-btn').style.display = 'none';
-            } else {
-                document.getElementById('close-editor-btn').style.display = 'none';
             }
             
-            const savedAutoRefresh = localStorage.getItem('autoRefresh');
-            if (savedAutoRefresh === 'true') {
-                document.getElementById('auto-refresh').checked = true;
-                autoRefreshEnabled = true;
-            }
+
         });
         
         // Also run on window load for iframe reloads
