@@ -241,27 +241,33 @@
   /* 2D Net View */
   #cube-net {
     display: none;
-    grid-template-columns: repeat(4, calc(var(--sticker-size) * 3));
-    grid-template-rows: repeat(3, calc(var(--sticker-size) * 3));
+    grid-template-columns: repeat(4, 90px);
+    grid-template-rows: repeat(3, 90px);
     gap: 4px;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 2;
+    padding: 30px;
   }
 
   .face-2d {
     display: grid;
-    grid-template-columns: repeat(3, var(--sticker-size));
-    grid-template-rows: repeat(3, var(--sticker-size));
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
     gap: 2px;
+    background: #333;
+    padding: 2px;
+    border-radius: 4px;
+    border: 3px solid transparent;
+    width: 80px;
+    height: 80px;
   }
 
   .sticker {
-    width: var(--sticker-size);
-    height: var(--sticker-size);
-    border: 1px solid #000;
+    border: 1px solid #333;
+    border-radius: 2px;
     display: flex;
     align-items: center;
     justify-content: center;
