@@ -334,7 +334,7 @@
             </div>
             <div style="margin: 10px 0;">
               <label>Panel Width: <span id="panelWidthValue">333</span>px</label>
-              <input type="range" id="panelWidth" min="200" max="600" value="333" style="width: 100%;">
+              <input type="range" id="panelWidth" min="200" max="600" value="350" style="width: 100%;">
             </div>
             <button onclick="resetAccessibility()">Reset</button>
           </div>

@@ -1,4 +1,4 @@
-
+const defaultPanelWidth = 350
 
       function setRealViewportHeight() {
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -2150,29 +2150,10 @@ try {
 const controls = $('#controls');
 let isLoading = true;
 
-try {
-  const savedWidth = localStorage.getItem('controlsWidth');
-  if (savedWidth) {
-    controls.style.width = savedWidth + 'px';
-  }
-} catch (e) {}
-
-setTimeout(() => {
-  isLoading = false;
-  const resizeObserver = new ResizeObserver(() => {
-    if (isLoading) return;
-    const width = controls.offsetWidth;
-    localStorage.setItem('controlsWidth', width);
-  });
-  resizeObserver.observe(controls);
-}, 500);
-
-
-
 // Accessibility controls
 let uiScale = 100;
 let textScale = 100;
-let panelWidth = 300;
+let panelWidth = defaultPanelWidth;
 
 function applyAccessibility() {
   document.documentElement.style.setProperty('--ui-scale', uiScale / 100);
@@ -2186,13 +2167,12 @@ function applyAccessibility() {
 function resetAccessibility() {
   uiScale = 100;
   textScale = 100;
-  panelWidth = 300;
   $('#uiScale').value = 100;
   $('#textScale').value = 100;
-  $('#panelWidth').value = 300;
+  $('#panelWidth').value = defaultPanelWidth;
   $('#uiScaleValue').textContent = 100;
   $('#textScaleValue').textContent = 100;
-  $('#panelWidthValue').textContent = 300;
+  $('#panelWidthValue').textContent = defaultPanelWidth;
   applyAccessibility();
 }
 
