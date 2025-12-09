@@ -457,6 +457,4 @@ class CubeCore {
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = CubeCore;
-}
+export default CubeCore;

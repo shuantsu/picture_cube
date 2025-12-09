@@ -1,5 +1,12 @@
 // History Manager - Tree-based move history with visualization
-class MoveNode {
+const $ = (sel) => {
+  if (sel.startsWith('#')) {
+    return document.getElementById(sel.slice(1));
+  }
+  return document.querySelector(sel);
+};
+
+export class MoveNode {
   constructor(move, parent = null, state = null) {
     this.id = crypto?.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2,9);
     this.move = move;
@@ -10,7 +17,7 @@ class MoveNode {
   }
 }
 
-class HistoryManager {
+export class HistoryManager {
   constructor() {
     this.root = null;
     this.currentNode = null;

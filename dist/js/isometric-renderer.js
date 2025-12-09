@@ -1,5 +1,7 @@
+import { BaseRenderer } from './cube-view.js';
+
 // Isometric Renderer - 3D orthographic/isometric view
-class IsometricRenderer extends BaseRenderer {
+export default class IsometricRenderer extends BaseRenderer {
   constructor(container) {
     super(container);
     this.rotation = { x: -25, y: -45 };
@@ -90,6 +92,4 @@ class IsometricRenderer extends BaseRenderer {
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = IsometricRenderer;
-}
+

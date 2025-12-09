@@ -1,5 +1,7 @@
+import { BaseRenderer } from './cube-view.js';
+
 // CubeNet Renderer - 2D flat net view
-class CubeNetRenderer extends BaseRenderer {
+export default class CubeNetRenderer extends BaseRenderer {
   constructor(container) {
     super(container);
     this.zoom = 1;
@@ -72,6 +74,4 @@ class CubeNetRenderer extends BaseRenderer {
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = CubeNetRenderer;
-}
+

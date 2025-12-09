@@ -1,4 +1,4 @@
-class AlgUtils {
+export default class AlgUtils {
   constructor() {
     this.possibleMoves = {
       "x": ["R", "L"],

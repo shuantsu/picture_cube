@@ -1,5 +1,12 @@
 // UI Controls Manager
-class UIControls {
+const $ = (sel) => {
+  if (sel.startsWith('#')) {
+    return document.getElementById(sel.slice(1));
+  }
+  return document.querySelector(sel);
+};
+
+export class UIControls {
   constructor() {
     this.defaultPanelWidth = 350;
     this.uiScale = 100;
@@ -10,19 +17,28 @@ class UIControls {
   }
 
   initAccessibility() {
-    $('#uiScale').addEventListener('input', (e) => {
+    const uiScale = $('#uiScale');
+    if (!uiScale) return;
+    
+    uiScale.addEventListener('input', (e) => {
       this.uiScale = parseInt(e.target.value);
       $('#uiScaleValue').textContent = this.uiScale;
       this.applyAccessibility();
     });
 
-    $('#textScale').addEventListener('input', (e) => {
+    const textScale = $('#textScale');
+    if (!textScale) return;
+    
+    textScale.addEventListener('input', (e) => {
       this.textScale = parseInt(e.target.value);
       $('#textScaleValue').textContent = this.textScale;
       this.applyAccessibility();
     });
 
-    $('#panelWidth').addEventListener('input', (e) => {
+    const panelWidth = $('#panelWidth');
+    if (!panelWidth) return;
+    
+    panelWidth.addEventListener('input', (e) => {
       this.panelWidth = parseInt(e.target.value);
       $('#panelWidthValue').textContent = this.panelWidth;
       this.applyAccessibility();
@@ -76,13 +92,19 @@ class UIControls {
   }
 
   initBackground() {
-    $('#bgWidth').addEventListener('input', (e) => {
+    const bgWidth = $('#bgWidth');
+    if (!bgWidth) return;
+    
+    bgWidth.addEventListener('input', (e) => {
       this.bgWidth = parseInt(e.target.value);
       $('#bgWidthValue').textContent = this.bgWidth;
       this.applyBackgroundSize();
     });
 
-    $('#bgHeight').addEventListener('input', (e) => {
+    const bgHeight = $('#bgHeight');
+    if (!bgHeight) return;
+    
+    bgHeight.addEventListener('input', (e) => {
       this.bgHeight = parseInt(e.target.value);
       $('#bgHeightValue').textContent = this.bgHeight;
       this.applyBackgroundSize();

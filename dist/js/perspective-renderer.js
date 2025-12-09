@@ -1,5 +1,7 @@
+import { BaseRenderer } from './cube-view.js';
+
 // Perspective Renderer - 3D perspective view
-class PerspectiveRenderer extends BaseRenderer {
+export default class PerspectiveRenderer extends BaseRenderer {
   constructor(container) {
     super(container);
     this.rotation = { x: -25, y: -45 };
@@ -90,6 +92,4 @@ class PerspectiveRenderer extends BaseRenderer {
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = PerspectiveRenderer;
-}
+

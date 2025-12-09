@@ -1,5 +1,12 @@
 // Camera Head Tracking Module
-class CameraTracking {
+const $ = (sel) => {
+  if (sel.startsWith('#')) {
+    return document.getElementById(sel.slice(1));
+  }
+  return document.querySelector(sel);
+};
+
+export class CameraTracking {
   constructor() {
     this.enabled = false;
     this.faceMesh = null;

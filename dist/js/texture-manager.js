@@ -1,5 +1,5 @@
 // TextureManager - Handles all texture-related operations
-class TextureManager {
+export default class TextureManager {
   constructor() {
     this.textureMode = "standard";
     this.faceTextures = {};

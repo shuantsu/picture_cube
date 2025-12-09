@@ -283,6 +283,4 @@ class BaseRenderer {
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { CubeView, BaseRenderer };
-}
+export { CubeView, BaseRenderer };

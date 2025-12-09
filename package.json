@@ -1,0 +1,26 @@
+{
+  "name": "__PICTURE_CUBE",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "prebuild": "node scripts/prebuild.js",
+    "dev": "vite",
+    "build": "pnpm prebuild && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.24.0",
+  "devDependencies": {
+    "sharp": "^0.34.5",
+    "vite": "^7.2.7",
+    "vite-plugin-static-copy": "^3.1.4"
+  },
+  "dependencies": {
+    "jquery": "^3.7.1",
+    "jquery-ui-dist": "^1.13.3"
+  }
+}

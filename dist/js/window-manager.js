@@ -1,9 +1,9 @@
 
 
 function addIframeOverlays() {
-  $$('iframe').each(function() {
-    var $iframe = $$(this);
-    var $overlay = $$('<div class="manual-iframe-overlay"></div>')
+  $('iframe').each(function() {
+    var $iframe = $(this);
+    var $overlay = $('<div class="manual-iframe-overlay"></div>')
       .css({
         position: 'absolute',
         left: $iframe.offset().left,
@@ -15,25 +15,25 @@ function addIframeOverlays() {
         pointerEvents: 'auto'  // Let events pass through if needed
       });
     $overlay.data('iframe', $iframe);  // Link back for cleanup
-    $$('body').append($overlay);
+    $('body').append($overlay);
   });
 }
 
 function removeIframeOverlays() {
-  $$('.manual-iframe-overlay').remove();
+  $('.manual-iframe-overlay').remove();
 }
 
 
 // Windows 95 style window manager using jQuery UI
 window.toggleEditorWindow = function(active) {
   if (active) {
-    const win = $$('#cube-3d-window');
-    const content = $$('#cube-3d-content');
-    const wrapper = $$('#cube-3d-wrapper');
+    const win = $('#cube-3d-window');
+    const content = $('#cube-3d-content');
+    const wrapper = $('#cube-3d-wrapper');
     
     if (!win.length || !content.length || !wrapper.length) return;
     
-    $$('body').addClass('editor-active');
+    $('body').addClass('editor-active');
     content.append(wrapper);
     
     win.css({ left: '50px', top: '50px' });
@@ -52,20 +52,20 @@ window.toggleEditorWindow = function(active) {
       stop: removeIframeOverlays,
     });
 
-    $$(document).on('mousedown',(ev)=>{
+    $(document).on('mousedown',(ev)=>{
       if (ev.target.id === 'cube-3d-wrapper') {
-        cameraRotationEnabled = true;
+        window.cameraRotationEnabled = true;
         return;
       }
-      cameraRotationEnabled = false;
+      window.cameraRotationEnabled = false;
     })
 
   } else {
-    const win = $$('#cube-3d-window');
-    const wrapper = $$('#cube-3d-wrapper');
-    const originalParent = $$('#right-panel');
+    const win = $('#cube-3d-window');
+    const wrapper = $('#cube-3d-wrapper');
+    const originalParent = $('#right-panel');
     
-    $$('body').removeClass('editor-active');
+    $('body').removeClass('editor-active');
     originalParent.append(wrapper);
     wrapper.css({ width: '', height: '' });
     

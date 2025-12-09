@@ -196,7 +196,13 @@ class Giiker extends EventEmitter {
   }
 }
 
-// Expose BluetoothCube globally
-window.BluetoothCube = BluetoothCube;
+// Export for ES6 modules
+if (typeof window !== 'undefined') {
+  window.BluetoothCube = BluetoothCube;
+}
+
+return BluetoothCube;
 
 })();
+
+export default (typeof window !== 'undefined' && window.BluetoothCube) || BluetoothCube;

@@ -1,7 +1,6 @@
-
-  let defaultTexture = null;
-  let examples = {};
-  let examplesRaw = {};
+let defaultTexture = null;
+let examples = {};
+const examplesRaw = {};
 
   // Load examples list and preload files
   fetch('examples/index.json')
@@ -48,7 +47,8 @@
     }
     return result;
   }
-  window.stripJsonComments = stripJsonComments;
+window.stripJsonComments = stripJsonComments;
+window.examplesRaw = examplesRaw;
 
   // Load backgrounds
   fetch('backgrounds/index.json')
@@ -92,7 +92,9 @@
     localStorage.removeItem('selectedBackground');
     document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('selected'));
   }
-  window.applyBackgroundColor = applyBackgroundColor;
+window.applyBackgroundColor = applyBackgroundColor;
+
+export { examplesRaw };
 
   const savedBg = localStorage.getItem('selectedBackground');
   const savedColor = localStorage.getItem('backgroundColor');
