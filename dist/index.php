@@ -333,8 +333,8 @@
               <input type="range" id="textScale" min="50" max="200" value="100" style="width: 100%;">
             </div>
             <div style="margin: 10px 0;">
-              <label>Panel Width: <span id="panelWidthValue">300</span>px</label>
-              <input type="range" id="panelWidth" min="200" max="600" value="300" style="width: 100%;">
+              <label>Panel Width: <span id="panelWidthValue">333</span>px</label>
+              <input type="range" id="panelWidth" min="200" max="600" value="333" style="width: 100%;">
             </div>
             <button onclick="resetAccessibility()">Reset</button>
           </div>
