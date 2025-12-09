@@ -10,57 +10,6 @@
     <title>Picture Cube -- Beta</title>
       <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.min.css">
       <link rel="stylesheet" href="css/style.css">
-      <style>
-        #cube-3d-window {
-          position: absolute;
-          width: 400px;
-          height: 400px;
-          background: #c0c0c0;
-          border: 2px solid;
-          border-color: #dfdfdf #808080 #808080 #dfdfdf;
-          box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
-          z-index: 1002;
-          display: none;
-          will-change: transform;
-        }
-        body.editor-active #cube-3d-window { display: block; }
-        .ui-resizable-handle { background: transparent !important; border: none !important; }
-        .ui-resizable-se, .ui-resizable-sw, .ui-resizable-ne, .ui-resizable-nw { width: 10px !important; height: 10px !important; }
-        .ui-resizable-n, .ui-resizable-s { height: 5px !important; }
-        .ui-resizable-e, .ui-resizable-w { width: 5px !important; }
-        #cube-3d-titlebar {
-          background: linear-gradient(to right, #000080, #1084d0);
-          color: white;
-          padding: 3px 5px;
-          font-size: 12px;
-          font-weight: bold;
-          cursor: move;
-          user-select: none;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          touch-action: none;
-        }
-        #cube-3d-titlebar span { flex: 1; }
-        #cube-3d-content {
-          position: relative;
-          width: 100%;
-          height: calc(100% - 24px);
-          background: #000;
-          overflow: hidden;
-          pointer-events: auto;
-        }
-        #cube-3d-window.dragging #cube-3d-content,
-        #cube-3d-window.resizing #cube-3d-content {
-          pointer-events: none;
-        }
-        body.editor-active #cube-3d-wrapper {
-          position: absolute !important;
-          top: 50% !important;
-          left: 50% !important;
-          transform: translate(-50%, -50%) !important;
-        }
-      </style>
   </head>
 
   <body>
@@ -83,21 +32,7 @@
           </button>
           <div class="accordion-content">
             <div class="move-grid" id="moveGrid"></div>
-            <script>
-              (function(){
-                const moves = ['U','D','R','L','F','B','M','E','S','x','y','z','Rw','Lw','Uw','Dw','Fw','Bw'];
-                const grid = document.getElementById('moveGrid');
-                moves.forEach(m => {
-                  ['', "'", '2'].forEach(mod => {
-                    const move = m + mod;
-                    const btn = document.createElement('button');
-                    btn.onclick = () => applyMove(move);
-                    btn.textContent = move.replace("'", "'");
-                    grid.appendChild(btn);
-                  });
-                });
-              })();
-            </script>
+            <!-- template will be inserted in app.js -->
           </div>
         </div>
 
@@ -403,7 +338,6 @@
 
     <div id="toast" class="toast"></div>
 
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="js/marked.min.js"></script>
@@ -417,6 +351,10 @@
     <script src="js/texture-instructions.js"></script>
     <script src="js/backgrounds.js"></script>
     <script src="js/texture-manager.js"></script>
+    <script src="js/history-manager.js"></script>
+    <script src="js/camera-tracking.js"></script>
+    <script src="js/ui-controls.js"></script>
+    <script src="js/algorithm-parser.js"></script>
     <script src="js/app.js"></script>
     <script src="js/window-manager.js"></script>
   </body>

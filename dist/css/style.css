@@ -708,3 +708,55 @@
     left: 50%;
     transform: translate(-50%, -50%);
   }
+
+
+
+#cube-3d-window {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: #c0c0c0;
+  border: 2px solid;
+  border-color: #dfdfdf #808080 #808080 #dfdfdf;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+  z-index: 1002;
+  display: none;
+  will-change: transform;
+}
+body.editor-active #cube-3d-window { display: block; }
+.ui-resizable-handle { background: transparent !important; border: none !important; }
+.ui-resizable-se, .ui-resizable-sw, .ui-resizable-ne, .ui-resizable-nw { width: 10px !important; height: 10px !important; }
+.ui-resizable-n, .ui-resizable-s { height: 5px !important; }
+.ui-resizable-e, .ui-resizable-w { width: 5px !important; }
+#cube-3d-titlebar {
+  background: linear-gradient(to right, #000080, #1084d0);
+  color: white;
+  padding: 3px 5px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: move;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  touch-action: none;
+}
+#cube-3d-titlebar span { flex: 1; }
+#cube-3d-content {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 24px);
+  background: #000;
+  overflow: hidden;
+  pointer-events: auto;
+}
+#cube-3d-window.dragging #cube-3d-content,
+#cube-3d-window.resizing #cube-3d-content {
+  pointer-events: none;
+}
+body.editor-active #cube-3d-wrapper {
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+}

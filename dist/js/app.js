@@ -99,6 +99,11 @@ const faces3D = {};
 const cubeCore = new CubeCore();
 const textureManager = new TextureManager();
 
+// Initialize UI, Camera, and History managers
+const uiControls = new UIControls();
+const cameraTracking = new CameraTracking();
+const historyManager = new HistoryManager();
+
 const faces = ["U", "L", "F", "R", "B", "D"];
 const colors = [
   "#ffffff",
@@ -439,13 +444,13 @@ let historyEnabled = false;
 
 function toggleHistoryTracking() {
   historyEnabled = ElHistoryEnabled.checked;
-  if (historyEnabled && !historyRoot) initHistory();
+  if (historyEnabled && !historyManager.root) historyManager.init(getCurrentState());
 }
 
 function applyMove(move, trackHistory = true) {
   cubeCore.applyMove(move);
   syncState();
-  if (trackHistory && historyEnabled) addMoveToHistory(move);
+  if (trackHistory && historyEnabled) historyManager.addMove(move, getCurrentState());
 }
 
 function applyAlgorithm() {
@@ -474,7 +479,7 @@ function applyAlgorithm() {
   } else {
     moves.forEach((move) => cubeCore.applyMove(move));
     syncState();
-    addMoveToHistory(`ALG (${moves.length} moves)`);
+    historyManager.addMove(`ALG (${moves.length} moves)`, getCurrentState());
   }
 }
 
@@ -483,7 +488,7 @@ function solveCube() {
   if (textureManager.textureMode !== "standard") {
     updateDOM();
   }
-  if (historyEnabled) addMoveToHistory('RESET');
+  if (historyEnabled) historyManager.addMove('RESET', getCurrentState());
 }
 
 function loadCustomConfig() {
@@ -644,14 +649,10 @@ ${indent}${row('D',6)}`;
 function copyToClipboard() {
   const stateDisplay = formatCubeDisplay(cubeState, v => v.toString().padStart(2, ' '), 1);
   const rotationsDisplay = formatCubeDisplay(stickerRotations);
-  navigator.clipboard.writeText(`----STICKERS----\n\n${stateDisplay}\n\n----ROTATIONS----\n\n${rotationsDisplay}`).then(() => showToast('Copied to clipboard!'));
+  navigator.clipboard.writeText(`----STICKERS----\n\n${stateDisplay}\n\n----ROTATIONS----\n\n${rotationsDisplay}`).then(() => uiControls.showToast('Copied to clipboard!'));
 }
 
-function showToast(message) {
-  ElToast.textContent = message;
-  ElToast.classList.add('show');
-  setTimeout(() => ElToast.classList.remove('show'), 2000);
-}
+
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -772,17 +773,7 @@ function saveSidebarState() {
   localStorage.setItem('sidebarOpen', controls.classList.contains('open'));
 }
 
-function loadSidebarState() {
-  try {
-    const saved = localStorage.getItem('sidebarOpen');
-    if (saved === 'true') {
-      const controls = $("#controls");
-      const container = $("#container");
-      controls.classList.add('open');
-      container.classList.add('controls-open');
-    }
-  } catch (e) {}
-}
+
 
 function toggleLeftPanel() {
   const controls = $("#controls");
@@ -812,7 +803,6 @@ function toggleFullscreen() {
     }
   }
 }
-
 
 
 // Modal functions
@@ -869,7 +859,6 @@ function saveSelectedTexture(filename) {
 }
 
 
-
 // Close modal when clicking outside
 window.onclick = function (event) {
   const instructionsModal = $("#instructionsModal");
@@ -880,7 +869,6 @@ window.onclick = function (event) {
     closeStateModal();
   }
 };
-
 
 
 // Accordion functionality
@@ -899,22 +887,7 @@ function saveAccordionStates() {
   localStorage.setItem('accordionStates', JSON.stringify(states));
 }
 
-function loadAccordionStates() {
-  try {
-    const saved = localStorage.getItem('accordionStates');
-    if (saved) {
-      const states = JSON.parse(saved);
-      const accordions = document.querySelectorAll('.accordion');
-      accordions.forEach((accordion, index) => {
-        if (states[index]) {
-          accordion.classList.add('open');
-        } else {
-          accordion.classList.remove('open');
-        }
-      });
-    }
-  } catch (e) {}
-}
+
 
 // Send ESC to parent if in iframe
 if (window.parent !== window) {
@@ -1017,8 +990,6 @@ function toggleEditor() {
 }
 
 
-
-
 // Listen for editor updates
 window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'UPDATE_CONFIG' && event.data.payload.config) {
@@ -1049,907 +1020,17 @@ window.addEventListener('message', (event) => {
   }
 });
 
-// Camera control integration
-let cameraEnabled = false;
-let faceMesh = null;
-let cameraStream = null;
-let camera = null;
-let calibrationCenter = { x: 0, y: 0 };
-let isCalibrated = false;
-let sensitivityX = 60;
-let sensitivityY = 40;
-let offsetX = 0;
-let offsetY = 0;
-let bgSensitivityX = 30;
-let bgSensitivityY = 30;
-let bgZoom = 150;
-let sameSensitivity = false;
-let sameBgSensitivity = false;
-let invertX = false;
-let invertY = false;
-let invertBgX = false;
-let invertBgY = false;
-let lastUpdateTime = 0;
-let mediaPipeReady = false;
-let faceDetected = false;
+// Camera control integration - using CameraTracking class
 
-async function loadCameras() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    stream.getTracks().forEach(track => track.stop());
-    
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const select = $('#cameraSelect');
-    const videoDevices = devices.filter(d => d.kind === 'videoinput');
-    
-    select.innerHTML = '<option value="">Select Camera...</option>';
-    videoDevices.forEach((device, i) => {
-      const option = document.createElement('option');
-      option.value = device.deviceId;
-      option.text = device.label || `Camera ${i + 1}`;
-      select.appendChild(option);
-    });
-    
-    updateCameraStatus(`Found ${videoDevices.length} cameras`);
-  } catch (e) {
-    updateCameraStatus('Camera permission needed');
-  }
-}
-
-function updateCameraStatus(text) {
-  $('#cameraStatus').textContent = text;
-}
-
-async function startCamera() {
-  const selectedCamera = $('#cameraSelect').value;
-  const video = $('#cameraPreview');
-  
-  if (cameraStream) {
-    cameraStream.getTracks().forEach(track => track.stop());
-  }
-  
-  try {
-    let constraints = { video: { width: 320, height: 240 } };
-    if (selectedCamera) {
-      constraints.video.deviceId = { exact: selectedCamera };
-    }
-    
-    updateCameraStatus('Starting camera...');
-    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject = cameraStream;
-    
-    // Load MediaPipe scripts if not already loaded
-    if (!window.FaceMesh) {
-      await loadMediaPipeScripts();
-    }
-    
-    // Initialize MediaPipe Face Mesh with error handling
-    try {
-      faceMesh = new FaceMesh({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-      });
-      
-      faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: false,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-      });
-      
-      faceMesh.onResults(onCameraResults);
-      
-      // Mark MediaPipe as ready after successful initialization
-      mediaPipeReady = true;
-      updateCameraStatus('Face detection ready - position head and calibrate');
-    } catch (e) {
-      updateCameraStatus('Face detection failed to load - camera preview only');
-    }
-    
-    // Wait for video to load
-    await new Promise(resolve => {
-      video.onloadedmetadata = resolve;
-    });
-    
-    // Use MediaPipe Camera for automatic processing
-    camera = new Camera(video, {
-      onFrame: async () => {
-        if (faceMesh && mediaPipeReady) {
-          await faceMesh.send({ image: video });
-        }
-      },
-      width: 320,
-      height: 240
-    });
-    
-    camera.start();
-    
-    const track = cameraStream.getVideoTracks()[0];
-    updateCameraStatus(`Active: ${track.label} - Position head and calibrate`);
-    
-  } catch (error) {
-    mediaPipeReady = false;
-    updateCameraStatus('Camera error: ' + error.message);
-  }
-}
-
-async function loadMediaPipeScripts() {
-  try {
-    const scripts = [
-      'https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js',
-      'https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js',
-      'https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js',
-      'https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js'
-    ];
-    
-    for (const src of scripts) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = () => reject(new Error(`Failed to load ${src}`));
-        document.head.appendChild(script);
-      });
-    }
-  } catch (error) {
-    throw new Error('MediaPipe scripts failed to load: ' + error.message);
-  }
-}
-
-function onCameraResults(results) {
-  if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
-    faceDetected = true;
-    const landmarks = results.multiFaceLandmarks[0];
-    
-    // Get nose tip (landmark 1)
-    const noseTip = landmarks[1];
-    const x = noseTip.x * 320;
-    const y = noseTip.y * 240;
-    
-    // Show head position with red dot
-    const dot = $('#headDot');
-    dot.style.display = 'block';
-    dot.style.left = x + 'px';
-    dot.style.top = y + 'px';
-    
-    if (isCalibrated) {
-      // Apply offset to camera coordinates
-      const adjustedX = x + offsetX;
-      const adjustedY = y + offsetY;
-      
-      // Calculate movement from calibration center
-      const deltaX = (adjustedX - calibrationCenter.x) / 160;
-      const deltaY = (adjustedY - calibrationCenter.y) / 120;
-      
-      // Apply to cube rotation with inversions
-      cubeRotation.y = 0 - (deltaX * sensitivityX * (invertX ? -1 : 1));
-      cubeRotation.x = -15 + (deltaY * sensitivityY * (invertY ? -1 : 1));
-      
-      const now = Date.now();
-      if (now - lastUpdateTime > 16) { // ~60fps throttling
-        updateCubeRotation();
-        updateBackgroundParallax(x, y);
-        lastUpdateTime = now;
-      }
-    }
-  } else {
-    faceDetected = false;
-    $('#headDot').style.display = 'none';
-  }
-}
-
-function toggleCamera() {
-  const btn = $('#cameraBtn');
-  const controls = $('#cameraControls');
-  const container = $('#cameraContainer');
-  
-  cameraEnabled = !cameraEnabled;
-  
-  if (cameraEnabled) {
-    btn.textContent = 'Disable Camera';
-    controls.style.display = 'block';
-    container.style.display = 'block';
-    loadCameras().then(() => {
-      if ($('#cameraSelect').options.length > 1) {
-        startCamera();
-      }
-    });
-    // Switch to 3D mode for camera control
-    if (currentViewMode === 'cubenet') {
-      setViewMode('perspective');
-    }
-  } else {
-    btn.textContent = 'Enable Camera';
-    controls.style.display = 'none';
-    container.style.display = 'none';
-    if (camera) {
-      camera.stop();
-      camera = null;
-    }
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
-      cameraStream = null;
-    }
-    isCalibrated = false;
-    mediaPipeReady = false;
-    faceDetected = false;
-    updateCameraStatus('Camera disabled');
-  }
-}
-
-function calibrateCamera() {
-  if (!cameraEnabled) {
-    updateCameraStatus('Camera not enabled');
-    return;
-  }
-  if (!mediaPipeReady) {
-    updateCameraStatus('Face detection not ready - wait a moment');
-    return;
-  }
-  if (!faceDetected) {
-    updateCameraStatus('No face detected - position yourself in camera view');
-    return;
-  }
-  
-  // Use current head position as calibration center
-  calibrationCenter.x = 160; // Center of 320px width
-  calibrationCenter.y = 120; // Center of 240px height
-  isCalibrated = true;
-  saveCameraCalibration();
-  updateCameraStatus('Calibrated! Move your head to control the cube');
-}
-
-function saveCameraCalibration() {
-  const calibrationData = {
-    calibrationCenter,
-    sensitivityX,
-    sensitivityY,
-    offsetX,
-    offsetY,
-    bgSensitivityX,
-    bgSensitivityY,
-    bgZoom,
-    sameSensitivity,
-    sameBgSensitivity,
-    invertX,
-    invertY,
-    invertBgX,
-    invertBgY,
-    isCalibrated
-  };
-  localStorage.setItem('cameraCalibration', JSON.stringify(calibrationData));
-}
-
-function loadCameraCalibration() {
-  try {
-    const saved = localStorage.getItem('cameraCalibration');
-    if (saved) {
-      const data = JSON.parse(saved);
-      calibrationCenter = data.calibrationCenter || { x: 160, y: 120 };
-      sensitivityX = data.sensitivityX || 60;
-      sensitivityY = data.sensitivityY || 40;
-      offsetX = data.offsetX || 0;
-      offsetY = data.offsetY || 0;
-      bgSensitivityX = data.bgSensitivityX || 30;
-      bgSensitivityY = data.bgSensitivityY || 30;
-      bgZoom = data.bgZoom || 150;
-      sameSensitivity = data.sameSensitivity || false;
-      sameBgSensitivity = data.sameBgSensitivity || false;
-      invertX = data.invertX || false;
-      invertY = data.invertY || false;
-      invertBgX = data.invertBgX || false;
-      invertBgY = data.invertBgY || false;
-      isCalibrated = data.isCalibrated || false;
-      
-      // Update UI elements
-      $('#sensitivityX').value = sensitivityX;
-      $('#sensitivityXValue').textContent = sensitivityX;
-      $('#sensitivityY').value = sensitivityY;
-      $('#sensitivityYValue').textContent = sensitivityY;
-      $('#offsetX').value = offsetX;
-      $('#offsetXValue').textContent = offsetX;
-      $('#offsetY').value = offsetY;
-      $('#offsetYValue').textContent = offsetY;
-      $('#bgSensitivityX').value = bgSensitivityX;
-      $('#bgSensitivityXValue').textContent = bgSensitivityX;
-      $('#bgSensitivityY').value = bgSensitivityY;
-      $('#bgSensitivityYValue').textContent = bgSensitivityY;
-      $('#sameSensitivity').checked = sameSensitivity;
-      $('#sameBgSensitivity').checked = sameBgSensitivity;
-      $('#invertX').checked = invertX;
-      $('#invertY').checked = invertY;
-      $('#invertBgX').checked = invertBgX;
-      $('#invertBgY').checked = invertBgY;
-    }
-  } catch (e) {}
-}
-
-function updateBackgroundParallax(x, y) {
-  const panel = $('#right-panel');
-  const adjustedX = (x + offsetX - calibrationCenter.x) / 160;
-  const adjustedY = (y + offsetY - calibrationCenter.y) / 120;
-  const bgOffsetX = 50 - (adjustedX * bgSensitivityX * (invertBgX ? -1 : 1));
-  const bgOffsetY = 50 - (adjustedY * bgSensitivityY * (invertBgY ? -1 : 1));
-  panel.style.backgroundPosition = `${bgOffsetX}% ${bgOffsetY}%`;
-  panel.style.backgroundSize = `${bgZoom}%`;
-}
-
-// Camera slider event listeners
-function initCameraControls() {
-  $('#sameSensitivity').addEventListener('change', (e) => {
-    sameSensitivity = e.target.checked;
-    saveCameraCalibration();
-  });
-  
-  $('#sameBgSensitivity').addEventListener('change', (e) => {
-    sameBgSensitivity = e.target.checked;
-    saveCameraCalibration();
-  });
-  
-  $('#invertX').addEventListener('change', (e) => {
-    invertX = e.target.checked;
-    saveCameraCalibration();
-  });
-  
-  $('#invertY').addEventListener('change', (e) => {
-    invertY = e.target.checked;
-    saveCameraCalibration();
-  });
-  
-  $('#invertBgX').addEventListener('change', (e) => {
-    invertBgX = e.target.checked;
-    saveCameraCalibration();
-  });
-  
-  $('#invertBgY').addEventListener('change', (e) => {
-    invertBgY = e.target.checked;
-    saveCameraCalibration();
-  });
-  
-  $('#sensitivityX').addEventListener('input', (e) => {
-    sensitivityX = parseInt(e.target.value);
-    $('#sensitivityXValue').textContent = sensitivityX;
-    if (sameSensitivity) {
-      sensitivityY = sensitivityX;
-      $('#sensitivityY').value = sensitivityY;
-      $('#sensitivityYValue').textContent = sensitivityY;
-    }
-    saveCameraCalibration();
-  });
-  
-  $('#sensitivityY').addEventListener('input', (e) => {
-    sensitivityY = parseInt(e.target.value);
-    $('#sensitivityYValue').textContent = sensitivityY;
-    if (sameSensitivity) {
-      sensitivityX = sensitivityY;
-      $('#sensitivityX').value = sensitivityX;
-      $('#sensitivityXValue').textContent = sensitivityX;
-    }
-    saveCameraCalibration();
-  });
-  
-  $('#offsetX').addEventListener('input', (e) => {
-    offsetX = parseInt(e.target.value);
-    $('#offsetXValue').textContent = offsetX;
-    saveCameraCalibration();
-  });
-  
-  $('#offsetY').addEventListener('input', (e) => {
-    offsetY = parseInt(e.target.value);
-    $('#offsetYValue').textContent = offsetY;
-    saveCameraCalibration();
-  });
-  
-  $('#bgSensitivityX').addEventListener('input', (e) => {
-    bgSensitivityX = parseInt(e.target.value);
-    $('#bgSensitivityXValue').textContent = bgSensitivityX;
-    if (sameBgSensitivity) {
-      bgSensitivityY = bgSensitivityX;
-      $('#bgSensitivityY').value = bgSensitivityY;
-      $('#bgSensitivityYValue').textContent = bgSensitivityY;
-    }
-    saveCameraCalibration();
-  });
-  
-  $('#bgSensitivityY').addEventListener('input', (e) => {
-    bgSensitivityY = parseInt(e.target.value);
-    $('#bgSensitivityYValue').textContent = bgSensitivityY;
-    if (sameBgSensitivity) {
-      bgSensitivityX = bgSensitivityY;
-      $('#bgSensitivityX').value = bgSensitivityX;
-      $('#bgSensitivityXValue').textContent = bgSensitivityX;
-    }
-    saveCameraCalibration();
-  });
-  
-  $('#cameraSelect').addEventListener('change', () => {
-    if (cameraEnabled) {
-      startCamera();
-    }
-  });
-}
-
-// History system - Tree-based (reliable)
-function uuid() {
-  if (crypto && crypto.randomUUID) return crypto.randomUUID();
-  return 'id-' + Math.random().toString(36).slice(2,9);
-}
-
-class MoveNode {
-  constructor(move, parent = null, state = null) {
-    this.id = uuid();
-    this.move = move;
-    this.parent = parent;
-    this.children = [];
-    this.state = state;
-    this.timestamp = new Date().toLocaleTimeString();
-  }
-}
-
-let historyRoot = null;
-let currentNode = null;
-
-function initHistory() {
-  const initialState = {
-    cubeState: JSON.parse(JSON.stringify(cubeState)),
-    stickerRotations: JSON.parse(JSON.stringify(stickerRotations)),
-    stickerTextures: JSON.parse(JSON.stringify(stickerTextures))
-  };
-  historyRoot = new MoveNode('START', null, initialState);
-  currentNode = historyRoot;
-}
-let historyTransform = { x: 0, y: 0, scale: 1 };
-let isHistoryPanning = false;
-let lastHistoryPanPoint = { x: 0, y: 0 };
-
-function addMoveToHistory(move) {
-  const state = {
-    cubeState: JSON.parse(JSON.stringify(cubeState)),
-    stickerRotations: JSON.parse(JSON.stringify(stickerRotations)),
-    stickerTextures: JSON.parse(JSON.stringify(stickerTextures))
-  };
-  
-  const newNode = new MoveNode(move, currentNode, state);
-  currentNode.children.push(newNode);
-  currentNode = newNode;
-  
-  updateHistoryDisplay();
-}
-
-function getPathToNode(node) {
-  const path = [];
-  let cur = node;
-  while (cur) {
-    path.push(cur);
-    cur = cur.parent;
-  }
-  return path.reverse();
-}
-
-function findNodeById(root, id) {
-  let found = null;
-  function dfs(n) {
-    if (n.id === id) { found = n; return; }
-    for (const c of n.children) {
-      dfs(c);
-      if (found) return;
-    }
-  }
-  dfs(root);
-  return found;
-}
-
-const XSTEP = 120, YSTEP = 60, NODE_W = 80, NODE_H = 32;
-
-function layoutTree(root) {
-  let branchCounter = 0;
-  const positions = {};
-
-  function dfs(node, depth, branchIndex) {
-    const x = depth * XSTEP;
-    const y = branchIndex * YSTEP;
-    positions[node.id] = {x, y, node};
-    
-    for (let i = 0; i < node.children.length; i++) {
-      const c = node.children[i];
-      if (i === 0) {
-        dfs(c, depth + 1, branchIndex);
-      } else {
-        branchCounter++;
-        dfs(c, depth + 1, branchCounter);
-      }
-    }
-  }
-
-  dfs(root, 0, 0);
-  return positions;
-}
-
-let historyCanvas = null;
-let historyCtx = null;
-let historyPositions = {};
-
-// Polyfill for roundRect
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-    if (w < 2 * r) r = w / 2;
-    if (h < 2 * r) r = h / 2;
-    this.beginPath();
-    this.moveTo(x + r, y);
-    this.arcTo(x + w, y, x + w, y + h, r);
-    this.arcTo(x + w, y + h, x, y + h, r);
-    this.arcTo(x, y + h, x, y, r);
-    this.arcTo(x, y, x + w, y, r);
-    this.closePath();
-    return this;
-  };
-}
-
-function updateHistoryDisplay() {
-  const container = $('#historyGraph');
-  
-  if (!historyCanvas) {
-    container.innerHTML = '';
-    historyCanvas = document.createElement('canvas');
-    historyCanvas.id = 'historyCanvas';
-    historyCanvas.style.width = '100%';
-    historyCanvas.style.height = '100%';
-    historyCanvas.style.cursor = 'default';
-    container.appendChild(historyCanvas);
-    historyCtx = historyCanvas.getContext('2d');
-    
-    // Mouse events
-    historyCanvas.addEventListener('mousedown', (e) => {
-      const rect = historyCanvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left - historyTransform.x) / historyTransform.scale;
-      const y = (e.clientY - rect.top - historyTransform.y) / historyTransform.scale;
-      
-      let clicked = false;
-      for (const id in historyPositions) {
-        const p = historyPositions[id];
-        if (x >= p.x && x <= p.x + NODE_W && y >= p.y && y <= p.y + NODE_H) {
-          selectHistoryNode(p.node.id);
-          clicked = true;
-          break;
-        }
-      }
-      
-      if (!clicked && e.button === 0) {
-        isHistoryPanning = true;
-        lastHistoryPanPoint = { x: e.clientX, y: e.clientY };
-        historyCanvas.style.cursor = 'grabbing';
-        e.preventDefault();
-      }
-    });
-    
-    // Touch events
-    let historyTouchStart = null;
-    let historyInitialDistance = 0;
-    let historyInitialScale = 1;
-    
-    historyCanvas.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        const rect = historyCanvas.getBoundingClientRect();
-        const x = (touch.clientX - rect.left - historyTransform.x) / historyTransform.scale;
-        const y = (touch.clientY - rect.top - historyTransform.y) / historyTransform.scale;
-        
-        let clicked = false;
-        for (const id in historyPositions) {
-          const p = historyPositions[id];
-          if (x >= p.x && x <= p.x + NODE_W && y >= p.y && y <= p.y + NODE_H) {
-            selectHistoryNode(p.node.id);
-            clicked = true;
-            break;
-          }
-        }
-        
-        if (!clicked) {
-          isHistoryPanning = true;
-          historyTouchStart = { x: touch.clientX, y: touch.clientY };
-          lastHistoryPanPoint = { x: touch.clientX, y: touch.clientY };
-        }
-      } else if (e.touches.length === 2) {
-        isHistoryPanning = false;
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        historyInitialDistance = Math.sqrt(dx * dx + dy * dy);
-        historyInitialScale = historyTransform.scale;
-      }
-    }, { passive: true });
-    
-    historyCanvas.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1 && isHistoryPanning) {
-        const touch = e.touches[0];
-        const dx = (touch.clientX - lastHistoryPanPoint.x) * 1.2;
-        const dy = (touch.clientY - lastHistoryPanPoint.y) * 1.2;
-        historyTransform.x += dx;
-        historyTransform.y += dy;
-        lastHistoryPanPoint = { x: touch.clientX, y: touch.clientY };
-        renderHistoryCanvas();
-        e.preventDefault();
-      } else if (e.touches.length === 2) {
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const scale = (distance / historyInitialDistance) * historyInitialScale;
-        historyTransform.scale = Math.max(0.1, Math.min(3, scale));
-        renderHistoryCanvas();
-        e.preventDefault();
-      }
-    }, { passive: false });
-    
-    historyCanvas.addEventListener('touchend', () => {
-      isHistoryPanning = false;
-      historyTouchStart = null;
-    }, { passive: true });
-    
-    historyCanvas.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const rect = historyCanvas.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
-      
-      const scaleFactor = e.deltaY > 0 ? 0.9 : 1.1;
-      const newScale = Math.max(0.1, Math.min(3, historyTransform.scale * scaleFactor));
-      
-      const scaleChange = newScale / historyTransform.scale;
-      historyTransform.x = mouseX - (mouseX - historyTransform.x) * scaleChange;
-      historyTransform.y = mouseY - (mouseY - historyTransform.y) * scaleChange;
-      historyTransform.scale = newScale;
-      
-      renderHistoryCanvas();
-    });
-  }
-  
-  // Set canvas size
-  const rect = container.getBoundingClientRect();
-  historyCanvas.width = rect.width;
-  historyCanvas.height = rect.height;
-  
-  historyPositions = layoutTree(historyRoot);
-  renderHistoryCanvas();
-}
-
-function renderHistoryCanvas() {
-  if (!historyCtx) return;
-  
-  const ctx = historyCtx;
-  ctx.clearRect(0, 0, historyCanvas.width, historyCanvas.height);
-  ctx.save();
-  ctx.translate(historyTransform.x, historyTransform.y);
-  ctx.scale(historyTransform.scale, historyTransform.scale);
-  
-  // Draw edges
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-  ctx.lineWidth = 3;
-  for (const id in historyPositions) {
-    const p = historyPositions[id];
-    for (const child of p.node.children) {
-      const cpos = historyPositions[child.id];
-      if (!cpos) continue;
-      const x1 = p.x + NODE_W, y1 = p.y + NODE_H/2;
-      const x2 = cpos.x, y2 = cpos.y + NODE_H/2;
-      const midX = (x1 + x2) / 2;
-      
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.bezierCurveTo(midX, y1, midX, y2, x2, y2);
-      ctx.stroke();
-    }
-  }
-  
-  // Draw nodes
-  ctx.font = '12px monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  
-  for (const id in historyPositions) {
-    const p = historyPositions[id];
-    const isCurrent = currentNode.id === p.node.id;
-    
-    // Draw rect
-    ctx.fillStyle = isCurrent ? '#2d5016' : '#1a1a1a';
-    ctx.strokeStyle = isCurrent ? '#4caf50' : '#333';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(p.x, p.y, NODE_W, NODE_H, 6);
-    ctx.fill();
-    ctx.stroke();
-    
-    // Draw text
-    ctx.fillStyle = '#fff';
-    ctx.fillText(p.node.move === 'START' ? 'START' : p.node.move, p.x + NODE_W/2, p.y + NODE_H/2);
-    
-    // Draw badge
-    if (p.node.children.length > 1) {
-      ctx.fillStyle = '#4caf50';
-      ctx.font = '10px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText(p.node.children.length, p.x + NODE_W - 8, p.y + 16);
-      ctx.font = '12px monospace';
-      ctx.textAlign = 'center';
-    }
-  }
-  
-  ctx.restore();
-  
-  // Update grid
-  const gridContainer = $('#historyRows');
-  gridContainer.innerHTML = '';
-  
-  const path = getPathToNode(currentNode);
-  path.forEach((node, index) => {
-    const row = document.createElement('div');
-    row.className = 'history-row' + (node.id === currentNode.id ? ' current' : '');
-    row.onclick = () => selectHistoryNode(node.id);
-    
-    const branchInfo = node.children.length > 1 ? ` <span style="color:#4caf50;font-weight:bold">(${node.children.length})</span>` : '';
-    row.innerHTML = `
-      <div class="history-cell">${node.timestamp}</div>
-      <div class="history-cell">${node.move}${branchInfo}</div>
-      <div class="history-cell">${index}</div>
-    `;
-    
-    gridContainer.appendChild(row);
-  });
-  
-  // Add next nodes if current node has children
-  if (currentNode.children.length > 0) {
-    const nextRow = document.createElement('div');
-    nextRow.className = 'history-row history-next';
-    nextRow.style.background = '#f0f8ff';
-    nextRow.style.borderLeft = '3px solid #4caf50';
-    
-    const timeCell = document.createElement('div');
-    timeCell.className = 'history-cell';
-    timeCell.textContent = '→';
-    
-    const moveCell = document.createElement('div');
-    moveCell.className = 'history-cell';
-    moveCell.style.display = 'flex';
-    moveCell.style.gap = '4px';
-    moveCell.style.flexWrap = 'wrap';
-    moveCell.style.alignItems = 'center';
-    
-    currentNode.children.forEach((child, idx) => {
-      const pill = document.createElement('span');
-      pill.textContent = child.move;
-      pill.style.cssText = 'background:#4caf50;color:white;padding:2px 8px;border-radius:12px;cursor:pointer;font-size:11px;font-weight:bold;';
-      pill.onclick = (e) => {
-        e.stopPropagation();
-        selectHistoryNode(child.id);
-      };
-      pill.onmouseenter = () => pill.style.background = '#45a049';
-      pill.onmouseleave = () => pill.style.background = '#4caf50';
-      moveCell.appendChild(pill);
-    });
-    
-    const indexCell = document.createElement('div');
-    indexCell.className = 'history-cell';
-    indexCell.textContent = '+';
-    
-    nextRow.appendChild(timeCell);
-    nextRow.appendChild(moveCell);
-    nextRow.appendChild(indexCell);
-    gridContainer.appendChild(nextRow);
-  }
-}
-
-function selectHistoryNode(nodeId) {
-  const node = findNodeById(historyRoot, nodeId);
-  if (!node) return;
-  if (!node.state) return;
-  
-  currentNode = node;
-  const state = node.state;
-  cubeState = JSON.parse(JSON.stringify(state.cubeState));
-  stickerRotations = JSON.parse(JSON.stringify(state.stickerRotations));
-  stickerTextures = JSON.parse(JSON.stringify(state.stickerTextures));
-  
-  cubeCore.cubeState = cubeState;
-  cubeCore.stickerRotations = stickerRotations;
-  cubeCore.stickerTextures = stickerTextures;
-  
-  updateDOM();
-  updateHistoryDisplay();
-}
-
-function clearHistory() {
-  initHistory();
-  historyTransform = { x: 0, y: 0, scale: 1 };
-  updateHistoryDisplay();
-  showToast('History cleared');
-}
-
-// Global mouse events for history panning
-document.addEventListener('mousemove', (e) => {
-  if (isHistoryPanning) {
-    const dx = (e.clientX - lastHistoryPanPoint.x) * 1.2;
-    const dy = (e.clientY - lastHistoryPanPoint.y) * 1.2;
-    historyTransform.x += dx;
-    historyTransform.y += dy;
-    lastHistoryPanPoint = { x: e.clientX, y: e.clientY };
-    renderHistoryCanvas();
-  }
-});
-
-document.addEventListener('mouseup', () => {
-  if (isHistoryPanning) {
-    isHistoryPanning = false;
-    if (historyCanvas) historyCanvas.style.cursor = 'default';
-  }
-});
-
-// Scramble function
-function scrambleCube() {
-  solveCube();
-  const algUtils = new AlgUtils();
-  algUtils.generateScrambleAlg(30);
-  const scrambleAlg = algUtils.alg;
-  
-  // Put scramble in textarea
-  $('#alg').value = scrambleAlg;
-  
-  // Execute the scramble - batch all moves for performance
-  const moves = scrambleAlg.trim().split(/\s+/).filter(move => move.length > 0);
-  moves.forEach((move) => cubeCore.applyMove(move));
-  syncState();
-  if (historyEnabled) addMoveToHistory(`SCRAMBLE (${moves.length} moves)`);
-}
-
-// Bluetooth cube integration
-let bluetoothCube = null;
-
-function toggleBluetooth() {
-  const btn = $('#bluetoothBtn');
-  const status = $('#bluetoothStatus');
-  
-  if (!bluetoothCube || !bluetoothCube.isConnected()) {
-    btn.textContent = 'Connecting...';
-    btn.disabled = true;
-    
-    bluetoothCube = new BluetoothCube();
-    
-    bluetoothCube.onMove((notation) => {
-      applyMove(notation);
-    });
-    
-    bluetoothCube.onConnect(() => {
-      btn.textContent = 'Disconnect';
-      btn.disabled = false;
-      status.textContent = 'Connected to GiiKER cube';
-      status.style.color = '#4caf50';
-    });
-    
-    bluetoothCube.onDisconnect(() => {
-      btn.textContent = 'Connect GiiKER Cube';
-      btn.disabled = false;
-      status.textContent = 'Disconnected';
-      status.style.color = '#666';
-    });
-    
-    bluetoothCube.onError((error) => {
-      btn.textContent = 'Connect GiiKER Cube';
-      btn.disabled = false;
-      status.textContent = 'Connection failed';
-      status.style.color = '#f44336';
-      console.error('Bluetooth error:', error);
-    });
-    
-    bluetoothCube.connect();
-  } else {
-    bluetoothCube.disconnect();
-  }
-}
 
 // Inicializar
 
 historyEnabled = ElHistoryEnabled?.checked || false;
 initCube();
-loadAccordionStates();
-loadSidebarState();
-loadCameraCalibration();
-initCameraControls();
+uiControls.loadAccordionStates();
+uiControls.loadSidebarState();
+cameraTracking.load(); initCameraUI();
+// Camera controls initialized via initCameraUI();
 
 // Load crisp mode
 try {
@@ -1981,7 +1062,6 @@ try {
     $('#controls').classList.add('hidden');
   }
 } catch (e) {}
-
 
 
 // Check for config in URL hash first
@@ -2067,151 +1147,280 @@ function toggleRenderThrottle() {
   console.log('Render throttle:', renderThrottleEnabled ? 'ENABLED (60 FPS)' : 'DISABLED (unlimited)');
 }
 
-let bgWidth = 100;
-let bgHeight = 100;
-
-function applyBackgroundSize() {
-  const panel = $('#right-panel');
-  const rect = panel.getBoundingClientRect();
-  const width = (rect.width * bgWidth) / 100;
-  const height = (rect.height * bgHeight) / 100;
-  panel.style.backgroundSize = `${width}px ${height}px`;
-  localStorage.setItem('bgWidth', bgWidth);
-  localStorage.setItem('bgHeight', bgHeight);
-}
-
-function resetBackgroundSize() {
-  bgWidth = 100;
-  bgHeight = 100;
-  $('#bgWidth').value = 100;
-  $('#bgHeight').value = 100;
-  $('#bgWidthValue').textContent = 100;
-  $('#bgHeightValue').textContent = 100;
-  applyBackgroundSize();
-}
-
-$('#bgWidth').addEventListener('input', (e) => {
-  bgWidth = parseInt(e.target.value);
-  $('#bgWidthValue').textContent = bgWidth;
-  applyBackgroundSize();
-});
-
-$('#bgHeight').addEventListener('input', (e) => {
-  bgHeight = parseInt(e.target.value);
-  $('#bgHeightValue').textContent = bgHeight;
-  applyBackgroundSize();
-});
-
-window.addEventListener('resize', applyBackgroundSize);
-
-function selectBackground(filename) {
-  const panel = $('#right-panel');
-  if (filename) {
-    panel.style.backgroundImage = `url('backgrounds/${filename}')`;
-    localStorage.setItem('selectedBackground', filename);
-  } else {
-    panel.style.backgroundImage = '';
-    localStorage.removeItem('selectedBackground');
-  }
-  
-  document.querySelectorAll('.bg-thumb').forEach(t => t.style.border = '2px solid transparent');
-  document.querySelector(`[data-bg="${filename}"]`).style.border = '2px solid #4caf50';
-}
-
-function loadSelectedBackground() {
-  try {
-    const saved = localStorage.getItem('selectedBackground');
-    if (saved) {
-      selectBackground(saved);
-    }
-  } catch (e) {}
-}
-
-// Load background on init
-loadSelectedBackground();
-
-try {
-  const savedWidth = localStorage.getItem('bgWidth');
-  const savedHeight = localStorage.getItem('bgHeight');
-  if (savedWidth) {
-    bgWidth = parseInt(savedWidth);
-    $('#bgWidth').value = bgWidth;
-    $('#bgWidthValue').textContent = bgWidth;
-  }
-  if (savedHeight) {
-    bgHeight = parseInt(savedHeight);
-    $('#bgHeight').value = bgHeight;
-    $('#bgHeightValue').textContent = bgHeight;
-  }
-  applyBackgroundSize();
-} catch (e) {}
 
 // Save/load controls width
 const controls = $('#controls');
 let isLoading = true;
 
-// Accessibility controls
-let uiScale = 100;
-let textScale = 100;
-let panelWidth = defaultPanelWidth;
+// Helper functions for class integration
+function getCurrentState() {
+  return {
+    cubeState: JSON.parse(JSON.stringify(cubeState)),
+    stickerRotations: JSON.parse(JSON.stringify(stickerRotations)),
+    stickerTextures: JSON.parse(JSON.stringify(stickerTextures))
+  };
+}
 
-function applyAccessibility() {
-  document.documentElement.style.setProperty('--ui-scale', uiScale / 100);
-  document.documentElement.style.setProperty('--text-scale', textScale / 100);
-  $('#controls').style.width = panelWidth + 'px';
-  localStorage.setItem('uiScale', uiScale);
-  localStorage.setItem('textScale', textScale);
-  localStorage.setItem('panelWidth', panelWidth);
+function initCameraUI() {
+  // Wire up camera UI controls
+  const settings = cameraTracking.settings;
+  
+  $('#sensitivityX').value = settings.sensitivityX;
+  $('#sensitivityXValue').textContent = settings.sensitivityX;
+  $('#sensitivityY').value = settings.sensitivityY;
+  $('#sensitivityYValue').textContent = settings.sensitivityY;
+  $('#offsetX').value = settings.offsetX;
+  $('#offsetXValue').textContent = settings.offsetX;
+  $('#offsetY').value = settings.offsetY;
+  $('#offsetYValue').textContent = settings.offsetY;
+  $('#bgSensitivityX').value = settings.bgSensitivityX;
+  $('#bgSensitivityXValue').textContent = settings.bgSensitivityX;
+  $('#bgSensitivityY').value = settings.bgSensitivityY;
+  $('#bgSensitivityYValue').textContent = settings.bgSensitivityY;
+  $('#sameSensitivity').checked = settings.sameSensitivity;
+  $('#sameBgSensitivity').checked = settings.sameBgSensitivity;
+  $('#invertX').checked = settings.invertX;
+  $('#invertY').checked = settings.invertY;
+  $('#invertBgX').checked = settings.invertBgX;
+  $('#invertBgY').checked = settings.invertBgY;
+  
+  // Event listeners
+  $('#sensitivityX').addEventListener('input', (e) => {
+    settings.sensitivityX = parseInt(e.target.value);
+    $('#sensitivityXValue').textContent = settings.sensitivityX;
+    if (settings.sameSensitivity) {
+      settings.sensitivityY = settings.sensitivityX;
+      $('#sensitivityY').value = settings.sensitivityY;
+      $('#sensitivityYValue').textContent = settings.sensitivityY;
+    }
+    cameraTracking.save();
+  });
+  
+  $('#sensitivityY').addEventListener('input', (e) => {
+    settings.sensitivityY = parseInt(e.target.value);
+    $('#sensitivityYValue').textContent = settings.sensitivityY;
+    if (settings.sameSensitivity) {
+      settings.sensitivityX = settings.sensitivityY;
+      $('#sensitivityX').value = settings.sensitivityX;
+      $('#sensitivityXValue').textContent = settings.sensitivityX;
+    }
+    cameraTracking.save();
+  });
+  
+  $('#offsetX').addEventListener('input', (e) => {
+    settings.offsetX = parseInt(e.target.value);
+    $('#offsetXValue').textContent = settings.offsetX;
+    cameraTracking.save();
+  });
+  
+  $('#offsetY').addEventListener('input', (e) => {
+    settings.offsetY = parseInt(e.target.value);
+    $('#offsetYValue').textContent = settings.offsetY;
+    cameraTracking.save();
+  });
+  
+  $('#bgSensitivityX').addEventListener('input', (e) => {
+    settings.bgSensitivityX = parseInt(e.target.value);
+    $('#bgSensitivityXValue').textContent = settings.bgSensitivityX;
+    if (settings.sameBgSensitivity) {
+      settings.bgSensitivityY = settings.bgSensitivityX;
+      $('#bgSensitivityY').value = settings.bgSensitivityY;
+      $('#bgSensitivityYValue').textContent = settings.bgSensitivityY;
+    }
+    cameraTracking.save();
+  });
+  
+  $('#bgSensitivityY').addEventListener('input', (e) => {
+    settings.bgSensitivityY = parseInt(e.target.value);
+    $('#bgSensitivityYValue').textContent = settings.bgSensitivityY;
+    if (settings.sameBgSensitivity) {
+      settings.bgSensitivityX = settings.bgSensitivityY;
+      $('#bgSensitivityX').value = settings.bgSensitivityX;
+      $('#bgSensitivityXValue').textContent = settings.bgSensitivityX;
+    }
+    cameraTracking.save();
+  });
+  
+  ['sameSensitivity', 'sameBgSensitivity', 'invertX', 'invertY', 'invertBgX', 'invertBgY'].forEach(id => {
+    $('#' + id).addEventListener('change', (e) => {
+      settings[id] = e.target.checked;
+      cameraTracking.save();
+    });
+  });
+  
+  $('#cameraSelect').addEventListener('change', () => {
+    if (cameraTracking.enabled) cameraTracking.startCamera($('#cameraSelect').value);
+  });
+  
+  // Set rotation callback
+  cameraTracking.onRotationChange = (x, y) => {
+    cubeRotation.x = x;
+    cubeRotation.y = y;
+    updateCubeRotation();
+  };
+}
+
+// Global functions for HTML onclick handlers
+function toggleCamera() {
+  const btn = $('#cameraBtn');
+  const controls = $('#cameraControls');
+  const container = $('#cameraContainer');
+  
+  cameraTracking.enabled = !cameraTracking.enabled;
+  
+  if (cameraTracking.enabled) {
+    btn.textContent = 'Disable Camera';
+    controls.style.display = 'block';
+    container.style.display = 'block';
+    cameraTracking.loadCameras().then(devices => {
+      if (devices.length > 0) {
+        const select = $('#cameraSelect');
+        select.innerHTML = '<option value="">Select Camera...</option>';
+        devices.forEach((device, i) => {
+          const option = document.createElement('option');
+          option.value = device.deviceId;
+          option.text = device.label || `Camera ${i + 1}`;
+          select.appendChild(option);
+        });
+        cameraTracking.startCamera();
+      }
+    });
+    if (currentViewMode === 'cubenet') setViewMode('perspective');
+  } else {
+    btn.textContent = 'Enable Camera';
+    controls.style.display = 'none';
+    container.style.display = 'none';
+    cameraTracking.stop();
+  }
+}
+
+function calibrateCamera() {
+  cameraTracking.calibrate();
 }
 
 function resetAccessibility() {
-  uiScale = 100;
-  textScale = 100;
-  $('#uiScale').value = 100;
-  $('#textScale').value = 100;
-  $('#panelWidth').value = defaultPanelWidth;
-  $('#uiScaleValue').textContent = 100;
-  $('#textScaleValue').textContent = 100;
-  $('#panelWidthValue').textContent = defaultPanelWidth;
-  applyAccessibility();
+  uiControls.resetAccessibility();
 }
 
-$('#uiScale').addEventListener('input', (e) => {
-  uiScale = parseInt(e.target.value);
-  $('#uiScaleValue').textContent = uiScale;
-  applyAccessibility();
-});
+function resetBackgroundSize() {
+  uiControls.resetBackgroundSize();
+}
 
-$('#textScale').addEventListener('input', (e) => {
-  textScale = parseInt(e.target.value);
-  $('#textScaleValue').textContent = textScale;
-  applyAccessibility();
-});
+function selectBackground(filename) {
+  uiControls.selectBackground(filename);
+}
 
-$('#panelWidth').addEventListener('input', (e) => {
-  panelWidth = parseInt(e.target.value);
-  $('#panelWidthValue').textContent = panelWidth;
-  applyAccessibility();
-});
+function applyBackgroundColor() {
+  const color = $('#bgColorPicker').value;
+  $('#right-panel').style.backgroundColor = color;
+  localStorage.setItem('bgColor', color);
+}
 
-try {
-  const savedUi = localStorage.getItem('uiScale');
-  const savedText = localStorage.getItem('textScale');
-  const savedPanel = localStorage.getItem('panelWidth');
-  if (savedUi) {
-    uiScale = parseInt(savedUi);
-    $('#uiScale').value = uiScale;
-    $('#uiScaleValue').textContent = uiScale;
+function toggleAccordion(header) {
+  uiControls.toggleAccordion(header);
+}
+
+// Initialize UI controls
+uiControls.initAccessibility();
+uiControls.initBackground();
+uiControls.loadAccessibility();
+uiControls.loadBackground();
+uiControls.loadSelectedBackground();
+
+// Initialize history manager
+historyManager.onStateRestore = (state) => {
+  cubeState = JSON.parse(JSON.stringify(state.cubeState));
+  stickerRotations = JSON.parse(JSON.stringify(state.stickerRotations));
+  stickerTextures = JSON.parse(JSON.stringify(state.stickerTextures));
+  cubeCore.cubeState = cubeState;
+  cubeCore.stickerRotations = stickerRotations;
+  cubeCore.stickerTextures = stickerTextures;
+  updateDOM();
+};
+
+// Compatibility variables
+let cameraEnabled = false;
+let isCalibrated = false;
+let bgZoom = 150;
+let historyRoot = null;
+
+function saveCameraCalibration() {
+  cameraTracking.save();
+}
+
+function addMoveToHistory(move) {
+  historyManager.addMove(move, getCurrentState());
+}
+
+function initHistory() {
+  historyManager.init(getCurrentState());
+}
+
+function clearHistory() {
+  historyManager.clear();
+  uiControls.showToast('History cleared');
+}
+
+function scrambleCube() {
+  solveCube();
+  const algUtils = new AlgUtils();
+  algUtils.generateScrambleAlg(30);
+  const scrambleAlg = algUtils.alg;
+  $('#alg').value = scrambleAlg;
+  const moves = scrambleAlg.trim().split(/\s+/).filter(move => move.length > 0);
+  moves.forEach((move) => cubeCore.applyMove(move));
+  syncState();
+  if (historyEnabled) historyManager.addMove(`SCRAMBLE (${moves.length} moves)`, getCurrentState());
+}
+
+// Bluetooth - using BluetoothCube class from bluetooth.js
+let bluetoothCube = null;
+
+function toggleBluetooth() {
+  const btn = $('#bluetoothBtn');
+  const status = $('#bluetoothStatus');
+  
+  if (!bluetoothCube || !bluetoothCube.isConnected()) {
+    btn.textContent = 'Connecting...';
+    btn.disabled = true;
+    bluetoothCube = new BluetoothCube();
+    bluetoothCube.onMove((notation) => applyMove(notation));
+    bluetoothCube.onConnect(() => {
+      btn.textContent = 'Disconnect';
+      btn.disabled = false;
+      status.textContent = 'Connected to GiiKER cube';
+      status.style.color = '#4caf50';
+    });
+    bluetoothCube.onDisconnect(() => {
+      btn.textContent = 'Connect GiiKER Cube';
+      btn.disabled = false;
+      status.textContent = 'Disconnected';
+      status.style.color = '#666';
+    });
+    bluetoothCube.onError((error) => {
+      btn.textContent = 'Connect GiiKER Cube';
+      btn.disabled = false;
+      status.textContent = 'Connection failed';
+      status.style.color = '#f44336';
+    });
+    bluetoothCube.connect();
+  } else {
+    bluetoothCube.disconnect();
   }
-  if (savedText) {
-    textScale = parseInt(savedText);
-    $('#textScale').value = textScale;
-    $('#textScaleValue').textContent = textScale;
-  }
-  if (savedPanel) {
-    panelWidth = parseInt(savedPanel);
-    $('#panelWidth').value = panelWidth;
-    $('#panelWidthValue').textContent = panelWidth;
-  }
-  applyAccessibility();
-} catch (e) {}
+}
+
+// this inserts the buttons on #moveGrid
+
+(function(){
+  const moves = ['U','D','R','L','F','B','M','E','S','x','y','z','Rw','Lw','Uw','Dw','Fw','Bw'];
+  const grid = document.getElementById('moveGrid');
+  moves.forEach(m => {
+    ['', "'", '2'].forEach(mod => {
+      const move = m + mod;
+      const btn = document.createElement('button');
+      btn.onclick = () => applyMove(move);
+      btn.textContent = move.replace("'", "'");
+      grid.appendChild(btn);
+    });
+  });
+})();
