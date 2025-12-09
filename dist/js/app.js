@@ -32,7 +32,13 @@
 
 // ==================== FUNDAMENTOS: X, Y, U + applyStickerRotation ====================
 
-const $ = (sel) => sel.startsWith('#') ? document.getElementById(sel.slice(1)) : document.querySelector(sel);
+const $ = (sel) => {
+  if (sel.startsWith('#')) {
+    return document.getElementById(sel.slice(1));
+  }
+  return document.querySelector(sel);
+};
+const $$ = jQuery;
 
 const ElRightPanel = $('#right-panel');
 const ElControls = $('#controls');
@@ -119,6 +125,7 @@ let zoom2D = 1;
 let panOffset = { x: 0, y: 0 };
 let isDragging = false;
 let previousMousePosition = { x: 0, y: 0 };
+let cameraRotationEnabled = true;
 
 // View system
 let cubeView = null;
@@ -333,6 +340,7 @@ function handleMouseMove(e) {
     panOffset.y += deltaMove.y;
     update2DZoom();
   } else {
+    if (!cameraRotationEnabled) return;
     cubeRotation.x -= deltaMove.y * 0.5;
     cubeRotation.y += deltaMove.x * 0.5;
     cubeRotation.x = Math.max(-90, Math.min(90, cubeRotation.x));
@@ -673,9 +681,9 @@ function updateRotationsTab() {
 
 // Event listeners
 ElRightPanel.addEventListener("mousedown", handleMouseDown);
-ElRightPanel.addEventListener("touchstart", handleTouchStart, { passive: true });
+ElRightPanel.addEventListener("touchstart", handleTouchStart, { passive: false });
 document.addEventListener("mousemove", handleMouseMove);
-document.addEventListener("touchmove", handleTouchMove, { passive: true });
+document.addEventListener("touchmove", handleTouchMove, { passive: false });
 document.addEventListener("mouseup", handleMouseUp);
 document.addEventListener("touchend", handleTouchEnd);
 ElRightPanel.addEventListener("wheel", handleWheel, { passive: false });
@@ -689,7 +697,7 @@ ElRightPanel.addEventListener("touchstart", function(e) {
     initialDistance = getTouchDistance(e.touches[0], e.touches[1]);
     initialZoom = currentViewMode === "cubenet" ? zoom2D : cubeSize / 300;
   }
-}, { passive: true });
+}, { passive: false });
 
 ElRightPanel.addEventListener("touchmove", function(e) {
   if (e.touches.length === 2) {
@@ -706,7 +714,7 @@ ElRightPanel.addEventListener("touchmove", function(e) {
       document.documentElement.style.setProperty("--font-size-3d", `${fontSize}px`);
     }
   }
-}, { passive: true });
+}, { passive: false });
 
 function getTouchDistance(touch1, touch2) {
   const dx = touch1.clientX - touch2.clientX;
@@ -860,18 +868,7 @@ function saveSelectedTexture(filename) {
   localStorage.setItem('selectedTexture', filename);
 }
 
-function loadSelectedTexture() {
-  try {
-    const saved = localStorage.getItem('selectedTexture');
-    if (saved) {
-      const select = $('#exampleSelect');
-      select.value = saved;
-      loadExample();
-    }
-  } catch (e) {
-    loadPochmannDefault();
-  }
-}
+
 
 // Close modal when clicking outside
 window.onclick = function (event) {
@@ -928,19 +925,19 @@ if (window.parent !== window) {
   });
 }
 
-function loadPochmannDefault() {
-  if (defaultTexture) {
-    if (defaultTexture.textures && defaultTexture.cube && !defaultTexture.mode) {
-      textureManager.setMode("unified");
-      textureManager.loadUnifiedConfig(defaultTexture);
-    } else if (defaultTexture.mode === "face_textures") {
-      textureManager.setMode("face_textures");
-      textureManager.faceTextures = defaultTexture.textures || {};
-      faces.forEach((face) => {
-        stickerTextures[face] = Array(9).fill(0).map((_, i) => ({ face, index: i }));
-      });
+function loadDefaultTexture() {
+  const savedTexture = localStorage.getItem('selectedTexture');
+  const select = $('#exampleSelect');
+  
+  if (savedTexture && examplesRaw[savedTexture]) {
+    select.value = savedTexture;
+    loadExample();
+  } else {
+    const firstOption = select.options[1];
+    if (firstOption) {
+      select.value = firstOption.value;
+      loadExample();
     }
-    updateDOM();
   }
 }
 
@@ -958,6 +955,7 @@ function toggleEditor() {
     
     $("#cubenetBtn").disabled = true;
     setViewMode('perspective');
+    if (window.toggleEditorWindow) window.toggleEditorWindow(true);
 
     // Show editor
     editorIframe.style.display = 'block';
@@ -1006,6 +1004,7 @@ function toggleEditor() {
     $("#cubenetBtn").disabled = false;
     editorIframe.style.display = 'none';
     ElRightPanel.classList.remove('editor-open');
+    if (window.toggleEditorWindow) window.toggleEditorWindow(false);
     // Keep cube elements visible based on current view mode
     if (currentViewMode === 'cubenet') {
       cubeNet.style.display = 'grid';
@@ -1997,21 +1996,12 @@ if (window.location.hash) {
     loadViewState();
   } catch (e) {
     console.error('Failed to load config from URL:', e);
-    loadPochmannDefault();
+    setTimeout(() => loadDefaultTexture(), 200);
   }
 }
 // Load saved texture or default
 else {
-  try {
-    const savedTexture = localStorage.getItem('selectedTexture');
-    if (savedTexture) {
-      setTimeout(() => loadSelectedTexture(), 100);
-    } else {
-      loadPochmannDefault();
-    }
-  } catch (e) {
-    loadPochmannDefault();
-  }
+  setTimeout(() => loadDefaultTexture(), 200);
 }
 
 // Load saved view mode or default to perspective
@@ -2077,6 +2067,43 @@ function toggleRenderThrottle() {
   console.log('Render throttle:', renderThrottleEnabled ? 'ENABLED (60 FPS)' : 'DISABLED (unlimited)');
 }
 
+let bgWidth = 100;
+let bgHeight = 100;
+
+function applyBackgroundSize() {
+  const panel = $('#right-panel');
+  const rect = panel.getBoundingClientRect();
+  const width = (rect.width * bgWidth) / 100;
+  const height = (rect.height * bgHeight) / 100;
+  panel.style.backgroundSize = `${width}px ${height}px`;
+  localStorage.setItem('bgWidth', bgWidth);
+  localStorage.setItem('bgHeight', bgHeight);
+}
+
+function resetBackgroundSize() {
+  bgWidth = 100;
+  bgHeight = 100;
+  $('#bgWidth').value = 100;
+  $('#bgHeight').value = 100;
+  $('#bgWidthValue').textContent = 100;
+  $('#bgHeightValue').textContent = 100;
+  applyBackgroundSize();
+}
+
+$('#bgWidth').addEventListener('input', (e) => {
+  bgWidth = parseInt(e.target.value);
+  $('#bgWidthValue').textContent = bgWidth;
+  applyBackgroundSize();
+});
+
+$('#bgHeight').addEventListener('input', (e) => {
+  bgHeight = parseInt(e.target.value);
+  $('#bgHeightValue').textContent = bgHeight;
+  applyBackgroundSize();
+});
+
+window.addEventListener('resize', applyBackgroundSize);
+
 function selectBackground(filename) {
   const panel = $('#right-panel');
   if (filename) {
@@ -2102,3 +2129,109 @@ function loadSelectedBackground() {
 
 // Load background on init
 loadSelectedBackground();
+
+try {
+  const savedWidth = localStorage.getItem('bgWidth');
+  const savedHeight = localStorage.getItem('bgHeight');
+  if (savedWidth) {
+    bgWidth = parseInt(savedWidth);
+    $('#bgWidth').value = bgWidth;
+    $('#bgWidthValue').textContent = bgWidth;
+  }
+  if (savedHeight) {
+    bgHeight = parseInt(savedHeight);
+    $('#bgHeight').value = bgHeight;
+    $('#bgHeightValue').textContent = bgHeight;
+  }
+  applyBackgroundSize();
+} catch (e) {}
+
+// Save/load controls width
+const controls = $('#controls');
+let isLoading = true;
+
+try {
+  const savedWidth = localStorage.getItem('controlsWidth');
+  if (savedWidth) {
+    controls.style.width = savedWidth + 'px';
+  }
+} catch (e) {}
+
+setTimeout(() => {
+  isLoading = false;
+  const resizeObserver = new ResizeObserver(() => {
+    if (isLoading) return;
+    const width = controls.offsetWidth;
+    localStorage.setItem('controlsWidth', width);
+  });
+  resizeObserver.observe(controls);
+}, 500);
+
+
+
+// Accessibility controls
+let uiScale = 100;
+let textScale = 100;
+let panelWidth = 300;
+
+function applyAccessibility() {
+  document.documentElement.style.setProperty('--ui-scale', uiScale / 100);
+  document.documentElement.style.setProperty('--text-scale', textScale / 100);
+  $('#controls').style.width = panelWidth + 'px';
+  localStorage.setItem('uiScale', uiScale);
+  localStorage.setItem('textScale', textScale);
+  localStorage.setItem('panelWidth', panelWidth);
+}
+
+function resetAccessibility() {
+  uiScale = 100;
+  textScale = 100;
+  panelWidth = 300;
+  $('#uiScale').value = 100;
+  $('#textScale').value = 100;
+  $('#panelWidth').value = 300;
+  $('#uiScaleValue').textContent = 100;
+  $('#textScaleValue').textContent = 100;
+  $('#panelWidthValue').textContent = 300;
+  applyAccessibility();
+}
+
+$('#uiScale').addEventListener('input', (e) => {
+  uiScale = parseInt(e.target.value);
+  $('#uiScaleValue').textContent = uiScale;
+  applyAccessibility();
+});
+
+$('#textScale').addEventListener('input', (e) => {
+  textScale = parseInt(e.target.value);
+  $('#textScaleValue').textContent = textScale;
+  applyAccessibility();
+});
+
+$('#panelWidth').addEventListener('input', (e) => {
+  panelWidth = parseInt(e.target.value);
+  $('#panelWidthValue').textContent = panelWidth;
+  applyAccessibility();
+});
+
+try {
+  const savedUi = localStorage.getItem('uiScale');
+  const savedText = localStorage.getItem('textScale');
+  const savedPanel = localStorage.getItem('panelWidth');
+  if (savedUi) {
+    uiScale = parseInt(savedUi);
+    $('#uiScale').value = uiScale;
+    $('#uiScaleValue').textContent = uiScale;
+  }
+  if (savedText) {
+    textScale = parseInt(savedText);
+    $('#textScale').value = textScale;
+    $('#textScaleValue').textContent = textScale;
+  }
+  if (savedPanel) {
+    panelWidth = parseInt(savedPanel);
+    $('#panelWidth').value = panelWidth;
+    $('#panelWidthValue').textContent = panelWidth;
+  }
+  applyAccessibility();
+} catch (e) {}

@@ -25,7 +25,7 @@
           })
       ));
     })
-    .then(() => { if (defaultTexture) loadPochmannDefault(); });
+    .then(() => {});
 
   function stripJsonComments(json) {
     let result = '', inString = false, inComment = false, inBlockComment = false;

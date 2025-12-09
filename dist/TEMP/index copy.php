@@ -7,7 +7,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Picture Cube -- Beta</title>
-      <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.min.css">
       <link rel="stylesheet" href="css/style.css">
       <style>
         #cube-3d-window {
@@ -18,15 +17,11 @@
           border: 2px solid;
           border-color: #dfdfdf #808080 #808080 #dfdfdf;
           box-shadow: 2px 2px 0 rgba(0,0,0,0.2);
-          z-index: 1002;
+          z-index: 1000;
           display: none;
           will-change: transform;
         }
         body.editor-active #cube-3d-window { display: block; }
-        .ui-resizable-handle { background: transparent !important; border: none !important; }
-        .ui-resizable-se, .ui-resizable-sw, .ui-resizable-ne, .ui-resizable-nw { width: 10px !important; height: 10px !important; }
-        .ui-resizable-n, .ui-resizable-s { height: 5px !important; }
-        .ui-resizable-e, .ui-resizable-w { width: 5px !important; }
         #cube-3d-titlebar {
           background: linear-gradient(to right, #000080, #1084d0);
           color: white;
@@ -332,10 +327,6 @@
               <label>Text Scale: <span id="textScaleValue">100</span>%</label>
               <input type="range" id="textScale" min="50" max="200" value="100" style="width: 100%;">
             </div>
-            <div style="margin: 10px 0;">
-              <label>Panel Width: <span id="panelWidthValue">300</span>px</label>
-              <input type="range" id="panelWidth" min="200" max="600" value="300" style="width: 100%;">
-            </div>
             <button onclick="resetAccessibility()">Reset</button>
           </div>
         </div>
@@ -400,8 +391,6 @@
     <div id="toast" class="toast"></div>
 
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="js/marked.min.js"></script>
     <script src="js/bluetooth.js"></script>
     <script src="js/cube-core.js"></script>
@@ -414,6 +403,7 @@
     <script src="js/backgrounds.js"></script>
     <script src="js/texture-manager.js"></script>
     <script src="js/app.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="js/window-manager.js"></script>
   </body>
 </html>
