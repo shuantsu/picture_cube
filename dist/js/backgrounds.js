@@ -17,10 +17,6 @@
             const option = document.createElement('option');
             option.value = filename;
             option.textContent = name;
-            if (filename === '05-pochman_supercube.json') {
-              option.selected = true;
-              defaultTexture = JSON.parse(stripJsonComments(text));
-            }
             select.appendChild(option);
           })
       ));
