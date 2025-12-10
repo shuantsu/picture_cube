@@ -1,0 +1,39 @@
+{
+  "vars": {
+    "url": "https://raw.githubusercontent.com/shuantsu/picture_cube_textures/refs/heads/master/EARTH"
+  },
+  "textures": {
+    "BACK_sprite": {
+      "backgroundImage": "url('$url/BACK.png')",
+      "backgroundSize": "300% 300%"
+    },
+    "FRONT_sprite": {
+      "backgroundImage": "url('$url/FRONT.png')",
+      "backgroundSize": "300% 300%"
+    },
+    "LEFT_sprite": {
+      "backgroundImage": "url('$url/LEFT.png')",
+      "backgroundSize": "300% 300%"
+    },
+    "DOWN_sprite": {
+      "backgroundImage": "url('$url/DOWN.png')",
+      "backgroundSize": "300% 300%"
+    },
+    "UP_sprite": {
+      "backgroundImage": "url('$url/UP.png')",
+      "backgroundSize": "300% 300%"
+    },
+    "RIGHT_sprite": {
+      "backgroundImage": "url('$url/RIGHT.png')",
+      "backgroundSize": "300% 300%"
+    }
+  },
+  "cube": {
+    "B": "textures.BACK_sprite",
+    "F": "textures.FRONT_sprite",
+    "L": "textures.LEFT_sprite",
+    "D": "textures.DOWN_sprite",
+    "U": "textures.UP_sprite",
+    "R": "textures.RIGHT_sprite"
+  }
+}
