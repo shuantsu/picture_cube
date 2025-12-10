@@ -25,7 +25,7 @@ Picture Cube is a 3D Rubik's cube simulator with support for custom textures, we
 
 ```
 __PICTURE_CUBE/
-├── dist/                      # Source code (dev)
+├── src/                       # Source code (dev)
 │   ├── index.html            # Main HTML
 │   ├── css/style.css         # Styles
 │   ├── js/                   # JavaScript modules
@@ -45,7 +45,7 @@ __PICTURE_CUBE/
 
 ## Module Architecture
 
-### JavaScript Modules (`dist/js/`)
+### JavaScript Modules (`src/js/`)
 
 #### **app.js** (1268 lines) - Main Orchestrator
 - Initializes all modules
@@ -188,7 +188,7 @@ __PICTURE_CUBE/
 ### npm Scripts
 ```bash
 pnpm dev        # Development server (port 8000)
-pnpm build      # Production build (dist/ → build/)
+pnpm build      # Production build (src/ → build/)
 pnpm preview    # Build preview
 ```
 
@@ -211,7 +211,7 @@ pnpm preview    # Build preview
    - `texture.png` and `texture-instructions.md`
 
 ### Configuration (vite.config.js)
-- **Root:** `dist/` (source code)
+- **Root:** `src/` (source code)
 - **Output:** `build/` (production)
 - **Base:** `./` (relative paths)
 - **Server:** port 8000, auto-open
@@ -346,7 +346,7 @@ pnpm dev
 ```
 
 ### Development Structure
-- **Source code:** `dist/`
+- **Source code:** `src/`
 - **Build:** `pnpm build` → `build/`
 - **Deploy:** `deploy.bat` (FTP)
 
@@ -363,8 +363,8 @@ pnpm dev
 
 - **Live Demo:** https://filipeteixeira.com.br/new/picturecube/
 - **Video:** https://www.youtube.com/watch?v=OOUIykqF7zs
-- **Texture Instructions:** `dist/texture-instructions.md`
-- **Examples:** `dist/examples/*.json`
+- **Texture Instructions:** `src/texture-instructions.md`
+- **Examples:** `src/examples/*.json`
 
 ---
 

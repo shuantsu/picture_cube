@@ -4,10 +4,10 @@ import { fileURLToPath } from 'url';
 import sharp from 'sharp';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const distDir = join(__dirname, '..', 'dist');
+const srcDir = join(__dirname, '..', 'src');
 
 async function generateBackgroundsIndex() {
-  const bgDir = join(distDir, 'backgrounds');
+  const bgDir = join(srcDir, 'backgrounds');
   const files = await readdir(bgDir, { withFileTypes: true });
   const imageFiles = files
     .filter(f => f.isFile() && ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'].includes(extname(f.name).toLowerCase()))
@@ -19,7 +19,7 @@ async function generateBackgroundsIndex() {
 }
 
 async function generateExamplesIndex() {
-  const examplesDir = join(distDir, 'examples');
+  const examplesDir = join(srcDir, 'examples');
   const files = await readdir(examplesDir);
   const jsonFiles = files
     .filter(f => f.endsWith('.json') && f !== 'index.json')
@@ -30,7 +30,7 @@ async function generateExamplesIndex() {
 }
 
 async function generateThumbnails() {
-  const bgDir = join(distDir, 'backgrounds');
+  const bgDir = join(srcDir, 'backgrounds');
   const thumbsDir = join(bgDir, 'thumbnails');
   await mkdir(thumbsDir, { recursive: true });
   

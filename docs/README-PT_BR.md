@@ -25,7 +25,7 @@ Picture Cube é um simulador 3D de cubo Rubik com suporte a texturas customizada
 
 ```
 __PICTURE_CUBE/
-├── dist/                      # Código fonte (dev)
+├── src/                       # Código fonte (dev)
 │   ├── index.html            # HTML principal
 │   ├── css/style.css         # Estilos
 │   ├── js/                   # Módulos JavaScript
@@ -45,7 +45,7 @@ __PICTURE_CUBE/
 
 ## Arquitetura de Módulos
 
-### Módulos JavaScript (`dist/js/`)
+### Módulos JavaScript (`src/js/`)
 
 #### **app.js** (1268 linhas) - Orquestrador Principal
 - Inicializa todos os módulos
@@ -188,7 +188,7 @@ __PICTURE_CUBE/
 ### Scripts npm
 ```bash
 pnpm dev        # Servidor de desenvolvimento (porta 8000)
-pnpm build      # Build de produção (dist/ → build/)
+pnpm build      # Build de produção (src/ → build/)
 pnpm preview    # Preview do build
 ```
 
@@ -211,7 +211,7 @@ pnpm preview    # Preview do build
    - `texture.png` e `texture-instructions.md`
 
 ### Configuração (vite.config.js)
-- **Root:** `dist/` (código fonte)
+- **Root:** `src/` (código fonte)
 - **Output:** `build/` (produção)
 - **Base:** `./` (paths relativos)
 - **Server:** porta 8000, auto-open
@@ -346,7 +346,7 @@ pnpm dev
 ```
 
 ### Estrutura de Desenvolvimento
-- **Código fonte:** `dist/`
+- **Código fonte:** `src/`
 - **Build:** `pnpm build` → `build/`
 - **Deploy:** `deploy.bat` (FTP)
 
@@ -363,8 +363,8 @@ pnpm dev
 
 - **Live Demo:** https://filipeteixeira.com.br/new/picturecube/
 - **Vídeo:** https://www.youtube.com/watch?v=OOUIykqF7zs
-- **Texture Instructions:** `dist/texture-instructions.md`
-- **Examples:** `dist/examples/*.json`
+- **Texture Instructions:** `src/texture-instructions.md`
+- **Examples:** `src/examples/*.json`
 
 ---
 
@@ -384,7 +384,7 @@ pnpm dev
 ```
 
 ### Estrutura de Desenvolvimento
-- **Código fonte:** `dist/`
+- **Código fonte:** `src/`
 - **Build:** `pnpm build` → `build/`
 - **Deploy:** `deploy.bat` (FTP)
 
@@ -401,8 +401,8 @@ pnpm dev
 
 - **Live Demo:** https://filipeteixeira.com.br/new/picturecube/
 - **Vídeo:** https://www.youtube.com/watch?v=OOUIykqF7zs
-- **Texture Instructions:** `dist/texture-instructions.md`
-- **Examples:** `dist/examples/*.json`
+- **Texture Instructions:** `src/texture-instructions.md`
+- **Examples:** `src/examples/*.json`
 
 ---
 
