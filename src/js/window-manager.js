@@ -52,7 +52,7 @@ window.toggleEditorWindow = function(active) {
       stop: removeIframeOverlays,
     });
 
-    $(document).on('mousedown',(ev)=>{
+    $(document).on('mousedown touchstart',(ev)=>{
       if (ev.target.id === 'cube-3d-wrapper') {
         window.cameraRotationEnabled = true;
         return;

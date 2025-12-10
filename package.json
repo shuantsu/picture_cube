@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "prebuild": "node scripts/prebuild.js",
-    "dev": "vite",
+    "dev": "pnpm prebuild && vite",
     "build": "pnpm prebuild && vite build",
     "preview": "vite preview"
   },
@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "jquery": "^3.7.1",
-    "jquery-ui-dist": "^1.13.3"
+    "jquery-ui-dist": "^1.13.3",
+    "jquery-ui-touch-punch": "^0.2.3"
   }
 }

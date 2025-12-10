@@ -4,6 +4,7 @@ import 'jquery-ui-dist/jquery-ui.min.css';
 window.$ = window.jQuery = $;
 
 await import('jquery-ui-dist/jquery-ui.min.js');
+await import('jquery-ui-touch-punch');
 import { UIControls } from './ui-controls.js';
 import { CameraTracking } from './camera-tracking.js';
 import { HistoryManager } from './history-manager.js';

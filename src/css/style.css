@@ -823,7 +823,6 @@ body.editor-active #cube-3d-wrapper {
   cursor: pointer;
   font-size: 24px;
   color: white;
-  display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
