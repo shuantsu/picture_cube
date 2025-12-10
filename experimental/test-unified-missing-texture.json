@@ -1,9 +1,0 @@
-{
-  "textures": {
-    "red": "#c41e3a"
-  },
-  "cube": {
-    "U": "nonexistent",
-    "L": "red"
-  }
-}
