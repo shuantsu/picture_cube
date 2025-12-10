@@ -64,6 +64,15 @@ window.examplesLoadedPromise = examplesLoadedPromise;
   let backgroundsLoaded = false;
   let backgroundFiles = [];
   let savedBgFile = null;
+  const thumbnailObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.dataset.loaded) {
+        const file = entry.target.dataset.bg;
+        entry.target.style.backgroundImage = `url('backgrounds/thumbnails/${file.replace(/\.[^.]+$/, '.jpg')}')`;
+        entry.target.dataset.loaded = 'true';
+      }
+    });
+  });
   
   function loadBackgroundThumbnails() {
     if (backgroundsLoaded) return;
@@ -74,9 +83,9 @@ window.examplesLoadedPromise = examplesLoadedPromise;
       const thumb = document.createElement('div');
       thumb.className = 'bg-thumb';
       thumb.dataset.bg = file;
-      thumb.style.backgroundImage = `url('backgrounds/thumbnails/${file.replace(/\.[^.]+$/, '.jpg')}')`;
       thumb.onclick = () => selectBackground(file);
       gallery.appendChild(thumb);
+      thumbnailObserver.observe(thumb);
     });
     
     // Mark saved background as selected if it exists
@@ -97,6 +106,11 @@ window.examplesLoadedPromise = examplesLoadedPromise;
         const header = bgAccordion?.querySelector('.accordion-header');
         
         header?.addEventListener('click', loadBackgroundThumbnails, { once: true });
+        
+        // Check immediately if already open
+        if (bgAccordion?.classList.contains('open')) {
+          loadBackgroundThumbnails();
+        }
         
         window.addEventListener('accordionStatesLoaded', () => {
           if (bgAccordion?.classList.contains('open')) {
