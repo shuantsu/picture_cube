@@ -34,7 +34,7 @@ __PICTURE_CUBE/
 │   └── editor/               # Texture editor (iframe)
 ├── build/                     # Production build (Vite)
 ├── scripts/                   # Build scripts
-│   ├── prebuild.js           # Generates scrambles and optimizes images
+│   ├── prebuild.js           # Generates index files and thumbnails
 │   └── generate-scramble.js  # Scramble generator
 ├── package.json              # npm dependencies and scripts
 ├── vite.config.js            # Vite configuration
@@ -194,8 +194,9 @@ pnpm preview    # Build preview
 
 ### Build Flow
 1. **prebuild.js** runs before build:
-   - Generates 1000 random scrambles
-   - Optimizes background images (thumbnails)
+   - Generates backgrounds/index.json
+   - Generates examples/index.json
+   - Generates thumbnails for background images
    
 2. **Vite** processes:
    - JS module bundling
