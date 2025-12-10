@@ -847,7 +847,15 @@ body.editor-active #cube-3d-wrapper {
 }
 
 @media (max-width: 768px) {
-  #rotationModeBtn {
+  #rotationModeBtn.show {
     display: flex;
   }
+}
+
+#rotationModeControls {
+  display: none;
+}
+
+#rotationModeControls.show {
+  display: block !important;
 }

@@ -30,13 +30,12 @@ class BluetoothRotation {
         if (window.bluetoothCube?.isConnected()) {
           this.rotationModeActive = true;
           btn.classList.add('active');
-          e.preventDefault();
         }
-      });
+      }, { passive: true });
       btn.addEventListener('touchend', () => {
         this.rotationModeActive = false;
         btn.classList.remove('active');
-      });
+      }, { passive: true });
       btn.addEventListener('mousedown', (e) => {
         if (window.bluetoothCube?.isConnected()) {
           this.rotationModeActive = true;

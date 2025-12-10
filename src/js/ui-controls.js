@@ -170,6 +170,12 @@ export class UIControls {
       localStorage.removeItem('selectedBackground');
     }
     
+    // Preserve background color
+    const savedColor = localStorage.getItem('backgroundColor');
+    if (savedColor) {
+      panel.style.backgroundColor = savedColor;
+    }
+    
     document.querySelectorAll('.bg-thumb').forEach(t => t.style.border = '2px solid transparent');
     const thumb = document.querySelector(`[data-bg="${filename}"]`);
     if (thumb) thumb.style.border = '2px solid #4caf50';
@@ -180,7 +186,7 @@ export class UIControls {
       const saved = localStorage.getItem('selectedBackground');
       if (saved) this.selectBackground(saved);
       
-      const savedColor = localStorage.getItem('bgColor');
+      const savedColor = localStorage.getItem('backgroundColor');
       if (savedColor) {
         const panel = $('#right-panel');
         panel.style.backgroundColor = savedColor;
@@ -243,6 +249,7 @@ export class UIControls {
         });
       }
     } catch (e) {}
+    window.dispatchEvent(new CustomEvent('accordionStatesLoaded'));
   }
 
   showToast(message) {

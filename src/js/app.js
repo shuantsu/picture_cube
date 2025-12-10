@@ -1,5 +1,5 @@
+import './bg-color-loader.js';
 import $ from 'jquery';
-import 'jquery-ui-dist/jquery-ui.min.css';
 
 window.$ = window.jQuery = $;
 
@@ -470,7 +470,15 @@ try {
 } catch (e) {}
 
 
-setTimeout(() => loadDefaultTexture(), 200);
+// Show spinner on app start
+const spinner = document.getElementById('loadingSpinner');
+if (spinner) spinner.style.display = 'block';
+
+// Guard to prevent multiple calls
+if (!window.__defaultTextureLoaded) {
+  window.__defaultTextureLoaded = true;
+  setTimeout(() => loadDefaultTexture(), 200);
+}
 
 
 
@@ -666,7 +674,7 @@ function selectBackground(filename) {
 function applyBackgroundColor() {
   const color = domManager.get('bgColorPicker').value;
   domManager.get('right-panel').style.backgroundColor = color;
-  localStorage.setItem('bgColor', color);
+  localStorage.setItem('backgroundColor', color);
 }
 
 // Expose functions to window for HTML onclick handlers

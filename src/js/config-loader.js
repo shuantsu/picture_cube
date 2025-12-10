@@ -11,6 +11,18 @@ export class ConfigLoader {
     const spinner = this.dom.get('loadingSpinner');
     spinner.style.display = 'block';
     
+    // Show grey stickers while loading
+    this.faces.forEach(face => {
+      ['.face-2d', '.face-3d'].forEach(selector => {
+        const faceEl = document.querySelector(`${selector}[data-face="${face}"]`);
+        if (faceEl) {
+          Array.from(faceEl.children).forEach(sticker => {
+            sticker.style.background = '#999';
+          });
+        }
+      });
+    });
+    
     try {
       let configText = this.dom.get('customConfig').value;
       if (!configText?.trim()) {
@@ -47,12 +59,28 @@ export class ConfigLoader {
     }
   }
 
-  loadExample() {
+  async loadExample() {
     const select = this.dom.get('exampleSelect');
     const filename = select.value;
-    if (!filename || !window.examplesRaw) return;
+    if (!filename) return;
     
-    const rawContent = window.examplesRaw[filename];
+    const spinner = this.dom.get('loadingSpinner');
+    spinner.style.display = 'block';
+    
+    // Show grey stickers while loading
+    this.faces.forEach(face => {
+      ['.face-2d', '.face-3d'].forEach(selector => {
+        const faceEl = document.querySelector(`${selector}[data-face="${face}"]`);
+        if (faceEl) {
+          Array.from(faceEl.children).forEach(sticker => {
+            sticker.style.background = '#999';
+          });
+        }
+      });
+    });
+    
+    // Fetch example on-demand
+    const rawContent = await window.fetchExample(filename);
     if (rawContent) {
       this.dom.get('customConfig').value = rawContent;
       this.loadCustomConfig();
@@ -69,17 +97,17 @@ export class ConfigLoader {
     const savedTexture = localStorage.getItem('selectedTexture');
     const select = this.dom.get('exampleSelect');
     
-    // Wait for examples to be loaded
+    // Wait for examples INDEX to be loaded (not the files)
     await window.examplesLoadedPromise;
     
-    if (savedTexture && window.examplesRaw[savedTexture]) {
+    if (savedTexture) {
       select.value = savedTexture;
-      this.loadExample();
+      await this.loadExample(); // Fetch only this one
     } else {
       const firstOption = select.options[1];
       if (firstOption) {
         select.value = firstOption.value;
-        this.loadExample();
+        await this.loadExample(); // Fetch only this one
       }
     }
   }

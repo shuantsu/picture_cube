@@ -1,0 +1,25 @@
+CHECKLIST - Caça ao Loop Infinito
+TEORIA 1: backgrounds.js executa código no carregamento do módulo
+Previsão: Se comentarmos loadSavedBackgroundOnce(), o loop para
+Teste: Comentar linhas 166-176 de backgrounds.js
+Resultado: [ ]
+
+TEORIA 2: vite-plugin-html causa HMR infinito
+Previsão: Se removermos o plugin, o loop para
+Teste: Comentar plugin em vite.config.js (linhas 20-30)
+Resultado: [ ]
+
+TEORIA 3: bg-color-loader.js causa reload
+Previsão: Se comentarmos o import, o loop para
+Teste: Comentar linha 1 de app.js
+Resultado: [ ]
+
+TEORIA 4: loadDefaultTexture() causa loop
+Previsão: Se comentarmos o setTimeout, o loop para
+Teste: Comentar linhas 477-481 de app.js
+Resultado: [ ]
+
+TEORIA 5: fetchExample() causa loop recursivo
+Previsão: Se comentarmos window.fetchExample, o loop para
+Teste: Comentar linhas 24-33 de backgrounds.js
+Resultado: [ ]

@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { createHtmlPlugin } from 'vite-plugin-html';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: './',
   root: 'src',
   build: {
@@ -16,6 +17,16 @@ export default defineConfig({
     }
   },
   plugins: [
+    ...(command === 'build' ? [createHtmlPlugin({
+      minify: {
+        collapseWhitespace: true,
+        removeComments: true,
+        removeRedundantAttributes: true,
+        removeEmptyAttributes: true,
+        minifyCSS: true,
+        minifyJS: true
+      }
+    })] : []),
     viteStaticCopy({
       targets: [
         { src: 'backgrounds', dest: '.' },
@@ -30,4 +41,4 @@ export default defineConfig({
     port: 8000,
     open: true
   }
-});
+}));

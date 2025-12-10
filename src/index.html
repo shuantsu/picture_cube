@@ -9,14 +9,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Picture Cube -- Beta</title>
       <link rel="stylesheet" href="css/style.css">
-      <style>
-        #rotationModeBtn { display: none; }
-        @media (max-width: 768px) {
-          #rotationModeBtn.show { display: flex; }
-        }
-        #rotationModeControls { display: none; }
-        #rotationModeControls.show { display: block !important; }
-      </style>
   </head>
 
   <body>
@@ -294,7 +286,7 @@
         </div>
       </div>
 
-      <div id="right-panel">
+      <div id="right-panel" style="background-color: var(--bg-color, transparent);">
         <iframe id="editor-iframe" src="editor/"></iframe>
         <div class="loading-spinner" id="loadingSpinner"></div>
         <div id="cube-net">
