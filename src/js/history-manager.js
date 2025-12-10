@@ -139,22 +139,23 @@ export class HistoryManager {
   }
 
   attachEvents() {
-    this.canvas.addEventListener('mousedown', (e) => {
+    const handleStart = (x, y) => {
       const rect = this.canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left - this.transform.x) / this.transform.scale;
-      const y = (e.clientY - rect.top - this.transform.y) / this.transform.scale;
+      const tx = (x - rect.left - this.transform.x) / this.transform.scale;
+      const ty = (y - rect.top - this.transform.y) / this.transform.scale;
       
-      let clicked = false;
       for (const id in this.positions) {
         const p = this.positions[id];
-        if (x >= p.x && x <= p.x + this.NODE_W && y >= p.y && y <= p.y + this.NODE_H) {
+        if (tx >= p.x && tx <= p.x + this.NODE_W && ty >= p.y && ty <= p.y + this.NODE_H) {
           this.selectNode(p.node.id);
-          clicked = true;
-          break;
+          return true;
         }
       }
-      
-      if (!clicked && e.button === 0) {
+      return false;
+    };
+
+    this.canvas.addEventListener('mousedown', (e) => {
+      if (!handleStart(e.clientX, e.clientY) && e.button === 0) {
         this.isPanning = true;
         this.lastPanPoint = { x: e.clientX, y: e.clientY };
         this.canvas.style.cursor = 'grabbing';
@@ -196,6 +197,63 @@ export class HistoryManager {
       
       this.renderCanvas();
     }, { passive: false });
+
+    let lastTouchDist = 0;
+    this.canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        const t = e.touches[0];
+        if (!handleStart(t.clientX, t.clientY)) {
+          this.isPanning = true;
+          this.lastPanPoint = { x: t.clientX, y: t.clientY };
+        }
+        e.preventDefault();
+      } else if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDist = Math.hypot(dx, dy);
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1 && this.isPanning) {
+        const t = e.touches[0];
+        const dx = (t.clientX - this.lastPanPoint.x) * 1.2;
+        const dy = (t.clientY - this.lastPanPoint.y) * 1.2;
+        this.transform.x += dx;
+        this.transform.y += dy;
+        this.lastPanPoint = { x: t.clientX, y: t.clientY };
+        this.renderCanvas();
+        e.preventDefault();
+      } else if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        
+        if (lastTouchDist > 0) {
+          const rect = this.canvas.getBoundingClientRect();
+          const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+          const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+          
+          const scaleFactor = dist / lastTouchDist;
+          const newScale = Math.max(0.1, Math.min(3, this.transform.scale * scaleFactor));
+          
+          const scaleChange = newScale / this.transform.scale;
+          this.transform.x = centerX - (centerX - this.transform.x) * scaleChange;
+          this.transform.y = centerY - (centerY - this.transform.y) * scaleChange;
+          this.transform.scale = newScale;
+          
+          this.renderCanvas();
+        }
+        lastTouchDist = dist;
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    this.canvas.addEventListener('touchend', () => {
+      this.isPanning = false;
+      lastTouchDist = 0;
+    });
   }
 
   updateDisplay() {

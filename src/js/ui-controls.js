@@ -25,6 +25,7 @@ export class UIControls {
       $('#uiScaleValue').textContent = this.uiScale;
       this.applyAccessibility();
     });
+    uiScale.addEventListener('change', () => this.redrawHistory());
 
     const textScale = $('#textScale');
     if (!textScale) return;
@@ -34,6 +35,7 @@ export class UIControls {
       $('#textScaleValue').textContent = this.textScale;
       this.applyAccessibility();
     });
+    textScale.addEventListener('change', () => this.redrawHistory());
 
     const panelWidth = $('#panelWidth');
     if (!panelWidth) return;
@@ -43,6 +45,13 @@ export class UIControls {
       $('#panelWidthValue').textContent = this.panelWidth;
       this.applyAccessibility();
     });
+    panelWidth.addEventListener('change', () => this.redrawHistory());
+  }
+
+  redrawHistory() {
+    if (window.historyManager && window.historyManager.updateDisplay) {
+      window.historyManager.updateDisplay();
+    }
   }
 
   applyAccessibility() {

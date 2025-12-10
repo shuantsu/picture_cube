@@ -9,6 +9,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Picture Cube -- Beta</title>
       <link rel="stylesheet" href="css/style.css">
+      <style>
+        #rotationModeBtn { display: none; }
+        @media (max-width: 768px) {
+          #rotationModeBtn.show { display: flex; }
+        }
+        #rotationModeControls { display: none; }
+        #rotationModeControls.show { display: block !important; }
+      </style>
   </head>
 
   <body>
@@ -66,6 +74,11 @@
           <div class="accordion-content">
             <button id="bluetoothBtn" onclick="toggleBluetooth()">Connect GiiKER Cube</button>
             <div id="bluetoothStatus" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+            <div id="rotationModeControls" style="margin-top: 15px;">
+              <label>Rotation Mode Key: <strong id="currentRotationKey">Space</strong></label>
+              <button onclick="configureRotationKey()" style="width: 100%; margin-top: 5px;">Configure</button>
+              <small style="color: #666; display: block; margin-top: 5px;">Hold this key to convert moves to rotations (U→y, R→x, F→z)</small>
+            </div>
           </div>
         </div>
 
@@ -136,6 +149,8 @@
           <div class="accordion-content">
             <button onclick="solveCube()">Reset</button>
             <button onclick="openStateModal()">View State</button>
+            <button onclick="saveCurrentState()">Save State</button>
+            <div id="savedStatesGrid" class="saved-states-grid"></div>
           </div>
         </div>
 
@@ -335,7 +350,18 @@
       </div>
     </div>
 
+    <!-- Key Config Modal -->
+    <div id="keyConfigModal" class="modal">
+      <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <h3 id="keyConfigMessage">Press any key</h3>
+        <p id="keyConfigPreview" style="font-size: 24px; margin: 20px 0; min-height: 30px;"></p>
+        <button onclick="confirmRotationKey()" style="margin: 5px;">Confirm</button>
+        <button onclick="closeKeyConfigModal()" style="margin: 5px;">Cancel</button>
+      </div>
+    </div>
+
     <div id="toast" class="toast"></div>
+    <button id="rotationModeBtn" title="Hold for rotation mode"></button>
 
     <script type="module" src="/js/app.js"></script>
   </body>

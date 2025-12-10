@@ -709,6 +709,52 @@
     transform: translate(-50%, -50%);
   }
 
+  /* Saved States Grid */
+  .saved-states-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .saved-state-item {
+    background: #fff;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .saved-state-item:hover {
+    border-color: #4caf50;
+    transform: translateY(-2px);
+  }
+
+  .saved-state-item .state-name {
+    font-weight: bold;
+    font-size: var(--font-normal);
+    margin-bottom: 4px;
+  }
+
+  .saved-state-item .state-date {
+    font-size: var(--font-small);
+    color: #666;
+  }
+
+  .saved-state-item .state-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .saved-state-item button {
+    flex: 1;
+    padding: 4px;
+    font-size: var(--font-small);
+    margin: 0;
+  }
+
 
 
 #cube-3d-window {
@@ -759,4 +805,38 @@ body.editor-active #cube-3d-wrapper {
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
+}
+
+/* Rotation Mode Button (Mobile) */
+#rotationModeBtn {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #4caf50;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 999;
+  cursor: pointer;
+  font-size: 24px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  touch-action: none;
+}
+
+#rotationModeBtn.active {
+  background: #ff5722;
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  #rotationModeBtn {
+    display: flex;
+  }
 }

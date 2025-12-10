@@ -7,10 +7,12 @@ await import('jquery-ui-dist/jquery-ui.min.js');
 import { UIControls } from './ui-controls.js';
 import { CameraTracking } from './camera-tracking.js';
 import { HistoryManager } from './history-manager.js';
+import { StateManager } from './state-manager.js';
 import CubeCore from './cube-core.js';
 import TextureManager from './texture-manager.js';
 import AlgUtils from './scramble.js';
 import BluetoothCube from './bluetooth.js';
+import BluetoothRotation from './bluetooth-rotation.js';
 import { CubeView } from './cube-view.js';
 import CubeNetRenderer from './cubenet-renderer.js';
 import PerspectiveRenderer from './perspective-renderer.js';
@@ -88,6 +90,8 @@ window.IsometricRenderer = IsometricRenderer;
 const uiControls = new UIControls();
 const cameraTracking = new CameraTracking();
 const historyManager = new HistoryManager();
+const stateManager = new StateManager();
+window.historyManager = historyManager;
 
 const faces = ["U", "L", "F", "R", "B", "D"];
 const colors = [
@@ -430,7 +434,17 @@ let historyEnabled = false;
 
 function toggleHistoryTracking() {
   historyEnabled = ElHistoryEnabled.checked;
-  if (historyEnabled && !historyManager.root) historyManager.init(getCurrentState());
+  const label = document.querySelector('label[for="historyEnabled"]');
+  if (historyEnabled) {
+    if (!historyManager.root) {
+      historyManager.init(getCurrentState());
+    } else {
+      historyManager.addMove('TRACK: ON', getCurrentState());
+    }
+    if (label) label.innerHTML = '<span style="color:#4caf50;font-weight:bold">✓ Track History (ON)</span>';
+  } else {
+    if (label) label.innerHTML = '<span style="color:#666">Track History (OFF)</span>';
+  }
 }
 
 function applyMove(move, trackHistory = true) {
@@ -854,10 +868,13 @@ function saveSelectedTexture(filename) {
 window.onclick = function (event) {
   const instructionsModal = $$("#instructionsModal");
   const stateModal = $$("#stateModal");
+  const keyConfigModal = $$("#keyConfigModal");
   if (event.target === instructionsModal) {
     closeInstructionsModal();
   } else if (event.target === stateModal) {
     closeStateModal();
+  } else if (event.target === keyConfigModal) {
+    bluetoothRotation.closeModal();
   }
 };
 
@@ -1281,6 +1298,12 @@ window.switchTab = switchTab;
 window.toggleRenderThrottle = toggleRenderThrottle;
 window.toggleHistoryTracking = toggleHistoryTracking;
 window.applyMove = applyMove;
+window.configureRotationKey = configureRotationKey;
+window.confirmRotationKey = confirmRotationKey;
+window.closeKeyConfigModal = closeKeyConfigModal;
+window.saveCurrentState = () => saveCurrentState();
+window.loadSavedState = (id) => loadSavedState(id);
+window.deleteSavedState = (id) => deleteSavedState(id);
 
 // Initialize after DOM is loaded
 if (document.readyState === 'loading') {
@@ -1384,6 +1407,14 @@ function initializeApp() {
     cubeCore.stickerTextures = stickerTextures;
     updateDOM();
   };
+  
+  // Set initial label state
+  const label = document.querySelector('label[for="historyEnabled"]');
+  if (label && historyEnabled) {
+    label.innerHTML = '<span style="color:#4caf50;font-weight:bold">✓ Track History (ON)</span>';
+  } else if (label) {
+    label.innerHTML = '<span style="color:#666">Track History (OFF)</span>';
+  }
 
   // Initialize cube and other components
   historyEnabled = ElHistoryEnabled?.checked || false;
@@ -1392,6 +1423,8 @@ function initializeApp() {
   uiControls.loadSidebarState();
   cameraTracking.load();
   initCameraUI();
+  renderSavedStates();
+  window.uiControls = uiControls;
   
 }
 
@@ -1432,27 +1465,39 @@ function scrambleCube() {
 
 // Bluetooth - using BluetoothCube class from bluetooth.js
 let bluetoothCube = null;
+const bluetoothRotation = new BluetoothRotation();
+window.bluetoothRotation = bluetoothRotation;
 
 function toggleBluetooth() {
   const btn = $$('#bluetoothBtn');
   const status = $$('#bluetoothStatus');
+  const controls = $$('#rotationModeControls');
+  const mobileBtn = $$('#rotationModeBtn');
   
   if (!bluetoothCube || !bluetoothCube.isConnected()) {
     btn.textContent = 'Connecting...';
     btn.disabled = true;
     bluetoothCube = new BluetoothCube();
-    bluetoothCube.onMove((notation) => applyMove(notation));
+    window.bluetoothCube = bluetoothCube;
+    bluetoothCube.onMove((notation) => {
+      const move = bluetoothRotation.processMove(notation);
+      applyMove(move);
+    });
     bluetoothCube.onConnect(() => {
       btn.textContent = 'Disconnect';
       btn.disabled = false;
       status.textContent = 'Connected to GiiKER cube';
       status.style.color = '#4caf50';
+      if (controls) controls.classList.add('show');
+      if (mobileBtn) mobileBtn.classList.add('show');
     });
     bluetoothCube.onDisconnect(() => {
       btn.textContent = 'Connect GiiKER Cube';
       btn.disabled = false;
       status.textContent = 'Disconnected';
       status.style.color = '#666';
+      if (controls) controls.classList.remove('show');
+      if (mobileBtn) mobileBtn.classList.remove('show');
     });
     bluetoothCube.onError((error) => {
       btn.textContent = 'Connect GiiKER Cube';
@@ -1464,6 +1509,64 @@ function toggleBluetooth() {
   } else {
     bluetoothCube.disconnect();
   }
+}
+
+function configureRotationKey() {
+  bluetoothRotation.configure();
+}
+
+function confirmRotationKey() {
+  bluetoothRotation.confirm();
+}
+
+function closeKeyConfigModal() {
+  bluetoothRotation.closeModal();
+}
+
+// State Management
+function saveCurrentState() {
+  const name = prompt('Enter a name for this state:');
+  if (!name) return;
+  stateManager.save(name, cubeState, stickerRotations, stickerTextures);
+  renderSavedStates();
+  uiControls.showToast('State saved!');
+}
+
+function loadSavedState(id) {
+  const state = stateManager.load(id);
+  if (!state) return;
+  cubeState = JSON.parse(JSON.stringify(state.cubeState));
+  stickerRotations = JSON.parse(JSON.stringify(state.stickerRotations));
+  stickerTextures = JSON.parse(JSON.stringify(state.stickerTextures));
+  cubeCore.cubeState = cubeState;
+  cubeCore.stickerRotations = stickerRotations;
+  cubeCore.stickerTextures = stickerTextures;
+  updateDOM();
+  if (historyEnabled) historyManager.addMove(`LOAD: ${state.name}`, getCurrentState());
+  uiControls.showToast('State loaded!');
+}
+
+function deleteSavedState(id) {
+  if (!confirm('Delete this saved state?')) return;
+  stateManager.delete(id);
+  renderSavedStates();
+  uiControls.showToast('State deleted');
+}
+
+function renderSavedStates() {
+  const grid = $$('#savedStatesGrid');
+  if (!grid) return;
+  const states = stateManager.getAll();
+  grid.innerHTML = states.length === 0 ? '<div style="grid-column: 1/-1; text-align: center; color: #666; font-size: 12px; padding: 10px;">No saved states</div>' : states.map(s => `
+    <div class="saved-state-item">
+      <div class="state-name">${s.name}</div>
+      <div class="state-date">${s.date}</div>
+      <div class="state-actions">
+        <button onclick="loadSavedState(${s.id})">Load</button>
+        <button onclick="deleteSavedState(${s.id})" style="background: #f44336; color: white;">Delete</button>
+      </div>
+    </div>
+  `).join('');
 }
 
 
