@@ -2,25 +2,27 @@ let defaultTexture = null;
 let examples = {};
 const examplesRaw = {};
 
-  // Load examples list and preload files
-  fetch('examples/index.json')
-    .then(r => r.json())
-    .then(files => {
-      const select = document.getElementById('exampleSelect');
-      return Promise.all(files.map(filename => 
-        fetch(`examples/${filename}`)
-          .then(r => r.text())
-          .then(text => {
-            examplesRaw[filename] = text;
-            const name = filename.replace('.json', '').replace(/^\d+-/, '');
-            const option = document.createElement('option');
-            option.value = filename;
-            option.textContent = name;
-            select.appendChild(option);
-          })
-      ));
-    })
-    .then(() => {});
+// Promise that resolves when examples are loaded
+const examplesLoadedPromise = fetch('examples/index.json')
+  .then(r => r.json())
+  .then(files => {
+    const select = document.getElementById('exampleSelect');
+    return Promise.all(files.map(filename => 
+      fetch(`examples/${filename}`)
+        .then(r => r.text())
+        .then(text => {
+          examplesRaw[filename] = text;
+          const name = filename.replace('.json', '').replace(/^\d+-/, '');
+          const option = document.createElement('option');
+          option.value = filename;
+          option.textContent = name;
+          select.appendChild(option);
+        })
+    ));
+  })
+  .then(() => {
+    window.dispatchEvent(new CustomEvent('examplesLoaded'));
+  });
 
   function stripJsonComments(json) {
     let result = '', inString = false, inComment = false, inBlockComment = false;
@@ -49,6 +51,7 @@ const examplesRaw = {};
   }
 window.stripJsonComments = stripJsonComments;
 window.examplesRaw = examplesRaw;
+window.examplesLoadedPromise = examplesLoadedPromise;
 
   // Load backgrounds
   fetch('backgrounds/index.json')

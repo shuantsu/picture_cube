@@ -932,7 +932,10 @@ function renderSavedStates() {
 
 window.addEventListener('message', (e) => {
   if (e.data.type === 'toast') {
-      uiControls.showToast(e.data.message);
+      // Only show toast if editor is actually open
+      if (editorBridge?.editorOpen) {
+        uiControls.showToast(e.data.message);
+      }
       return;
   }
 });

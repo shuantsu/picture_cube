@@ -1767,13 +1767,16 @@ $varName" rows="2"></textarea>
 
                 window.showToast = message => parentWindow.postMessage({ type: 'toast', message }, '*')
 
-                // Trigger auto-import immediately when embedded
+                // Only trigger auto-import if editor iframe is visible
                 setTimeout(() => {
                     try {
-                        const parentConfig = window.parent.document.getElementById('customConfig').value;
-                        if (parentConfig.trim()) {
-                            document.getElementById('import-json').value = parentConfig;
-                            loadFromJSON();
+                        const iframe = window.parent.document.getElementById('editor-iframe');
+                        if (iframe && iframe.style.display !== 'none') {
+                            const parentConfig = window.parent.document.getElementById('customConfig').value;
+                            if (parentConfig.trim()) {
+                                document.getElementById('import-json').value = parentConfig;
+                                loadFromJSON();
+                            }
                         }
                     } catch (e) {
                         console.log('Could not access parent config:', e);
@@ -1803,10 +1806,14 @@ $varName" rows="2"></textarea>
         // Expose method to parent window
         window.triggerImportFromParent = function () {
             try {
-                const parentConfig = window.parent.document.getElementById('customConfig').value;
-                if (parentConfig.trim()) {
-                    document.getElementById('import-json').value = parentConfig;
-                    loadFromJSON();
+                // Only import if editor is visible
+                const iframe = window.parent.document.getElementById('editor-iframe');
+                if (iframe && iframe.style.display !== 'none') {
+                    const parentConfig = window.parent.document.getElementById('customConfig').value;
+                    if (parentConfig.trim()) {
+                        document.getElementById('import-json').value = parentConfig;
+                        loadFromJSON();
+                    }
                 }
             } catch (e) {
                 console.log('Could not access parent config:', e);

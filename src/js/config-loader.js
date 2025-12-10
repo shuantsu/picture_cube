@@ -59,16 +59,20 @@ export class ConfigLoader {
       this.saveSelectedTexture(filename);
     }
 
+    // Only trigger import if editor is actually open
     if (window.editorOpen) {
       this.dom.get('editor-iframe')?.contentWindow?.triggerImportFromParent();
     }
   }
 
-  loadDefaultTexture() {
+  async loadDefaultTexture() {
     const savedTexture = localStorage.getItem('selectedTexture');
     const select = this.dom.get('exampleSelect');
     
-    if (savedTexture && window.examplesRaw?.[savedTexture]) {
+    // Wait for examples to be loaded
+    await window.examplesLoadedPromise;
+    
+    if (savedTexture && window.examplesRaw[savedTexture]) {
       select.value = savedTexture;
       this.loadExample();
     } else {

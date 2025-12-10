@@ -98,11 +98,15 @@ export class EditorBridge {
         break;
 
       case 'MODAL_OPENED':
-        $('#cube-3d-window').fadeOut();
+        if (this.editorOpen) {
+          $('#cube-3d-window').fadeOut();
+        }
         break;
 
       case 'MODAL_CLOSED':
-        $('#cube-3d-window').fadeIn();
+        if (this.editorOpen) {
+          $('#cube-3d-window').fadeIn();
+        }
         break;
     }
   }
