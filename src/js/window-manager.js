@@ -54,10 +54,10 @@ window.toggleEditorWindow = function(active) {
 
     $(document).on('mousedown touchstart',(ev)=>{
       if (ev.target.id === 'cube-3d-wrapper') {
-        window.cameraRotationEnabled = true;
+        if (window.viewController) window.viewController.cameraRotationEnabled = true;
         return;
       }
-      window.cameraRotationEnabled = false;
+      if (window.viewController) window.viewController.cameraRotationEnabled = false;
     })
 
   } else {

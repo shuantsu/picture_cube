@@ -21,6 +21,13 @@ import IsometricRenderer from './isometric-renderer.js';
 import './backgrounds.js';
 import './texture-instructions.js';
 import './window-manager.js';
+import { domManager } from './dom-manager.js';
+import { ViewController } from './view-controller.js';
+import { InputHandler } from './input-handler.js';
+import { ModalManager } from './modal-manager.js';
+import { ConfigLoader } from './config-loader.js';
+import { EditorBridge } from './editor-bridge.js';
+import { MoveGridBuilder } from './move-grid-builder.js';
 
 const defaultPanelWidth = 350
 
@@ -56,20 +63,15 @@ const defaultPanelWidth = 350
 
 // ==================== FUNDAMENTOS: X, Y, U + applyStickerRotation ====================
 
-const $$ = (sel) => {
-  if (sel.startsWith('#')) {
-    return document.getElementById(sel.slice(1));
-  }
-  return document.querySelector(sel);
-};
+const $$ = (sel) => domManager.$(sel);
 
-let ElRightPanel, ElControls, ElContainer, ElCubeNet, ElCube3D, ElCubenetBtn, ElPerspectiveBtn, ElOrthographicBtn;
-let ElCrispBtn, ElThrottleBtn, ElCameraBtn, ElBluetoothBtn, ElAlg, ElCustomConfig, ElExampleSelect, ElHistoryEnabled;
-let ElStateModal, ElInstructionsModal, ElLoadingSpinner, ElToast, ElBluetoothStatus, ElCameraStatus, ElCameraSelect;
-let ElCameraContainer, ElCameraControls, ElCameraPreview, ElHeadDot, ElHistoryGraph, ElHistoryRows, ElEditorIframe;
-let ElStateTab, ElRotationsTab, ElBackgroundGallery, ElSensitivityX, ElSensitivityXValue, ElSensitivityY, ElSensitivityYValue;
-let ElOffsetX, ElOffsetXValue, ElOffsetY, ElOffsetYValue, ElBgSensitivityX, ElBgSensitivityXValue, ElBgSensitivityY;
-let ElBgSensitivityYValue, ElSameSensitivity, ElSameBgSensitivity, ElInvertX, ElInvertY, ElInvertBgX, ElInvertBgY;
+// Module instances
+let viewController;
+let inputHandler;
+let modalManager;
+let configLoader;
+let editorBridge;
+let moveGridBuilder;
 
 const faces2D = {};
 const faces3D = {};
@@ -110,22 +112,12 @@ let stickerIds = { U: [], L: [], F: [], R: [], B: [], D: [] };
 let stickerTextures = cubeCore.stickerTextures;
 
 // Throttle system
-let renderThrottleEnabled = false;
+let renderThrottleEnabled = true;
 let rafScheduled = false;
 
-let currentViewMode = "cubenet";
-let cubeRotation = { x: -25, y: -45 };
-let cubeSize = window.innerWidth <= 480 ? 230 : 350;
-let zoom2D = 1;
-let panOffset = { x: 0, y: 0 };
-let isDragging = false;
-let previousMousePosition = { x: 0, y: 0 };
-let cameraRotationEnabled = true;
-window.cameraRotationEnabled = cameraRotationEnabled;
 
-// View system
-let cubeView = null;
-let currentRenderer = null;
+
+
 
 function createStickers(faceElement, is3D = false) {
   faceElement.innerHTML = "";
@@ -176,10 +168,10 @@ function applyStickerStyle(sticker, face, index, stickerId) {
 
 function updateDOM() {
   try {
-    if (cubeView && currentRenderer && typeof cubeView.render === 'function') {
+    if (viewController?.cubeView && viewController?.currentRenderer && typeof viewController.cubeView.render === 'function') {
       const textureConfig = textureManager.getConfig();
       textureConfig.stickerTextures = stickerTextures;
-      cubeView.render(cubeState, stickerRotations, stickerTextures, textureConfig);
+      viewController.cubeView.render(cubeState, stickerRotations, stickerTextures, textureConfig);
       return;
     }
   } catch (e) {
@@ -207,180 +199,13 @@ function updateDOM() {
 }
 
 function setViewMode(mode) {
-  currentViewMode = mode;
-  localStorage.setItem('viewMode', mode);
-
-  try {
-    // Hide all renderers
-    if (currentRenderer && currentRenderer.hide) currentRenderer.hide();
-
-    // Create and show new renderer
-    if (!ElRightPanel) {
-      console.warn('Container not found, deferring setViewMode');
-      setTimeout(() => setViewMode(mode), 100);
-      return;
-    }
-
-    if (mode === "cubenet") {
-      currentRenderer = new CubeNetRenderer(ElRightPanel);
-      currentRenderer.setZoom(zoom2D);
-      currentRenderer.setPan(panOffset.x, panOffset.y);
-      ElCubenetBtn.disabled = true;
-      ElPerspectiveBtn.disabled = false;
-      ElOrthographicBtn.disabled = false;
-    } else if (mode === "perspective") {
-      currentRenderer = new PerspectiveRenderer(ElRightPanel);
-      currentRenderer.setRotation(cubeRotation.x, cubeRotation.y);
-      currentRenderer.setSize(cubeSize);
-      ElCubenetBtn.disabled = false;
-      ElPerspectiveBtn.disabled = true;
-      ElOrthographicBtn.disabled = false;
-    } else if (mode === "orthographic") {
-      currentRenderer = new IsometricRenderer(ElRightPanel);
-      currentRenderer.setRotation(cubeRotation.x, cubeRotation.y);
-      currentRenderer.setSize(cubeSize);
-      ElCubenetBtn.disabled = false;
-      ElPerspectiveBtn.disabled = false;
-      ElOrthographicBtn.disabled = true;
-    }
-
-    currentRenderer.show();
-    cubeView = new CubeView(ElRightPanel, currentRenderer);
-    updateDOM();
-
-    if (editorOpen) {
-      ElCubenetBtn.disabled = true;
-    }
-  } catch (e) {
-    console.error('setViewMode failed:', e);
-    // Force fallback rendering
-    currentRenderer = null;
-    cubeView = null;
-    updateDOM();
-  }
+  viewController.setViewMode(mode);
+  updateDOM();
 }
 
-function updateCubeRotation() {
-  if (cubeView && currentRenderer && currentRenderer.setRotation) {
-    cubeView.setRotation(cubeRotation.x, cubeRotation.y);
-  } else if (ElCube3D) {
-    ElCube3D.style.transform = `
-      translate(-50%, -50%)
-      rotateX(${cubeRotation.x}deg)
-      rotateY(${cubeRotation.y}deg)
-    `;
-  }
-  saveViewState();
-}
 
-function update2DZoom() {
-  if (cubeView && currentRenderer && currentRenderer.setZoom) {
-    cubeView.setZoom(zoom2D);
-    cubeView.setPan(panOffset.x, panOffset.y);
-  } else if (ElCubeNet) {
-    ElCubeNet.style.transform = `translate(calc(-50% + ${panOffset.x}px), calc(-50% + ${panOffset.y}px)) scale(${zoom2D})`;
-  }
-  saveViewState();
-}
 
-function saveViewState() {
-  localStorage.setItem('cubeViewState', JSON.stringify({
-    cubeRotation,
-    zoom2D,
-    panOffset,
-    cubeSize
-  }));
-}
 
-function loadViewState() {
-  try {
-    const saved = localStorage.getItem('cubeViewState');
-    if (saved) {
-      const state = JSON.parse(saved);
-      cubeRotation = state.cubeRotation || cubeRotation;
-      zoom2D = state.zoom2D || zoom2D;
-      panOffset = state.panOffset || panOffset;
-      cubeSize = state.cubeSize || cubeSize;
-      
-      if (currentViewMode === 'cubenet') {
-        update2DZoom();
-      } else {
-        document.documentElement.style.setProperty('--cube-size', `${cubeSize}px`);
-        const fontSize = Math.max(8, Math.min(32, (cubeSize / 300) * 16));
-        document.documentElement.style.setProperty('--font-size-3d', `${fontSize}px`);
-        updateCubeRotation();
-      }
-    }
-  } catch (e) {}
-}
-
-function handleMouseDown(e) {
-  if (e.target.id === "right-panel" || e.target.closest("#right-panel")) {
-    isDragging = true;
-    previousMousePosition = { x: e.clientX, y: e.clientY };
-    ElRightPanel.style.cursor = "grabbing";
-    e.preventDefault();
-  }
-}
-
-function handleMouseMove(e) {
-  if (!isDragging) return;
-
-  const deltaMove = {
-    x: e.clientX - previousMousePosition.x,
-    y: e.clientY - previousMousePosition.y,
-  };
-
-  if (currentViewMode === "cubenet") {
-    panOffset.x += deltaMove.x;
-    panOffset.y += deltaMove.y;
-    update2DZoom();
-  } else {
-    if (!window.cameraRotationEnabled) return;
-    cubeRotation.x -= deltaMove.y * 0.5;
-    cubeRotation.y += deltaMove.x * 0.5;
-    cubeRotation.x = Math.max(-90, Math.min(90, cubeRotation.x));
-    updateCubeRotation();
-  }
-
-  previousMousePosition = { x: e.clientX, y: e.clientY };
-}
-
-function handleMouseUp() {
-  isDragging = false;
-  ElRightPanel.style.cursor = "grab";
-}
-
-function handleWheel(e) {
-  if (e.target.closest("#controls")) return;
-  e.preventDefault();
-
-  const delta = Math.sign(e.deltaY);
-
-  if (currentViewMode === "cubenet") {
-    zoom2D = Math.max(0.5, Math.min(3, zoom2D * (1 - delta * 0.1)));
-    update2DZoom();
-  } else {
-    // Zoom background if camera is enabled
-    if (cameraEnabled && isCalibrated) {
-      bgZoom += delta > 0 ? -5 : 5;
-      bgZoom = Math.max(50, Math.min(300, bgZoom));
-      saveCameraCalibration();
-    } else {
-      cubeSize = Math.max(200, Math.min(800, cubeSize * (1 - delta * 0.1)));
-      const fontSize = Math.max(8, Math.min(32, (cubeSize / 300) * 16));
-      document.documentElement.style.setProperty(
-        "--cube-size",
-        `${cubeSize}px`
-      );
-      document.documentElement.style.setProperty(
-        "--font-size-3d",
-        `${fontSize}px`
-      );
-      saveViewState();
-    }
-  }
-}
 
 // Removed - now in CubeCore
 
@@ -434,7 +259,7 @@ const double = (fn) => () => repeat(fn, 2);
 let historyEnabled = false;
 
 function toggleHistoryTracking() {
-  historyEnabled = ElHistoryEnabled.checked;
+  historyEnabled = domManager.get('historyEnabled').checked;
   const label = document.querySelector('label[for="historyEnabled"]');
   if (historyEnabled) {
     if (!historyManager.root) {
@@ -455,7 +280,7 @@ function applyMove(move, trackHistory = true) {
 }
 
 function applyAlgorithm() {
-  let alg = ElAlg.value.trim();
+  let alg = domManager.get('alg').value.trim();
   if (!alg) return;
   
   alg = alg.replace(/’/g, "'");
@@ -493,278 +318,22 @@ function solveCube() {
 }
 
 function loadCustomConfig() {
-  ElLoadingSpinner.style.display = 'block';
-  
-  try {
-    let configText = ElCustomConfig.value;
-    if (!configText || !configText.trim()) {
-      ElLoadingSpinner.style.display = 'none';
-      return;
-    }
-    // Strip comments from JSON
-    function stripJsonComments(json) {
-      let result = '';
-      let inString = false;
-      let inComment = false;
-      let inBlockComment = false;
-      for (let i = 0; i < json.length; i++) {
-        const char = json[i];
-        const next = json[i + 1] || '';
-        if (inBlockComment) {
-          if (char === '*' && next === '/') {
-            inBlockComment = false;
-            i++;
-          }
-          continue;
-        }
-        if (inComment) {
-          if (char === '\n') {
-            inComment = false;
-            result += char;
-          }
-          continue;
-        }
-        if (char === '"' && (i === 0 || json[i - 1] !== '\\')) {
-          inString = !inString;
-          result += char;
-          continue;
-        }
-        if (!inString) {
-          if (char === '/' && next === '/') {
-            inComment = true;
-            i++;
-            continue;
-          }
-          if (char === '/' && next === '*') {
-            inBlockComment = true;
-            i++;
-            continue;
-          }
-        }
-        result += char;
-      }
-      return result;
-    }
-    configText = stripJsonComments(configText);
-    let finalConfig = JSON.parse(configText);
-    
-    // Handle new unified system
-    if (finalConfig.textures && finalConfig.cube && !finalConfig.mode) {
-      textureManager.setMode("unified");
-      if (finalConfig.vars) {
-        finalConfig = replaceVarsInConfig(finalConfig);
-      }
-      textureManager.loadUnifiedConfig(finalConfig);
-    }
-    // Legacy system support
-    else if (finalConfig.mode) {
-      if (finalConfig.vars) {
-        finalConfig = replaceVarsInConfig(finalConfig);
-      }
-      textureManager.loadLegacyConfig(finalConfig);
-      
-      if (!stickerTextures.U || stickerTextures.U.length === 0) {
-        faces.forEach((face, faceIndex) => {
-          stickerTextures[face] = Array(9)
-            .fill(0)
-            .map((_, i) => ({ face, index: i }));
-        });
-      }
-    }
-
-    // Check for background images and wait for them to load
-    const imagePromises = [];
-    Object.values(textureManager.faceTextures).forEach(texture => {
-      if (texture && texture.backgroundImage) {
-        const match = texture.backgroundImage.match(/url\(["']?([^"')]+)["']?\)/);
-        if (match) {
-          const img = new Image();
-          const promise = new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = resolve; // Continue even if image fails
-          });
-          img.src = match[1];
-          imagePromises.push(promise);
-        }
-      }
-    });
-
-    Promise.all(imagePromises).then(() => {
-      updateDOM();
-      ElLoadingSpinner.style.display = 'none';
-    });
-
-    // If no images, hide spinner immediately after DOM update
-    if (imagePromises.length === 0) {
-      updateDOM();
-      ElLoadingSpinner.style.display = 'none';
-    }
-  } catch (error) {
-    ElLoadingSpinner.style.display = 'none';
-    alert("JSON Error: " + error.message);
-  }
+  configLoader.loadCustomConfig();
 }
 
 function openStateModal() {
-  updateStateTab();
-  updateRotationsTab();
-  
-  // Calculate optimal width based on longest line (middle row with L F R B)
-  const longestLineChars = 41; // Adjusted for 2-digit numbers with proper spacing
-  const charWidth = 8.4;
-  const padding = 60;
-  const optimalWidth = Math.min(longestLineChars * charWidth + padding, window.innerWidth * 0.9);
-  
-  $$('#stateModal').querySelector('.modal-content').style.width = `${optimalWidth}px`;
-  $$('#stateModal').style.display = 'block';
+  modalManager.openStateModal();
 }
 
 function closeStateModal() {
-  $$('#stateModal').style.display = 'none';
+  modalManager.closeStateModal();
 }
-
-function formatCubeDisplay(data, formatter = v => v, extraLabelSpacing=0) {
-  const f = formatter;
-  const vals = Object.values(data).flat().map(f);
-  const w = Math.max(...vals.map(v => v.toString().length));
-  const pad = v => f(v).toString().padStart(w, ' ');
-  const row = (face, start) => `${pad(data[face][start])} ${pad(data[face][start+1])} ${pad(data[face][start+2])}`;
-  const faceWidth = w * 3 + 2;
-  const midCol = w + 1;
-  const indent = ' '.repeat(faceWidth + 3);
-  const labelIndent = ' '.repeat(faceWidth + 3 + midCol);
-  const labelGap = ' '.repeat(faceWidth + 2);
-  const extraSpace = ' '.repeat(extraLabelSpacing);
-  return `${extraSpace}${labelIndent}U
-${indent}${row('U',0)}
-${indent}${row('U',3)}
-${indent}${row('U',6)}
-
-${' '.repeat(midCol)}${extraSpace}L${labelGap}F${labelGap}R${labelGap}B
-${row('L',0)}   ${row('F',0)}   ${row('R',0)}   ${row('B',0)}
-${row('L',3)}   ${row('F',3)}   ${row('R',3)}   ${row('B',3)}
-${row('L',6)}   ${row('F',6)}   ${row('R',6)}   ${row('B',6)}
-
-${extraSpace}${labelIndent}D
-${indent}${row('D',0)}
-${indent}${row('D',3)}
-${indent}${row('D',6)}`;
-}
-
-function copyToClipboard() {
-  const stateDisplay = formatCubeDisplay(cubeState, v => v.toString().padStart(2, ' '), 1);
-  const rotationsDisplay = formatCubeDisplay(stickerRotations);
-  navigator.clipboard.writeText(`----STICKERS----\n\n${stateDisplay}\n\n----ROTATIONS----\n\n${rotationsDisplay}`).then(() => uiControls.showToast('Copied to clipboard!'));
-}
-
-
 
 function switchTab(tab) {
-  document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-  document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
-  $$(`#${tab}Tab`).classList.add('active');
+  modalManager.switchTab(tab);
 }
 
-function updateStateTab() {
-  const pre = document.createElement('pre');
-  pre.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: "Courier New", monospace; font-size: 14px; line-height: 1.2; cursor: pointer;';
-  pre.textContent = formatCubeDisplay(cubeState, v => v.toString().padStart(2, ' '), 1);
-  pre.onclick = copyToClipboard;
-  ElStateTab.innerHTML = '<p><strong>Sticker positions (0-53):</strong></p>';
-  ElStateTab.appendChild(pre);
-}
 
-function updateRotationsTab() {
-  const total = faces.reduce((sum, face) => sum + stickerRotations[face].reduce((a, b) => a + b, 0), 0);
-  const pre = document.createElement('pre');
-  pre.style.cssText = 'background: #f5f5f5; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: "Courier New", monospace; font-size: 14px; line-height: 1.2; cursor: pointer;';
-  pre.textContent = formatCubeDisplay(stickerRotations);
-  pre.onclick = copyToClipboard;
-  ElRotationsTab.innerHTML = `<p><strong>Total rotations:</strong> ${total}</p>`;
-  ElRotationsTab.appendChild(pre);
-}
-
-function initEventListeners() {
-  ElRightPanel.addEventListener("mousedown", handleMouseDown);
-ElRightPanel.addEventListener("touchstart", handleTouchStart, { passive: false });
-document.addEventListener("mousemove", handleMouseMove);
-document.addEventListener("touchmove", handleTouchMove, { passive: false });
-document.addEventListener("mouseup", handleMouseUp);
-document.addEventListener("touchend", handleTouchEnd);
-ElRightPanel.addEventListener("wheel", handleWheel, { passive: false });
-
-// Pinch zoom for touch devices
-let initialDistance = 0;
-let initialZoom = 1;
-
-ElRightPanel.addEventListener("touchstart", function(e) {
-  if (e.touches.length === 2) {
-    initialDistance = getTouchDistance(e.touches[0], e.touches[1]);
-    initialZoom = currentViewMode === "cubenet" ? zoom2D : cubeSize / 300;
-  }
-}, { passive: false });
-
-ElRightPanel.addEventListener("touchmove", function(e) {
-  if (e.touches.length === 2) {
-    const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
-    const scale = currentDistance / initialDistance;
-    
-    if (currentViewMode === "cubenet") {
-      zoom2D = Math.max(0.5, Math.min(3, initialZoom * scale));
-      update2DZoom();
-    } else {
-      cubeSize = Math.max(200, Math.min(800, initialZoom * scale * 300));
-      const fontSize = Math.max(8, Math.min(32, (cubeSize / 300) * 16));
-      document.documentElement.style.setProperty("--cube-size", `${cubeSize}px`);
-      document.documentElement.style.setProperty("--font-size-3d", `${fontSize}px`);
-    }
-  }
-}, { passive: false });
-}
-
-function getTouchDistance(touch1, touch2) {
-  const dx = touch1.clientX - touch2.clientX;
-  const dy = touch1.clientY - touch2.clientY;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-function handleTouchStart(e) {
-  if (e.touches.length === 1) {
-    isDragging = true;
-    const touch = e.touches[0];
-    previousMousePosition = { x: touch.clientX, y: touch.clientY };
-    e.preventDefault();
-  }
-}
-
-function handleTouchMove(e) {
-  if (!isDragging || e.touches.length !== 1) return;
-  
-  const touch = e.touches[0];
-  const deltaMove = {
-    x: touch.clientX - previousMousePosition.x,
-    y: touch.clientY - previousMousePosition.y,
-  };
-  
-  if (currentViewMode === "cubenet") {
-    panOffset.x += deltaMove.x;
-    panOffset.y += deltaMove.y;
-    update2DZoom();
-  } else {
-    cubeRotation.x -= deltaMove.y * 0.5;
-    cubeRotation.y += deltaMove.x * 0.5;
-    cubeRotation.x = Math.max(-90, Math.min(90, cubeRotation.x));
-    updateCubeRotation();
-  }
-  
-  previousMousePosition = { x: touch.clientX, y: touch.clientY };
-  e.preventDefault();
-}
-
-function handleTouchEnd(e) {
-  isDragging = false;
-}
 
 function toggleSidebar() {
   const controls = $$("#controls");
@@ -813,55 +382,21 @@ function toggleFullscreen() {
 
 // Modal functions
 function openInstructionsModal() {
-  $$("#instructionsModal").style.display = "block";
-  
-  // Add event listeners to try-example links
-  document.querySelectorAll('a[href="#try-example"]').forEach(link => {
-    link.onclick = function() {
-      let nextElement = this.parentElement.nextElementSibling;
-      while (nextElement && nextElement.tagName !== 'PRE') {
-        nextElement = nextElement.nextElementSibling;
-      }
-      if (nextElement) {
-        const codeBlock = nextElement.querySelector('code');
-        if (codeBlock) {
-          tryExample(codeBlock.textContent);
-        }
-      }
-      return false;
-    };
-  });
+  modalManager.openInstructionsModal();
 }
 
 function closeInstructionsModal() {
-  $$("#instructionsModal").style.display = "none";
+  modalManager.closeInstructionsModal();
 }
 
 function tryExample(jsonExample) {
   closeInstructionsModal();
-  $$('#customConfig').value = jsonExample;
+  domManager.get('customConfig').value = jsonExample;
   loadCustomConfig();
 }
 
 function loadExample() {
-  const select = $$('#exampleSelect');
-  const filename = select.value;
-  if (!filename) return;
-  
-  const rawContent = examplesRaw[filename];
-  if (rawContent) {
-    $$('#customConfig').value = rawContent;
-    loadCustomConfig();
-    saveSelectedTexture(filename);
-  }
-  if (editorOpen) {
-    const editorIframe = $$('#editor-iframe');
-    editorIframe.contentWindow.triggerImportFromParent();
-  }
-}
-
-function saveSelectedTexture(filename) {
-  localStorage.setItem('selectedTexture', filename);
+  configLoader.loadExample();
 }
 
 
@@ -894,123 +429,12 @@ if (window.parent !== window) {
 }
 
 function loadDefaultTexture() {
-  const savedTexture = localStorage.getItem('selectedTexture');
-  const select = $$('#exampleSelect');
-  
-  if (savedTexture && examplesRaw[savedTexture]) {
-    select.value = savedTexture;
-    loadExample();
-  } else {
-    const firstOption = select.options[1];
-    if (firstOption) {
-      select.value = firstOption.value;
-      loadExample();
-    }
-  }
+  configLoader.loadDefaultTexture();
 }
-
-// Editor functions
-let editorOpen = false;
 
 function toggleEditor() {
-  const cubeNet = $$('#cube-net');
-  const cube3DWrapper = $$('#cube-3d-wrapper');
-  const editorIframe = $$('#editor-iframe');
-  
-  editorOpen = !editorOpen;
-  
-  if (editorOpen) {
-    
-    $$("#cubenetBtn").disabled = true;
-    setViewMode('perspective');
-    if (window.toggleEditorWindow) window.toggleEditorWindow(true);
-
-    // Show editor
-    editorIframe.style.display = 'block';
-    ElRightPanel.classList.add('editor-open');
-    
-    // Trigger auto-import after iframe is shown
-    setTimeout(() => {
-      try {
-        editorIframe.contentWindow.triggerImportFromParent();
-      } catch (e) {}
-    }, 200);
-    // Send current config to editor
-    const currentConfig = $$('#customConfig').value;
-    if (currentConfig && currentConfig.trim()) {
-      const sendConfig = () => {
-        try {
-          const config = JSON.parse(currentConfig);
-          editorIframe.contentWindow.postMessage({
-            type: 'IMPORT_CONFIG',
-            payload: { config }
-          }, '*');
-        } catch (e) {
-          editorIframe.contentWindow.postMessage({
-            type: 'IMPORT_CONFIG',
-            payload: { config: currentConfig }
-          }, '*');
-        }
-      };
-      // Try immediately if already loaded, otherwise wait
-      setTimeout(sendConfig, 500);
-      editorIframe.onload = sendConfig;
-    }
-    // Keep cube elements visible based on current view mode
-    if (currentViewMode === 'cubenet') {
-      cubeNet.style.display = 'grid';
-      cube3DWrapper.style.display = 'none';
-    } else {
-      cubeNet.style.display = 'none';
-      cube3DWrapper.style.display = 'block';
-    }
-  } else {
-    // Hide editor
-    $$("#cubenetBtn").disabled = false;
-    editorIframe.style.display = 'none';
-    ElRightPanel.classList.remove('editor-open');
-    if (window.toggleEditorWindow) window.toggleEditorWindow(false);
-    // Keep cube elements visible based on current view mode
-    if (currentViewMode === 'cubenet') {
-      cubeNet.style.display = 'grid';
-      cube3DWrapper.style.display = 'none';
-    } else {
-      cubeNet.style.display = 'none';
-      cube3DWrapper.style.display = 'block';
-    }
-  }
+  editorBridge.toggleEditor();
 }
-
-
-// Listen for editor updates
-window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'UPDATE_CONFIG' && event.data.payload.config) {
-    const config = event.data.payload.config;
-    $$('#customConfig').value = JSON.stringify(config, null, 2);
-    loadCustomConfig();
-  }
-  if (event.data && event.data.type === 'CLOSE_EDITOR') {
-    toggleEditor();
-  }
-  if (event.data && event.data.type === 'EDITOR_READY') {
-    // Editor is ready, send current config
-    const currentConfig = $$('#customConfig').value;
-    if (currentConfig && currentConfig.trim()) {
-      try {
-        const config = JSON.parse(currentConfig);
-        event.source.postMessage({
-          type: 'IMPORT_CONFIG',
-          payload: { config }
-        }, '*');
-      } catch (e) {
-        event.source.postMessage({
-          type: 'IMPORT_CONFIG',
-          payload: { config: currentConfig }
-        }, '*');
-      }
-    }
-  }
-});
 
 // Camera control integration - using CameraTracking class
 
@@ -1032,12 +456,8 @@ try {
 // Load render throttle
 try {
   const saved = localStorage.getItem('renderThrottle');
-  if (saved === 'true') {
-    renderThrottleEnabled = true;
-    const btn = $('#throttleBtn');
-    btn.textContent = 'Render Throttle: ON';
-    btn.style.background = '#4caf50';
-    btn.style.color = 'white';
+  if (saved !== null) {
+    renderThrottleEnabled = saved === 'true';
   }
 } catch (e) {}
 
@@ -1052,29 +472,7 @@ try {
 
 setTimeout(() => loadDefaultTexture(), 200);
 
-// Variable replacement function (shared between unified and legacy)
-function replaceVarsInConfig(config) {
-  const replaceVars = (obj) => {
-    if (typeof obj === 'string') {
-      // Replace variables embedded in strings (e.g., "url('$url/image.png')")
-      return obj.replace(/\$([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, varName) => {
-        return config.vars[varName] !== undefined ? config.vars[varName] : match;
-      });
-    } else if (Array.isArray(obj)) {
-      return obj.map(replaceVars);
-    } else if (obj && typeof obj === 'object') {
-      const result = {};
-      for (const [key, value] of Object.entries(obj)) {
-        if (key !== 'vars') {
-          result[key] = replaceVars(value);
-        }
-      }
-      return result;
-    }
-    return obj;
-  };
-  return replaceVars(config);
-}
+
 
 
 window.setCrispMode = () => {
@@ -1086,7 +484,7 @@ window.unsetCrispMode = () => {
 window.toggleCrispMode = () => {
   document.body.classList.toggle('crisp-mode');
   const enabled = document.body.classList.contains('crisp-mode');
-  const btn = $$('#crispBtn');
+  const btn = domManager.get('crispBtn');
   btn.textContent = `Crisp Mode: ${enabled ? 'ON' : 'OFF'}`;
   btn.style.background = enabled ? '#4caf50' : '';
   btn.style.color = enabled ? 'white' : '';
@@ -1095,7 +493,7 @@ window.toggleCrispMode = () => {
 
 function toggleRenderThrottle() {
   renderThrottleEnabled = !renderThrottleEnabled;
-  const btn = $$('#throttleBtn');
+  const btn = domManager.get('throttleBtn');
   btn.textContent = `Render Throttle: ${renderThrottleEnabled ? 'ON' : 'OFF'}`;
   btn.style.background = renderThrottleEnabled ? '#4caf50' : '';
   btn.style.color = renderThrottleEnabled ? 'white' : '';
@@ -1120,106 +518,106 @@ function initCameraUI() {
   // Wire up camera UI controls
   const settings = cameraTracking.settings;
   
-  $$('#sensitivityX').value = settings.sensitivityX;
-  $$('#sensitivityXValue').textContent = settings.sensitivityX;
-  $$('#sensitivityY').value = settings.sensitivityY;
-  $$('#sensitivityYValue').textContent = settings.sensitivityY;
-  $$('#offsetX').value = settings.offsetX;
-  $$('#offsetXValue').textContent = settings.offsetX;
-  $$('#offsetY').value = settings.offsetY;
-  $$('#offsetYValue').textContent = settings.offsetY;
-  $$('#bgSensitivityX').value = settings.bgSensitivityX;
-  $$('#bgSensitivityXValue').textContent = settings.bgSensitivityX;
-  $$('#bgSensitivityY').value = settings.bgSensitivityY;
-  $$('#bgSensitivityYValue').textContent = settings.bgSensitivityY;
-  $$('#sameSensitivity').checked = settings.sameSensitivity;
-  $$('#sameBgSensitivity').checked = settings.sameBgSensitivity;
-  $$('#invertX').checked = settings.invertX;
-  $$('#invertY').checked = settings.invertY;
-  $$('#invertBgX').checked = settings.invertBgX;
-  $$('#invertBgY').checked = settings.invertBgY;
+  domManager.get('sensitivityX').value = settings.sensitivityX;
+  domManager.get('sensitivityXValue').textContent = settings.sensitivityX;
+  domManager.get('sensitivityY').value = settings.sensitivityY;
+  domManager.get('sensitivityYValue').textContent = settings.sensitivityY;
+  domManager.get('offsetX').value = settings.offsetX;
+  domManager.get('offsetXValue').textContent = settings.offsetX;
+  domManager.get('offsetY').value = settings.offsetY;
+  domManager.get('offsetYValue').textContent = settings.offsetY;
+  domManager.get('bgSensitivityX').value = settings.bgSensitivityX;
+  domManager.get('bgSensitivityXValue').textContent = settings.bgSensitivityX;
+  domManager.get('bgSensitivityY').value = settings.bgSensitivityY;
+  domManager.get('bgSensitivityYValue').textContent = settings.bgSensitivityY;
+  domManager.get('sameSensitivity').checked = settings.sameSensitivity;
+  domManager.get('sameBgSensitivity').checked = settings.sameBgSensitivity;
+  domManager.get('invertX').checked = settings.invertX;
+  domManager.get('invertY').checked = settings.invertY;
+  domManager.get('invertBgX').checked = settings.invertBgX;
+  domManager.get('invertBgY').checked = settings.invertBgY;
   
   // Event listeners
-  $$('#sensitivityX').addEventListener('input', (e) => {
+  domManager.get('sensitivityX').addEventListener('input', (e) => {
     settings.sensitivityX = parseInt(e.target.value);
-    $$('#sensitivityXValue').textContent = settings.sensitivityX;
+    domManager.get('sensitivityXValue').textContent = settings.sensitivityX;
     if (settings.sameSensitivity) {
       settings.sensitivityY = settings.sensitivityX;
-      $$('#sensitivityY').value = settings.sensitivityY;
-      $$('#sensitivityYValue').textContent = settings.sensitivityY;
+      domManager.get('sensitivityY').value = settings.sensitivityY;
+      domManager.get('sensitivityYValue').textContent = settings.sensitivityY;
     }
     cameraTracking.save();
   });
   
-  $$('#sensitivityY').addEventListener('input', (e) => {
+  domManager.get('sensitivityY').addEventListener('input', (e) => {
     settings.sensitivityY = parseInt(e.target.value);
-    $$('#sensitivityYValue').textContent = settings.sensitivityY;
+    domManager.get('sensitivityYValue').textContent = settings.sensitivityY;
     if (settings.sameSensitivity) {
       settings.sensitivityX = settings.sensitivityY;
-      $$('#sensitivityX').value = settings.sensitivityX;
-      $$('#sensitivityXValue').textContent = settings.sensitivityX;
+      domManager.get('sensitivityX').value = settings.sensitivityX;
+      domManager.get('sensitivityXValue').textContent = settings.sensitivityX;
     }
     cameraTracking.save();
   });
   
-  $$('#offsetX').addEventListener('input', (e) => {
+  domManager.get('offsetX').addEventListener('input', (e) => {
     settings.offsetX = parseInt(e.target.value);
-    $$('#offsetXValue').textContent = settings.offsetX;
+    domManager.get('offsetXValue').textContent = settings.offsetX;
     cameraTracking.save();
   });
   
-  $$('#offsetY').addEventListener('input', (e) => {
+  domManager.get('offsetY').addEventListener('input', (e) => {
     settings.offsetY = parseInt(e.target.value);
-    $$('#offsetYValue').textContent = settings.offsetY;
+    domManager.get('offsetYValue').textContent = settings.offsetY;
     cameraTracking.save();
   });
   
-  $$('#bgSensitivityX').addEventListener('input', (e) => {
+  domManager.get('bgSensitivityX').addEventListener('input', (e) => {
     settings.bgSensitivityX = parseInt(e.target.value);
-    $$('#bgSensitivityXValue').textContent = settings.bgSensitivityX;
+    domManager.get('bgSensitivityXValue').textContent = settings.bgSensitivityX;
     if (settings.sameBgSensitivity) {
       settings.bgSensitivityY = settings.bgSensitivityX;
-      $$('#bgSensitivityY').value = settings.bgSensitivityY;
-      $$('#bgSensitivityYValue').textContent = settings.bgSensitivityY;
+      domManager.get('bgSensitivityY').value = settings.bgSensitivityY;
+      domManager.get('bgSensitivityYValue').textContent = settings.bgSensitivityY;
     }
     cameraTracking.save();
   });
   
-  $$('#bgSensitivityY').addEventListener('input', (e) => {
+  domManager.get('bgSensitivityY').addEventListener('input', (e) => {
     settings.bgSensitivityY = parseInt(e.target.value);
-    $$('#bgSensitivityYValue').textContent = settings.bgSensitivityY;
+    domManager.get('bgSensitivityYValue').textContent = settings.bgSensitivityY;
     if (settings.sameBgSensitivity) {
       settings.bgSensitivityX = settings.bgSensitivityY;
-      $$('#bgSensitivityX').value = settings.bgSensitivityX;
-      $$('#bgSensitivityXValue').textContent = settings.bgSensitivityX;
+      domManager.get('bgSensitivityX').value = settings.bgSensitivityX;
+      domManager.get('bgSensitivityXValue').textContent = settings.bgSensitivityX;
     }
     cameraTracking.save();
   });
   
   ['sameSensitivity', 'sameBgSensitivity', 'invertX', 'invertY', 'invertBgX', 'invertBgY'].forEach(id => {
-    $$('#' + id).addEventListener('change', (e) => {
+    domManager.get(id).addEventListener('change', (e) => {
       settings[id] = e.target.checked;
       cameraTracking.save();
     });
   });
   
-  $$('#cameraSelect').addEventListener('change', () => {
-    if (cameraTracking.enabled) cameraTracking.startCamera($$('#cameraSelect').value);
+  domManager.get('cameraSelect').addEventListener('change', () => {
+    if (cameraTracking.enabled) cameraTracking.startCamera(domManager.get('cameraSelect').value);
   });
   
   // Set rotation callback
   cameraTracking.onRotationChange = (x, y) => {
-    cubeRotation.x = x;
-    cubeRotation.y = y;
-    updateCubeRotation();
+    viewController.cubeRotation.x = x;
+    viewController.cubeRotation.y = y;
+    viewController.updateCubeRotation();
   };
 }
 
 // Global functions for HTML onclick handlers
 function toggleCamera() {
-  const btn = $$('#cameraBtn');
-  const controls = $$('#cameraControls');
-  const container = $$('#cameraContainer');
+  const btn = domManager.get('cameraBtn');
+  const controls = domManager.get('cameraControls');
+  const container = domManager.get('cameraContainer');
   
   cameraTracking.enabled = !cameraTracking.enabled;
   
@@ -1229,7 +627,7 @@ function toggleCamera() {
     container.style.display = 'block';
     cameraTracking.loadCameras().then(devices => {
       if (devices.length > 0) {
-        const select = $$('#cameraSelect');
+        const select = domManager.get('cameraSelect');
         select.innerHTML = '<option value="">Select Camera...</option>';
         devices.forEach((device, i) => {
           const option = document.createElement('option');
@@ -1240,7 +638,7 @@ function toggleCamera() {
         cameraTracking.startCamera();
       }
     });
-    if (currentViewMode === 'cubenet') setViewMode('perspective');
+    if (viewController.currentViewMode === 'cubenet') setViewMode('perspective');
   } else {
     btn.textContent = 'Enable Camera';
     controls.style.display = 'none';
@@ -1266,8 +664,8 @@ function selectBackground(filename) {
 }
 
 function applyBackgroundColor() {
-  const color = $$('#bgColorPicker').value;
-  $$('#right-panel').style.backgroundColor = color;
+  const color = domManager.get('bgColorPicker').value;
+  domManager.get('right-panel').style.backgroundColor = color;
   localStorage.setItem('bgColor', color);
 }
 
@@ -1277,6 +675,10 @@ window.toggleSidebar = toggleSidebar;
 window.toggleLeftPanel = toggleLeftPanel;
 window.toggleFullscreen = toggleFullscreen;
 window.toggleEditor = toggleEditor;
+window.tryExample = tryExample;
+Object.defineProperty(window, 'editorOpen', {
+  get: () => editorBridge?.editorOpen ?? false
+});
 window.applyAlgorithm = applyAlgorithm;
 window.scrambleCube = scrambleCube;
 window.toggleBluetooth = toggleBluetooth;
@@ -1314,62 +716,22 @@ if (document.readyState === 'loading') {
 }
 
 function initializeApp() {
-  ElRightPanel = $$('#right-panel');
-  ElControls = $$('#controls');
-  ElContainer = $$('#container');
-  ElCubeNet = $$('#cube-net');
-  ElCube3D = $$('#cube-3d');
-  ElCubenetBtn = $$('#cubenetBtn');
-  ElPerspectiveBtn = $$('#perspectiveBtn');
-  ElOrthographicBtn = $$('#orthographicBtn');
-  ElCrispBtn = $$('#crispBtn');
-  ElThrottleBtn = $$('#throttleBtn');
-  ElCameraBtn = $$('#cameraBtn');
-  ElBluetoothBtn = $$('#bluetoothBtn');
-  ElAlg = $$('#alg');
-  ElCustomConfig = $$('#customConfig');
-  ElExampleSelect = $$('#exampleSelect');
-  ElHistoryEnabled = $$('#historyEnabled');
-  ElStateModal = $$('#stateModal');
-  ElInstructionsModal = $$('#instructionsModal');
-  ElLoadingSpinner = $$('#loadingSpinner');
-  ElToast = $$('#toast');
-  ElBluetoothStatus = $$('#bluetoothStatus');
-  ElCameraStatus = $$('#cameraStatus');
-  ElCameraSelect = $$('#cameraSelect');
-  ElCameraContainer = $$('#cameraContainer');
-  ElCameraControls = $$('#cameraControls');
-  ElCameraPreview = $$('#cameraPreview');
-  ElHeadDot = $$('#headDot');
-  ElHistoryGraph = $$('#historyGraph');
-  ElHistoryRows = $$('#historyRows');
-  ElEditorIframe = $$('#editor-iframe');
-  ElStateTab = $$('#stateTab');
-  ElRotationsTab = $$('#rotationsTab');
-  ElBackgroundGallery = $$('#backgroundGallery');
-  ElSensitivityX = $$('#sensitivityX');
-  ElSensitivityXValue = $$('#sensitivityXValue');
-  ElSensitivityY = $$('#sensitivityY');
-  ElSensitivityYValue = $$('#sensitivityYValue');
-  ElOffsetX = $$('#offsetX');
-  ElOffsetXValue = $$('#offsetXValue');
-  ElOffsetY = $$('#offsetY');
-  ElOffsetYValue = $$('#offsetYValue');
-  ElBgSensitivityX = $$('#bgSensitivityX');
-  ElBgSensitivityXValue = $$('#bgSensitivityXValue');
-  ElBgSensitivityY = $$('#bgSensitivityY');
-  ElBgSensitivityYValue = $$('#bgSensitivityYValue');
-  ElSameSensitivity = $$('#sameSensitivity');
-  ElSameBgSensitivity = $$('#sameBgSensitivity');
-  ElInvertX = $$('#invertX');
-  ElInvertY = $$('#invertY');
-  ElInvertBgX = $$('#invertBgX');
-  ElInvertBgY = $$('#invertBgY');
+  // Initialize DOM manager
+  domManager.init();
 
-  initEventListeners();
+  // Initialize modules
+  viewController = new ViewController(domManager);
+  inputHandler = new InputHandler(viewController, domManager);
+  modalManager = new ModalManager(domManager, () => cubeState, () => stickerRotations);
+  configLoader = new ConfigLoader(domManager, textureManager, updateDOM);
+  editorBridge = new EditorBridge(domManager, viewController);
+  moveGridBuilder = new MoveGridBuilder(domManager, applyMove);
 
-  // Load saved view mode or default to perspective
+  // Initialize input handling
+  inputHandler.init();
+  editorBridge.init();
 
+  // Load saved view mode
   try {
     const savedViewMode = localStorage.getItem('viewMode') || 'perspective';
     setViewMode(savedViewMode);
@@ -1377,19 +739,8 @@ function initializeApp() {
     setViewMode('perspective');
   }
 
-
   // Create move buttons
-  const moves = ['U','D','R','L','F','B','M','E','S','x','y','z','Rw','Lw','Uw','Dw','Fw','Bw'];
-  const grid = document.getElementById('moveGrid');
-  moves.forEach(m => {
-    ['', "'", '2'].forEach(mod => {
-      const move = m + mod;
-      const btn = document.createElement('button');
-      btn.onclick = () => applyMove(move);
-      btn.textContent = move.replace("'", "'");
-      grid.appendChild(btn);
-    });
-  });
+  moveGridBuilder.build();
 
   // Initialize UI controls
   uiControls.initAccessibility();
@@ -1418,7 +769,7 @@ function initializeApp() {
   }
 
   // Initialize cube and other components
-  historyEnabled = ElHistoryEnabled?.checked || false;
+  historyEnabled = domManager.get('historyEnabled')?.checked || false;
   initCube();
   uiControls.loadAccordionStates();
   uiControls.loadSidebarState();
@@ -1426,13 +777,21 @@ function initializeApp() {
   initCameraUI();
   renderSavedStates();
   window.uiControls = uiControls;
+  window.viewController = viewController;
+  
+  // Update throttle button UI after DOM is ready
+  const throttleBtn = domManager.get('throttleBtn');
+  if (throttleBtn) {
+    throttleBtn.textContent = `Render Throttle: ${renderThrottleEnabled ? 'ON' : 'OFF'}`;
+    throttleBtn.style.background = renderThrottleEnabled ? '#4caf50' : '';
+    throttleBtn.style.color = renderThrottleEnabled ? 'white' : '';
+  }
   
 }
 
 // Compatibility variables
 let cameraEnabled = false;
 let isCalibrated = false;
-let bgZoom = 150;
 let historyRoot = null;
 
 function saveCameraCalibration() {
@@ -1457,7 +816,7 @@ function scrambleCube() {
   const algUtils = new AlgUtils();
   algUtils.generateScrambleAlg(30);
   const scrambleAlg = algUtils.alg;
-  $$('#alg').value = scrambleAlg;
+  domManager.get('alg').value = scrambleAlg;
   const moves = scrambleAlg.trim().split(/\s+/).filter(move => move.length > 0);
   moves.forEach((move) => cubeCore.applyMove(move));
   syncState();
@@ -1470,10 +829,10 @@ const bluetoothRotation = new BluetoothRotation();
 window.bluetoothRotation = bluetoothRotation;
 
 function toggleBluetooth() {
-  const btn = $$('#bluetoothBtn');
-  const status = $$('#bluetoothStatus');
-  const controls = $$('#rotationModeControls');
-  const mobileBtn = $$('#rotationModeBtn');
+  const btn = domManager.get('bluetoothBtn');
+  const status = domManager.get('bluetoothStatus');
+  const controls = domManager.$('#rotationModeControls');
+  const mobileBtn = domManager.$('#rotationModeBtn');
   
   if (!bluetoothCube || !bluetoothCube.isConnected()) {
     btn.textContent = 'Connecting...';
@@ -1555,7 +914,7 @@ function deleteSavedState(id) {
 }
 
 function renderSavedStates() {
-  const grid = $$('#savedStatesGrid');
+  const grid = domManager.get('savedStatesGrid');
   if (!grid) return;
   const states = stateManager.getAll();
   grid.innerHTML = states.length === 0 ? '<div style="grid-column: 1/-1; text-align: center; color: #666; font-size: 12px; padding: 10px;">No saved states</div>' : states.map(s => `
@@ -1571,3 +930,13 @@ function renderSavedStates() {
 }
 
 
+window.addEventListener('message', (e) => {
+  if (e.data.type === 'toast') {
+      uiControls.showToast(e.data.message);
+      return;
+  }
+});
+
+window.addEventListener('CLOSE_EDITOR', (e) => {
+  console.log('ok')
+});

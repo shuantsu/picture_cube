@@ -419,7 +419,7 @@
   .modal {
     display: none;
     position: fixed;
-    z-index: 1000;
+    z-index: 2000;
     left: 0;
     top: 0;
     width: 100%;
@@ -587,6 +587,12 @@
     transform: translateY(0);
   }
 
+  .toast-close {
+    margin-left:10px;
+    cursor:pointer;
+    font-size: 18px;
+  }
+
   .toast {
     position: fixed;
     top: 20px;
@@ -599,10 +605,16 @@
     opacity: 0;
     transition: opacity 0.3s;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    pointer-events: none;
+     -o-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none; 
   }
 
   .toast.show {
     opacity: 1;
+    pointer-events: auto;
   }
 
   /* History Graph */

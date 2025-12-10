@@ -25,7 +25,6 @@ export class CameraTracking {
       offsetY: 0,
       bgSensitivityX: 30,
       bgSensitivityY: 30,
-      bgZoom: 150,
       sameSensitivity: false,
       sameBgSensitivity: false,
       invertX: false,
@@ -193,7 +192,6 @@ export class CameraTracking {
     const bgOffsetX = 50 - (adjustedX * this.settings.bgSensitivityX * (this.settings.invertBgX ? -1 : 1));
     const bgOffsetY = 50 - (adjustedY * this.settings.bgSensitivityY * (this.settings.invertBgY ? -1 : 1));
     panel.style.backgroundPosition = `${bgOffsetX}% ${bgOffsetY}%`;
-    panel.style.backgroundSize = `${this.settings.bgZoom}%`;
   }
 
   stop() {

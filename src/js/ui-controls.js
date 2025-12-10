@@ -179,6 +179,14 @@ export class UIControls {
     try {
       const saved = localStorage.getItem('selectedBackground');
       if (saved) this.selectBackground(saved);
+      
+      const savedColor = localStorage.getItem('bgColor');
+      if (savedColor) {
+        const panel = $('#right-panel');
+        panel.style.backgroundColor = savedColor;
+        const picker = $('#bgColorPicker');
+        if (picker) picker.value = savedColor;
+      }
     } catch (e) {}
   }
 
@@ -239,7 +247,7 @@ export class UIControls {
 
   showToast(message) {
     const toast = $('#toast');
-    toast.textContent = message;
+    toast.innerHTML = `${message}<span class="toast-close" onclick="this.parentElement.classList.remove('show')">×</span>`;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 2000);
   }

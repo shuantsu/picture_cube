@@ -1,25 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Texture Creator - Picture Cube</title>
 
     <style>
-        * { 
+
+            .toast-close {
+                margin-left: 15px;
+                font-size: 20px;
+                font-weight: bold;
+                cursor: pointer;
+                opacity: 0.7;
+            }
+
+            .toast-close:hover {
+                opacity: 1;
+            }
+
+
+        * {
             box-sizing: border-box;
             user-select: none;
             -webkit-user-select: none;
         }
-        
-        input, textarea {
+
+        input,
+        textarea {
             user-select: text;
             -webkit-user-select: text;
         }
-        
-        body { 
-            margin: 0; 
-            font-family: Arial, sans-serif; 
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
             background: #f5f5f5;
             display: flex;
             height: 100vh;
@@ -27,7 +43,7 @@
 
         /* Left Panel - Texture Library */
         #texture-panel {
-		padding-top: 25px;
+            padding-top: 25px;
             width: 300px;
             background: white;
             border-right: 1px solid #ddd;
@@ -187,12 +203,35 @@
             cursor: default;
         }
 
-        .face-wrapper.face-U { grid-column: 2; grid-row: 1; }
-        .face-wrapper.face-L { grid-column: 1; grid-row: 2; }
-        .face-wrapper.face-F { grid-column: 2; grid-row: 2; }
-        .face-wrapper.face-R { grid-column: 3; grid-row: 2; }
-        .face-wrapper.face-B { grid-column: 4; grid-row: 2; }
-        .face-wrapper.face-D { grid-column: 2; grid-row: 3; }
+        .face-wrapper.face-U {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .face-wrapper.face-L {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .face-wrapper.face-F {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .face-wrapper.face-R {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .face-wrapper.face-B {
+            grid-column: 4;
+            grid-row: 2;
+        }
+
+        .face-wrapper.face-D {
+            grid-column: 2;
+            grid-row: 3;
+        }
 
         /* Modal */
         .modal {
@@ -202,8 +241,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
             align-items: center;
             justify-content: center;
         }
@@ -244,6 +283,11 @@
             gap: 10px;
             margin-top: 20px;
         }
+        #close-editor-btn {
+            cursor: pointer!important;
+            background: rgb(198, 4, 4);
+            float:right;
+        }
 
         /* Right Panel - Controls */
         #control-panel {
@@ -269,7 +313,7 @@
             border: none;
             padding: 10px 15px;
             border-radius: 4px;
-            cursor: pointer;
+            cursor: pointer!important;
             margin: 5px 5px 5px 0;
         }
 
@@ -285,7 +329,8 @@
             margin: 10px 0;
         }
 
-        input[type="text"], input[type="color"] {
+        input[type="text"],
+        input[type="color"] {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -304,7 +349,8 @@
             resize: vertical;
         }
 
-        #json-output, #import-json {
+        #json-output,
+        #import-json {
             background: #1e1e1e;
             color: #d4d4d4;
             tab-size: 2;
@@ -325,7 +371,7 @@
             color: white;
             padding: 15px 20px;
             border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             opacity: 0;
             transform: translateY(-20px);
             transition: all 0.3s ease;
@@ -347,7 +393,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 2000;
             align-items: center;
             justify-content: center;
@@ -370,26 +416,28 @@
             gap: 10px;
             margin-top: 20px;
         }
-
-
-
     </style>
 </head>
+
 <body>
     <!-- Texture Library Panel -->
     <div id="texture-panel">
         <div id="texture-header">
             <h2>Texture Library</h2>
             <div style="margin: 10px 0;">
-                <label><input type="radio" name="mode" value="face" checked onchange="setMode(this.value)"> Whole Face</label>
-                <label><input type="radio" name="mode" value="sticker" onchange="setMode(this.value)"> Individual Sticker</label>
+                <label><input type="radio" name="mode" value="face" checked onchange="setMode(this.value)"> Whole
+                    Face</label>
+                <label><input type="radio" name="mode" value="sticker" onchange="setMode(this.value)"> Individual
+                    Sticker</label>
             </div>
             <div id="selected-texture" style="margin: 10px 0; font-weight: bold; color: #666;">No texture selected</div>
             <div style="display: flex; gap: 5px; margin-top: 10px;">
-                <input type="color" id="quick-color" value="#ff0000" style="width: 50px; height: 36px; cursor: pointer;">
+                <input type="color" id="quick-color" value="#ff0000"
+                    style="width: 50px; height: 36px; cursor: pointer;">
                 <button onclick="addQuickColor()" style="flex: 1;">Add Color</button>
             </div>
-            <button onclick="document.getElementById('image-upload').click()" style="width: 100%; margin-top: 5px;">Upload Image</button>
+            <button onclick="document.getElementById('image-upload').click()"
+                style="width: 100%; margin-top: 5px;">Upload Image</button>
             <button onclick="addCSSTexture()" style="width: 100%; margin-top: 5px;">+ CSS/SVG</button>
         </div>
         <div id="texture-library">
@@ -401,24 +449,24 @@
     <div id="cube-panel">
         <div id="cube-wrapper">
             <div id="cube-container">
-            <div class="face-wrapper face-U">
-                <div class="cube-face" data-face="U"></div>
-            </div>
-            <div class="face-wrapper face-L">
-                <div class="cube-face" data-face="L"></div>
-            </div>
-            <div class="face-wrapper face-F">
-                <div class="cube-face" data-face="F"></div>
-            </div>
-            <div class="face-wrapper face-R">
-                <div class="cube-face" data-face="R"></div>
-            </div>
-            <div class="face-wrapper face-B">
-                <div class="cube-face" data-face="B"></div>
-            </div>
-            <div class="face-wrapper face-D">
-                <div class="cube-face" data-face="D"></div>
-            </div>
+                <div class="face-wrapper face-U">
+                    <div class="cube-face" data-face="U"></div>
+                </div>
+                <div class="face-wrapper face-L">
+                    <div class="cube-face" data-face="L"></div>
+                </div>
+                <div class="face-wrapper face-F">
+                    <div class="cube-face" data-face="F"></div>
+                </div>
+                <div class="face-wrapper face-R">
+                    <div class="cube-face" data-face="R"></div>
+                </div>
+                <div class="face-wrapper face-B">
+                    <div class="cube-face" data-face="B"></div>
+                </div>
+                <div class="face-wrapper face-D">
+                    <div class="cube-face" data-face="D"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -427,44 +475,48 @@
     <div id="control-panel">
         <input type="file" id="image-upload" accept="image/*" style="display: none;">
 
-    <!-- Modal -->
-    <div id="css-modal" class="modal">
-        <div class="modal-content">
-            <h3>Add Custom Texture</h3>
-            <input type="text" id="modal-name" placeholder="Texture name">
-            
-            <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
-                <strong>Gradient Builder</strong>
-                <div style="display: flex; gap: 5px; margin-top: 10px;">
-                    <select id="grad-type" style="flex: 1;">
-                        <option value="linear">Linear</option>
-                        <option value="radial">Radial</option>
-                        <option value="conic">Conic</option>
-                    </select>
-                    <input type="number" id="grad-angle" placeholder="Angle" value="45" style="width: 70px;">
-                    <span style="line-height: 36px;">deg</span>
+        <!-- Modal -->
+        <div id="css-modal" class="modal">
+            <div class="modal-content">
+                <h3>Add Custom Texture</h3>
+                <input type="text" id="modal-name" placeholder="Texture name">
+
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin: 10px 0;">
+                    <strong>Gradient Builder</strong>
+                    <div style="display: flex; gap: 5px; margin-top: 10px;">
+                        <select id="grad-type" style="flex: 1;">
+                            <option value="linear">Linear</option>
+                            <option value="radial">Radial</option>
+                            <option value="conic">Conic</option>
+                        </select>
+                        <input type="number" id="grad-angle" placeholder="Angle" value="45" style="width: 70px;">
+                        <span style="line-height: 36px;">deg</span>
+                    </div>
+                    <div style="display: flex; gap: 5px; margin-top: 5px;">
+                        <input type="color" id="grad-color1" value="#ff0000" style="width: 50px; height: 36px;">
+                        <input type="color" id="grad-color2" value="#0000ff" style="width: 50px; height: 36px;">
+                        <button onclick="applyGradient()" style="flex: 1;">Apply Gradient</button>
+                    </div>
+                    <div id="grad-preview"
+                        style="height: 40px; margin-top: 10px; border-radius: 4px; border: 1px solid #ddd;"></div>
                 </div>
-                <div style="display: flex; gap: 5px; margin-top: 5px;">
-                    <input type="color" id="grad-color1" value="#ff0000" style="width: 50px; height: 36px;">
-                    <input type="color" id="grad-color2" value="#0000ff" style="width: 50px; height: 36px;">
-                    <button onclick="applyGradient()" style="flex: 1;">Apply Gradient</button>
-                </div>
-                <div id="grad-preview" style="height: 40px; margin-top: 10px; border-radius: 4px; border: 1px solid #ddd;"></div>
-            </div>
-            
-            <textarea id="modal-background" placeholder="Texture value:
+
+                <textarea id="modal-background" placeholder="Texture value:
 linear-gradient(45deg, red, blue)
 url('...')
 $varName" rows="2"></textarea>
-            <label style="display: block; margin: 10px 0;">
-                <input type="checkbox" id="is-stackable"> Is stackable (uses array notation)
-            </label>
-            <div class="modal-buttons">
-                <button onclick="saveCSSTexture()" style="flex: 1;">Add</button>
-                <button onclick="closeModal()" class="secondary" style="flex: 1;">Cancel</button>
+                <label style="display: block; margin: 10px 0;">
+                    <input type="checkbox" id="is-stackable"> Is stackable (uses array notation)
+                </label>
+                <div class="modal-buttons">
+                    <button onclick="saveCSSTexture()" style="flex: 1;">Add</button>
+                    <button onclick="closeCSSModal()" class="secondary" style="flex: 1;">Cancel</button>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="control-section">
+            <button id="close-editor-btn" onclick="closeEditorModal()">✕</button>
+        </div>
 
         <div class="control-section">
             <h3>Variables</h3>
@@ -489,15 +541,13 @@ $varName" rows="2"></textarea>
 
     <div id="toast"></div>
 
-
-    <button id="close-editor-btn" onclick="closeEditorModal()" style="display:none; position:fixed; bottom:20px; right:20px; background:#dc3545; z-index:1000;">✕ Close Editor</button>
-
     <div id="confirm-modal">
         <div class="modal-content">
             <h3 id="confirm-title">Clear Cube Assignments?</h3>
             <p id="confirm-message">This will remove all texture assignments from the cube.</p>
             <div class="modal-buttons">
-                <button id="confirm-btn" onclick="confirmAction()" style="flex: 1; background: #dc3545;">Clear Cube</button>
+                <button id="confirm-btn" onclick="confirmAction()" style="flex: 1; background: #dc3545;">Clear
+                    Cube</button>
                 <button onclick="closeConfirmModal()" class="secondary" style="flex: 1;">Cancel</button>
             </div>
         </div>
@@ -506,7 +556,8 @@ $varName" rows="2"></textarea>
     <div id="import-modal" class="modal">
         <div class="modal-content">
             <h3>Import JSON Configuration</h3>
-            <textarea id="import-json" placeholder="Paste your JSON configuration here..." style="min-height: 200px; font-family: monospace;"></textarea>
+            <textarea id="import-json" placeholder="Paste your JSON configuration here..."
+                style="min-height: 200px; font-family: monospace;"></textarea>
             <div class="modal-buttons">
                 <button onclick="loadFromJSON()" style="flex: 1;">Load</button>
                 <button onclick="closeImportModal()" class="secondary" style="flex: 1;">Cancel</button>
@@ -529,13 +580,13 @@ $varName" rows="2"></textarea>
 
 
     <script>
-        // Toast notification
-        function showToast(message) {
+        window.showToast = () => {
+            // Fallback to local toast
             const toast = document.getElementById('toast');
-            toast.textContent = message;
+            toast.innerHTML = `${message}<span class="toast-close" onclick="this.parentElement.classList.remove('show')">×</span>`;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        };
 
         // Confirm modal
         let confirmCallback = null;
@@ -545,11 +596,11 @@ $varName" rows="2"></textarea>
             document.getElementById('confirm-message').textContent = message;
             document.getElementById('confirm-btn').textContent = buttonText;
             confirmCallback = callback;
-            document.getElementById('confirm-modal').classList.add('active');
+            openModal('#confirm-modal');
         }
 
         function closeConfirmModal() {
-            document.getElementById('confirm-modal').classList.remove('active');
+            closeModal('#confirm-modal');
             confirmCallback = null;
         }
 
@@ -567,7 +618,7 @@ $varName" rows="2"></textarea>
                     cubeAssignments = {};
                     updateVisualCube();
                     updateJSON();
-                    showToast('Cube assignments cleared');
+                    window.showToast('Cube assignments cleared');
                 }
             );
         }
@@ -588,7 +639,7 @@ $varName" rows="2"></textarea>
                     updateVarsList();
                     updateVisualCube();
                     document.getElementById('selected-texture').textContent = 'No texture selected';
-                    showToast('Everything reset');
+                    window.showToast('Everything reset');
                 }
             );
         }
@@ -641,7 +692,7 @@ $varName" rows="2"></textarea>
                     sticker.dataset.sticker = i;
                     faceEl.appendChild(sticker);
                 }
-                
+
                 faceEl.addEventListener('click', (e) => {
                     if (currentMode === 'sticker' && e.target.classList.contains('cube-sticker')) {
                         const stickerIndex = parseInt(e.target.dataset.sticker);
@@ -657,13 +708,13 @@ $varName" rows="2"></textarea>
         function updateTextureLibrary() {
             const library = document.getElementById('texture-library');
             library.innerHTML = '';
-            
+
             Object.entries(textureLibrary).forEach(([name, value]) => {
                 const item = document.createElement('div');
                 item.className = 'texture-item';
                 if (selectedTexture === name) item.classList.add('selected');
                 item.onclick = () => selectTexture(name);
-                
+
                 const preview = document.createElement('div');
                 preview.className = 'texture-preview';
                 if (value.startsWith('#')) {
@@ -672,11 +723,11 @@ $varName" rows="2"></textarea>
                     preview.style.backgroundImage = value;
                     preview.style.backgroundSize = 'cover';
                 }
-                
+
                 const nameEl = document.createElement('div');
                 nameEl.className = 'texture-name';
                 nameEl.textContent = name;
-                
+
                 const editBtn = document.createElement('button');
                 editBtn.className = 'texture-edit';
                 editBtn.textContent = 'Edit';
@@ -684,7 +735,7 @@ $varName" rows="2"></textarea>
                     e.stopPropagation();
                     editTexture(name);
                 };
-                
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.className = 'texture-delete';
                 deleteBtn.textContent = '×';
@@ -692,7 +743,7 @@ $varName" rows="2"></textarea>
                     e.stopPropagation();
                     deleteTexture(name);
                 };
-                
+
                 item.appendChild(preview);
                 item.appendChild(nameEl);
                 item.appendChild(editBtn);
@@ -711,18 +762,18 @@ $varName" rows="2"></textarea>
         // Assign texture to face/sticker
         function assignTexture(face, sticker = null) {
             if (!selectedTexture) {
-                showToast('Please select a texture first');
+                window.showToast('Please select a texture first');
                 return;
             }
-            
+
             const key = sticker !== null ? `${face}${sticker}` : face;
             const faceKey = face;
-            
+
             // Check if assigning to individual sticker
             if (sticker !== null) {
                 const hasFaceTexture = cubeAssignments[faceKey];
                 const currentSticker = cubeAssignments[key];
-                
+
                 if (!currentSticker && hasFaceTexture) {
                     // Sticker has no assignment but face does → use inherit mode [texture]
                     // Unless it's a solid color or var, then just replace
@@ -754,7 +805,7 @@ $varName" rows="2"></textarea>
                 const isStackable = textureStackable[selectedTexture];
                 cubeAssignments[face] = isStackable ? [selectedTexture] : selectedTexture;
             }
-            
+
             updateVisualCube();
             updateJSON();
         }
@@ -762,13 +813,13 @@ $varName" rows="2"></textarea>
         // Apply texture(s) to DOM element
         function applyTextureToElement(element, textureNameOrArray, isWholeFace = false) {
             const textures = Array.isArray(textureNameOrArray) ? textureNameOrArray : [textureNameOrArray];
-            
+
             // Build background layers
             const bgImages = [];
             const bgSizes = [];
             const bgPositions = [];
             let hasColor = false;
-            
+
             textures.forEach(textureName => {
                 const value = textureLibrary[textureName];
                 if (value.startsWith('#')) {
@@ -777,7 +828,7 @@ $varName" rows="2"></textarea>
                 } else {
                     bgImages.push(value);
                     bgSizes.push(isWholeFace ? '300% 300%' : 'cover');
-                    
+
                     if (isWholeFace) {
                         const sticker = parseInt(element.dataset.sticker);
                         const row = Math.floor(sticker / 3);
@@ -788,7 +839,7 @@ $varName" rows="2"></textarea>
                     }
                 }
             });
-            
+
             if (bgImages.length > 0) {
                 // Reverse arrays so first texture is bottom layer (CSS stacks first item on top)
                 element.style.backgroundImage = bgImages.reverse().join(', ');
@@ -803,60 +854,60 @@ $varName" rows="2"></textarea>
         // Get closest color name from 140 HTML colors
         function getColorName(hex) {
             const colors = {
-                'CD5C5C':'indianred','F08080':'lightcoral','FA8072':'salmon','E9967A':'darksalmon','FFA07A':'lightsalmon',
-                'DC143C':'crimson','FF0000':'red','B22222':'firebrick','8B0000':'darkred','FFC0CB':'pink',
-                'FFB6C1':'lightpink','FF69B4':'hotpink','FF1493':'deeppink','C71585':'mediumvioletred','DB7093':'palevioletred',
-                'FF7F50':'coral','FF6347':'tomato','FF4500':'orangered','FF8C00':'darkorange','FFA500':'orange',
-                'FFD700':'gold','FFFF00':'yellow','FFFFE0':'lightyellow','FFFACD':'lemonchiffon','FAFAD2':'lightgoldenrodyellow',
-                'FFEFD5':'papayawhip','FFE4B5':'moccasin','FFDAB9':'peachpuff','EEE8AA':'palegoldenrod','F0E68C':'khaki',
-                'BDB76B':'darkkhaki','E6E6FA':'lavender','D8BFD8':'thistle','DDA0DD':'plum','EE82EE':'violet',
-                'DA70D6':'orchid','FF00FF':'magenta','BA55D3':'mediumorchid','9370DB':'mediumpurple','663399':'rebeccapurple',
-                '8A2BE2':'blueviolet','9400D3':'darkviolet','9932CC':'darkorchid','8B008B':'darkmagenta','800080':'purple',
-                '4B0082':'indigo','6A5ACD':'slateblue','483D8B':'darkslateblue','7B68EE':'mediumslateblue','ADFF2F':'greenyellow',
-                '7FFF00':'chartreuse','7CFC00':'lawngreen','00FF00':'lime','32CD32':'limegreen','98FB98':'palegreen',
-                '90EE90':'lightgreen','00FA9A':'mediumspringgreen','00FF7F':'springgreen','3CB371':'mediumseagreen','2E8B57':'seagreen',
-                '228B22':'forestgreen','008000':'green','006400':'darkgreen','9ACD32':'yellowgreen','6B8E23':'olivedrab',
-                '808000':'olive','556B2F':'darkolivegreen','66CDAA':'mediumaquamarine','8FBC8B':'darkseagreen','20B2AA':'lightseagreen',
-                '008B8B':'darkcyan','008080':'teal','00FFFF':'cyan','E0FFFF':'lightcyan','AFEEEE':'paleturquoise',
-                '7FFFD4':'aquamarine','40E0D0':'turquoise','48D1CC':'mediumturquoise','00CED1':'darkturquoise','5F9EA0':'cadetblue',
-                '4682B4':'steelblue','B0C4DE':'lightsteelblue','B0E0E6':'powderblue','ADD8E6':'lightblue','87CEEB':'skyblue',
-                '87CEFA':'lightskyblue','00BFFF':'deepskyblue','1E90FF':'dodgerblue','6495ED':'cornflowerblue','4169E1':'royalblue',
-                '0000FF':'blue','0000CD':'mediumblue','00008B':'darkblue','000080':'navy','191970':'midnightblue',
-                'FFF8DC':'cornsilk','FFEBCD':'blanchedalmond','FFE4C4':'bisque','FFDEAD':'navajowhite','F5DEB3':'wheat',
-                'DEB887':'burlywood','D2B48C':'tan','BC8F8F':'rosybrown','F4A460':'sandybrown','DAA520':'goldenrod',
-                'B8860B':'darkgoldenrod','CD853F':'peru','D2691E':'chocolate','8B4513':'saddlebrown','A0522D':'sienna',
-                'A52A2A':'brown','800000':'maroon','FFFFFF':'white','FFFAFA':'snow','F0FFF0':'honeydew',
-                'F5FFFA':'mintcream','F0FFFF':'azure','F0F8FF':'aliceblue','F8F8FF':'ghostwhite','F5F5F5':'whitesmoke',
-                'FFF5EE':'seashell','F5F5DC':'beige','FDF5E6':'oldlace','FFFAF0':'floralwhite','FFFFF0':'ivory',
-                'FAEBD7':'antiquewhite','FAF0E6':'linen','FFF0F5':'lavenderblush','FFE4E1':'mistyrose','DCDCDC':'gainsboro',
-                'D3D3D3':'lightgray','C0C0C0':'silver','A9A9A9':'darkgray','808080':'gray','696969':'dimgray',
-                '778899':'lightslategray','708090':'slategray','2F4F4F':'darkslategray','000000':'black'
+                'CD5C5C': 'indianred', 'F08080': 'lightcoral', 'FA8072': 'salmon', 'E9967A': 'darksalmon', 'FFA07A': 'lightsalmon',
+                'DC143C': 'crimson', 'FF0000': 'red', 'B22222': 'firebrick', '8B0000': 'darkred', 'FFC0CB': 'pink',
+                'FFB6C1': 'lightpink', 'FF69B4': 'hotpink', 'FF1493': 'deeppink', 'C71585': 'mediumvioletred', 'DB7093': 'palevioletred',
+                'FF7F50': 'coral', 'FF6347': 'tomato', 'FF4500': 'orangered', 'FF8C00': 'darkorange', 'FFA500': 'orange',
+                'FFD700': 'gold', 'FFFF00': 'yellow', 'FFFFE0': 'lightyellow', 'FFFACD': 'lemonchiffon', 'FAFAD2': 'lightgoldenrodyellow',
+                'FFEFD5': 'papayawhip', 'FFE4B5': 'moccasin', 'FFDAB9': 'peachpuff', 'EEE8AA': 'palegoldenrod', 'F0E68C': 'khaki',
+                'BDB76B': 'darkkhaki', 'E6E6FA': 'lavender', 'D8BFD8': 'thistle', 'DDA0DD': 'plum', 'EE82EE': 'violet',
+                'DA70D6': 'orchid', 'FF00FF': 'magenta', 'BA55D3': 'mediumorchid', '9370DB': 'mediumpurple', '663399': 'rebeccapurple',
+                '8A2BE2': 'blueviolet', '9400D3': 'darkviolet', '9932CC': 'darkorchid', '8B008B': 'darkmagenta', '800080': 'purple',
+                '4B0082': 'indigo', '6A5ACD': 'slateblue', '483D8B': 'darkslateblue', '7B68EE': 'mediumslateblue', 'ADFF2F': 'greenyellow',
+                '7FFF00': 'chartreuse', '7CFC00': 'lawngreen', '00FF00': 'lime', '32CD32': 'limegreen', '98FB98': 'palegreen',
+                '90EE90': 'lightgreen', '00FA9A': 'mediumspringgreen', '00FF7F': 'springgreen', '3CB371': 'mediumseagreen', '2E8B57': 'seagreen',
+                '228B22': 'forestgreen', '008000': 'green', '006400': 'darkgreen', '9ACD32': 'yellowgreen', '6B8E23': 'olivedrab',
+                '808000': 'olive', '556B2F': 'darkolivegreen', '66CDAA': 'mediumaquamarine', '8FBC8B': 'darkseagreen', '20B2AA': 'lightseagreen',
+                '008B8B': 'darkcyan', '008080': 'teal', '00FFFF': 'cyan', 'E0FFFF': 'lightcyan', 'AFEEEE': 'paleturquoise',
+                '7FFFD4': 'aquamarine', '40E0D0': 'turquoise', '48D1CC': 'mediumturquoise', '00CED1': 'darkturquoise', '5F9EA0': 'cadetblue',
+                '4682B4': 'steelblue', 'B0C4DE': 'lightsteelblue', 'B0E0E6': 'powderblue', 'ADD8E6': 'lightblue', '87CEEB': 'skyblue',
+                '87CEFA': 'lightskyblue', '00BFFF': 'deepskyblue', '1E90FF': 'dodgerblue', '6495ED': 'cornflowerblue', '4169E1': 'royalblue',
+                '0000FF': 'blue', '0000CD': 'mediumblue', '00008B': 'darkblue', '000080': 'navy', '191970': 'midnightblue',
+                'FFF8DC': 'cornsilk', 'FFEBCD': 'blanchedalmond', 'FFE4C4': 'bisque', 'FFDEAD': 'navajowhite', 'F5DEB3': 'wheat',
+                'DEB887': 'burlywood', 'D2B48C': 'tan', 'BC8F8F': 'rosybrown', 'F4A460': 'sandybrown', 'DAA520': 'goldenrod',
+                'B8860B': 'darkgoldenrod', 'CD853F': 'peru', 'D2691E': 'chocolate', '8B4513': 'saddlebrown', 'A0522D': 'sienna',
+                'A52A2A': 'brown', '800000': 'maroon', 'FFFFFF': 'white', 'FFFAFA': 'snow', 'F0FFF0': 'honeydew',
+                'F5FFFA': 'mintcream', 'F0FFFF': 'azure', 'F0F8FF': 'aliceblue', 'F8F8FF': 'ghostwhite', 'F5F5F5': 'whitesmoke',
+                'FFF5EE': 'seashell', 'F5F5DC': 'beige', 'FDF5E6': 'oldlace', 'FFFAF0': 'floralwhite', 'FFFFF0': 'ivory',
+                'FAEBD7': 'antiquewhite', 'FAF0E6': 'linen', 'FFF0F5': 'lavenderblush', 'FFE4E1': 'mistyrose', 'DCDCDC': 'gainsboro',
+                'D3D3D3': 'lightgray', 'C0C0C0': 'silver', 'A9A9A9': 'darkgray', '808080': 'gray', '696969': 'dimgray',
+                '778899': 'lightslategray', '708090': 'slategray', '2F4F4F': 'darkslategray', '000000': 'black'
             };
-            
-            hex = hex.toUpperCase().replace('#','');
-            if(colors[hex]) return colors[hex];
-            
+
+            hex = hex.toUpperCase().replace('#', '');
+            if (colors[hex]) return colors[hex];
+
             const rgb = parseInt(hex, 16);
             const r = (rgb >> 16) & 0xff;
             const g = (rgb >> 8) & 0xff;
             const b = rgb & 0xff;
-            
+
             let minDist = Infinity;
             let closestName = 'color';
-            
+
             for (const [colorHex, colorName] of Object.entries(colors)) {
                 const crgb = parseInt(colorHex, 16);
                 const cr = (crgb >> 16) & 0xff;
                 const cg = (crgb >> 8) & 0xff;
                 const cb = crgb & 0xff;
-                
-                const dist = Math.sqrt((r-cr)**2 + (g-cg)**2 + (b-cb)**2);
+
+                const dist = Math.sqrt((r - cr) ** 2 + (g - cg) ** 2 + (b - cb) ** 2);
                 if (dist < minDist) {
                     minDist = dist;
                     closestName = colorName;
                 }
             }
-            
+
             return closestName;
         }
 
@@ -866,7 +917,7 @@ $varName" rows="2"></textarea>
             const angle = document.getElementById('grad-angle').value;
             const c1 = document.getElementById('grad-color1').value;
             const c2 = document.getElementById('grad-color2').value;
-            
+
             let gradient;
             if (type === 'linear') {
                 gradient = `linear-gradient(${angle}deg, ${c1}, ${c2})`;
@@ -875,7 +926,7 @@ $varName" rows="2"></textarea>
             } else {
                 gradient = `conic-gradient(from ${angle}deg, ${c1}, ${c2})`;
             }
-            
+
             return gradient;
         }
 
@@ -910,22 +961,22 @@ $varName" rows="2"></textarea>
             document.getElementById('is-stackable').checked = false;
             document.querySelector('#css-modal h3').textContent = 'Add Custom Texture';
             updateGradientPreview();
-            document.getElementById('css-modal').classList.add('active');
+            openModal('#css-modal');
         }
 
         function editTexture(name) {
             // Use original texture with vars if available, otherwise use resolved
             const texture = originalTextures[name] || textureLibrary[name];
-            
+
             // If it's a simple color, use color picker
             if (typeof texture === 'string' && texture.startsWith('#')) {
                 const colorPicker = document.getElementById('quick-color');
                 colorPicker.value = texture;
                 colorPicker.click();
-                colorPicker.onchange = function() {
+                colorPicker.onchange = function () {
                     const newColor = this.value;
                     const newName = getColorName(newColor);
-                    
+
                     // Auto-increment if name exists and is different
                     let finalName = newName;
                     let counter = 2;
@@ -933,25 +984,25 @@ $varName" rows="2"></textarea>
                         finalName = `${newName}${counter}`;
                         counter++;
                     }
-                    
+
                     // Update assignments to use new name
                     Object.keys(cubeAssignments).forEach(key => {
                         if (cubeAssignments[key] === name) {
                             cubeAssignments[key] = finalName;
                         }
                     });
-                    
+
                     // Remove old texture and add new one
                     delete textureLibrary[name];
                     delete originalTextures[name];
                     delete textureUsesVars[name];
                     textureLibrary[finalName] = newColor;
-                    
+
                     if (selectedTexture === name) {
                         selectedTexture = finalName;
                         document.getElementById('selected-texture').textContent = `Selected: ${finalName}`;
                     }
-                    
+
                     updateTextureLibrary();
                     updateVisualCube();
                     updateJSON();
@@ -959,47 +1010,47 @@ $varName" rows="2"></textarea>
                 };
                 return;
             }
-            
+
             // Otherwise use CSS modal
             editingTextureName = name;
             document.getElementById('modal-name').value = name;
             document.getElementById('modal-name').disabled = true;
             document.querySelector('#css-modal h3').textContent = 'Edit Texture';
-            
+
             // Textures are now always strings - strip url('...') wrapper for editing
             let displayValue = texture || '';
             if (displayValue.startsWith("url('") && displayValue.endsWith("')")) {
                 displayValue = displayValue.slice(5, -2);
-            } else if (displayValue.startsWith('url("') && displayValue.endsWith('")')  ) {
+            } else if (displayValue.startsWith('url("') && displayValue.endsWith('")')) {
                 displayValue = displayValue.slice(5, -2);
             }
             document.getElementById('modal-background').value = displayValue;
             document.getElementById('is-stackable').checked = textureStackable[name] || false;
-            
-            document.getElementById('css-modal').classList.add('active');
+
+            openModal('#css-modal');
         }
 
-        function closeModal() {
-            document.getElementById('css-modal').classList.remove('active');
+        function closeCSSModal() {
+            closeModal('#css-modal');
         }
 
         function saveCSSTexture() {
             const name = document.getElementById('modal-name').value.trim();
             if (!name) return;
-            
+
             let textureValue = document.getElementById('modal-background').value.trim();
             if (!textureValue) return;
-            
+
             // Wrap data URIs in url('...') if not already wrapped
             if (textureValue.startsWith('data:') && !textureValue.startsWith('url(')) {
                 textureValue = `url('${textureValue}')`;
             }
-            
+
             // Check if texture uses variables
             const hasVars = textureValue.includes('$');
-            
+
             const isStackable = document.getElementById('is-stackable').checked;
-            
+
             if (hasVars) {
                 // Store original with vars and resolved version
                 originalTextures[name] = textureValue;
@@ -1011,9 +1062,9 @@ $varName" rows="2"></textarea>
                 delete originalTextures[name];
                 textureUsesVars[name] = false;
             }
-            
+
             textureStackable[name] = isStackable;
-            
+
             // If editing and name changed, update assignments
             if (editingTextureName && editingTextureName !== name) {
                 Object.keys(cubeAssignments).forEach(key => {
@@ -1028,20 +1079,21 @@ $varName" rows="2"></textarea>
                     selectedTexture = name;
                 }
             }
-            
+
             selectedTexture = name;
             updateTextureLibrary();
             updateVisualCube();
             updateJSON();
             document.getElementById('selected-texture').textContent = `Selected: ${name}`;
-            closeModal();
+            closeCSSModal();
             editingTextureName = null;
         }
 
         // Close modal on outside click
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
-                closeModal();
+                const modalId = e.target.id;
+                if (modalId) closeModal('#' + modalId);
             }
         });
 
@@ -1049,7 +1101,7 @@ $varName" rows="2"></textarea>
         function addQuickColor() {
             const color = document.getElementById('quick-color').value;
             const name = getColorName(color);
-            
+
             // Auto-increment if name exists
             let finalName = name;
             let counter = 2;
@@ -1057,7 +1109,7 @@ $varName" rows="2"></textarea>
                 finalName = `${name}${counter}`;
                 counter++;
             }
-            
+
             textureLibrary[finalName] = color;
             selectedTexture = finalName;
             updateTextureLibrary();
@@ -1066,15 +1118,15 @@ $varName" rows="2"></textarea>
         }
 
         // Add image texture
-        document.getElementById('image-upload').addEventListener('change', function() {
+        document.getElementById('image-upload').addEventListener('change', function () {
             const file = this.files[0];
             if (!file) {
-                showToast('Please select an image file');
+                window.showToast('Please select an image file');
                 return;
             }
-            
+
             let name = file.name.split('.')[0];
-            
+
             // Auto-increment if name exists
             let finalName = name;
             let counter = 2;
@@ -1083,18 +1135,18 @@ $varName" rows="2"></textarea>
                 counter++;
             }
             name = finalName;
-            
+
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-                    
+
                     let width = img.width;
                     let height = img.height;
                     const maxSize = 250;
-                    
+
                     if (width > maxSize || height > maxSize) {
                         if (width > height) {
                             height = (height / width) * maxSize;
@@ -1104,11 +1156,11 @@ $varName" rows="2"></textarea>
                             height = maxSize;
                         }
                     }
-                    
+
                     canvas.width = width;
                     canvas.height = height;
                     ctx.drawImage(img, 0, 0, width, height);
-                    
+
                     const dataUri = canvas.toDataURL('image/jpeg', 0.7);
                     // Store as url('...') format
                     textureLibrary[name] = `url('${dataUri}')`;
@@ -1130,14 +1182,14 @@ $varName" rows="2"></textarea>
                 selectedTexture = null;
                 document.getElementById('selected-texture').textContent = 'No texture selected';
             }
-            
+
             // Remove from assignments
             Object.keys(cubeAssignments).forEach(key => {
                 if (cubeAssignments[key] === name) {
                     delete cubeAssignments[key];
                 }
             });
-            
+
             updateTextureLibrary();
             updateVisualCube();
             updateJSON();
@@ -1146,23 +1198,23 @@ $varName" rows="2"></textarea>
         // Generate JSON configuration
         function generateConfig() {
             const config = {};
-            
+
             // Separate colors from textures
             const colorsToExport = {};
             const texturesToExport = {};
-            
+
             // Track which textures need sprite vs spread
             const textureUsage = {}; // {textureName: {sprite: bool, spread: bool}}
-            
+
             // Analyze assignments
             Object.entries(cubeAssignments).forEach(([key, textureNameOrArray]) => {
                 const textures = Array.isArray(textureNameOrArray) ? textureNameOrArray : [textureNameOrArray];
-                
+
                 textures.forEach(textureName => {
                     if (!textureUsage[textureName]) {
-                        textureUsage[textureName] = {sprite: false, spread: false};
+                        textureUsage[textureName] = { sprite: false, spread: false };
                     }
-                    
+
                     // Single letter = whole face (sprite), otherwise individual sticker (spread)
                     if (key.length === 1) {
                         textureUsage[textureName].sprite = true;
@@ -1171,11 +1223,11 @@ $varName" rows="2"></textarea>
                     }
                 });
             });
-            
+
             // Categorize used textures as colors or textures
             Object.keys(textureUsage).forEach(textureName => {
                 const baseTexture = textureUsesVars[textureName] ? originalTextures[textureName] : textureLibrary[textureName];
-                
+
                 // If it's a simple color (starts with #), add to vars
                 if (typeof baseTexture === 'string' && baseTexture.startsWith('#')) {
                     colorsToExport[textureName] = baseTexture;
@@ -1183,13 +1235,13 @@ $varName" rows="2"></textarea>
                     texturesToExport[textureName] = baseTexture;
                 }
             });
-            
+
             // Add vars (existing + colors)
             const allVars = { ...varsLibrary, ...colorsToExport };
             if (Object.keys(allVars).length > 0) {
                 config.vars = allVars;
             }
-            
+
             // Add stackable definition - only include textures that exist in current cube
             const usedTextures = Object.keys(textureUsage);
             const stackableTextures = Object.keys(textureStackable)
@@ -1198,13 +1250,13 @@ $varName" rows="2"></textarea>
                 config.vars = config.vars || {};
                 config.vars.__definition = `stackable: ${stackableTextures.join(',')}`;
             }
-            
+
             config.textures = {};
-            
+
             // Generate texture entries with appropriate backgroundSize (only for non-colors)
             Object.entries(texturesToExport).forEach(([textureName, baseTexture]) => {
                 const usage = textureUsage[textureName];
-                
+
                 if (usage.sprite) {
                     const spriteName = `${textureName}_sprite`;
                     config.textures[spriteName] = {
@@ -1212,7 +1264,7 @@ $varName" rows="2"></textarea>
                         backgroundSize: '300% 300%'
                     };
                 }
-                
+
                 if (usage.spread) {
                     const spreadName = `${textureName}_spread`;
                     config.textures[spreadName] = {
@@ -1221,9 +1273,9 @@ $varName" rows="2"></textarea>
                     };
                 }
             });
-            
+
             config.cube = {};
-            
+
             // Build cube assignments
             Object.entries(cubeAssignments).forEach(([key, textureNameOrArray]) => {
                 if (Array.isArray(textureNameOrArray)) {
@@ -1249,7 +1301,7 @@ $varName" rows="2"></textarea>
                     }
                 }
             });
-            
+
             return config;
         }
 
@@ -1279,7 +1331,7 @@ $varName" rows="2"></textarea>
         function updateJSON() {
             const config = generateConfig();
             document.getElementById('json-output').value = JSON.stringify(config, null, 2);
-            
+
 
         }
 
@@ -1297,28 +1349,39 @@ $varName" rows="2"></textarea>
             URL.revokeObjectURL(url);
         }
 
+        // Generic modal functions
+        function openModal(selector) {
+            document.querySelector(selector).classList.add('active');
+            sendToParent('MODAL_OPENED', {});
+        }
+
+        function closeModal(selector) {
+            document.querySelector(selector).classList.remove('active');
+            sendToParent('MODAL_CLOSED', {});
+        }
+
         // Import modal functions
         function openImportModal() {
             document.getElementById('import-json').value = '';
-            document.getElementById('import-modal').classList.add('active');
+            openModal('#import-modal');
         }
 
         function closeImportModal() {
-            document.getElementById('import-modal').classList.remove('active');
+            closeModal('#import-modal');
         }
 
         function loadFromJSON() {
             let jsonText = document.getElementById('import-json').value.trim();
             if (!jsonText) {
-                showToast('Please paste JSON configuration');
+                window.showToast('Please paste JSON configuration');
                 return;
             }
-            
+
             try {
                 // Decode HTML entities (both named and numeric)
                 const doc = new DOMParser().parseFromString(jsonText, 'text/html');
                 jsonText = doc.documentElement.textContent;
-                
+
                 // Strip comments properly (avoid removing // inside strings)
                 function stripJsonComments(json) {
                     let result = '';
@@ -1363,14 +1426,14 @@ $varName" rows="2"></textarea>
                     }
                     return result;
                 }
-                
+
                 jsonText = stripJsonComments(jsonText);
                 const config = JSON.parse(jsonText);
                 loadConfig(config);
                 closeImportModal();
-                showToast('Configuration loaded successfully!');
+                window.showToast('Configuration loaded successfully!');
             } catch (err) {
-                showToast('Invalid JSON: ' + err.message);
+                window.showToast('Invalid JSON: ' + err.message);
             }
         }
 
@@ -1378,27 +1441,27 @@ $varName" rows="2"></textarea>
         function updateVarsList() {
             const varsList = document.getElementById('vars-list');
             varsList.innerHTML = '';
-            
+
             Object.entries(varsLibrary).forEach(([name, value]) => {
                 const varItem = document.createElement('div');
                 varItem.style.cssText = 'display: flex; gap: 5px; margin: 5px 0; align-items: center; background: #f8f9fa; padding: 5px; border-radius: 4px;';
-                
+
                 const varText = document.createElement('div');
                 varText.style.cssText = 'flex: 1; font-size: 12px; font-family: monospace; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
                 varText.textContent = `$${name} = ${value}`;
                 varText.title = `$${name} = ${value}`;
                 varText.onclick = () => editVar(name);
-                
+
                 const editBtn = document.createElement('button');
                 editBtn.textContent = 'Edit';
                 editBtn.style.cssText = 'background: #007cba; padding: 2px 8px; font-size: 11px;';
                 editBtn.onclick = () => editVar(name);
-                
+
                 const deleteBtn = document.createElement('button');
                 deleteBtn.textContent = '×';
                 deleteBtn.style.cssText = 'background: #dc3545; padding: 2px 8px; font-size: 14px;';
                 deleteBtn.onclick = () => deleteVar(name);
-                
+
                 varItem.appendChild(varText);
                 varItem.appendChild(editBtn);
                 varItem.appendChild(deleteBtn);
@@ -1414,7 +1477,7 @@ $varName" rows="2"></textarea>
             document.getElementById('var-value').value = '';
             document.getElementById('var-name').disabled = false;
             document.querySelector('#var-modal h3').textContent = 'Add Variable';
-            document.getElementById('var-modal').classList.add('active');
+            openModal('#var-modal');
         }
 
         function editVar(name) {
@@ -1423,55 +1486,55 @@ $varName" rows="2"></textarea>
             document.getElementById('var-value').value = varsLibrary[name];
             document.getElementById('var-name').disabled = true;
             document.querySelector('#var-modal h3').textContent = 'Edit Variable';
-            document.getElementById('var-modal').classList.add('active');
+            openModal('#var-modal');
         }
 
         function closeVarModal() {
-            document.getElementById('var-modal').classList.remove('active');
+            closeModal('#var-modal');
         }
 
         function saveVar() {
             const name = document.getElementById('var-name').value.trim();
             const value = document.getElementById('var-value').value.trim();
-            
+
             if (!name || !value) {
-                showToast('Please enter both name and value');
+                window.showToast('Please enter both name and value');
                 return;
             }
-            
+
             varsLibrary[name] = value;
-            
+
             // Re-resolve textures that use this var
             Object.entries(originalTextures).forEach(([texName, texValue]) => {
                 if (textureUsesVars[texName]) {
                     textureLibrary[texName] = replaceVars(texValue, varsLibrary);
                 }
             });
-            
+
             updateVarsList();
             updateTextureLibrary();
             updateVisualCube();
             updateJSON();
             closeVarModal();
-            showToast(editingVarName ? `Variable $${name} updated` : `Variable $${name} added`);
+            window.showToast(editingVarName ? `Variable $${name} updated` : `Variable $${name} added`);
             editingVarName = null;
         }
 
         function deleteVar(name) {
             delete varsLibrary[name];
-            
+
             // Re-resolve textures that use vars
             Object.entries(originalTextures).forEach(([texName, texValue]) => {
                 if (textureUsesVars[texName]) {
                     textureLibrary[texName] = replaceVars(texValue, varsLibrary);
                 }
             });
-            
+
             updateVarsList();
             updateTextureLibrary();
             updateVisualCube();
             updateJSON();
-            showToast(`Variable $${name} deleted`);
+            window.showToast(`Variable $${name} deleted`);
         }
 
         // Replace variables in a value
@@ -1498,11 +1561,11 @@ $varName" rows="2"></textarea>
             originalTextures = {};
             textureUsesVars = {};
             cubeAssignments = {};
-            
+
             // Load vars
             if (config.vars) {
                 varsLibrary = { ...config.vars };
-                
+
                 // Parse stackable definition
                 if (config.vars.__definition && config.vars.__definition.startsWith('stackable:')) {
                     const stackableList = config.vars.__definition.slice(10).trim();
@@ -1513,7 +1576,7 @@ $varName" rows="2"></textarea>
                     }
                     delete varsLibrary.__definition;
                 }
-                
+
                 // Add color vars to texture library
                 Object.entries(config.vars).forEach(([name, value]) => {
                     if (typeof value === 'string' && value.startsWith('#')) {
@@ -1521,7 +1584,7 @@ $varName" rows="2"></textarea>
                     }
                 });
             }
-            
+
             // Extract base textures from texture entries (remove _sprite/_spread suffixes)
             const baseTextures = new Map();
             if (config.textures) {
@@ -1531,10 +1594,10 @@ $varName" rows="2"></textarea>
                     if (typeof value === 'object' && value.backgroundImage) {
                         bgImage = value.backgroundImage;
                     }
-                    
+
                     // Remove _sprite or _spread suffix to get base name
                     const baseName = name.replace(/_(sprite|spread)$/, '');
-                    
+
                     if (!baseTextures.has(baseName)) {
                         const hasVars = JSON.stringify(bgImage).includes('$');
                         if (hasVars) {
@@ -1549,7 +1612,7 @@ $varName" rows="2"></textarea>
                     }
                 });
             }
-            
+
             // Load cube assignments (strip _sprite/_spread and $ from references)
             if (config.cube) {
                 Object.entries(config.cube).forEach(([key, value]) => {
@@ -1572,7 +1635,7 @@ $varName" rows="2"></textarea>
                     }
                 });
             }
-            
+
             // Update display
             updateTextureLibrary();
             updateVisualCube();
@@ -1587,7 +1650,7 @@ $varName" rows="2"></textarea>
                 sticker.style.backgroundColor = '#888';
                 sticker.style.backgroundImage = 'none';
             });
-            
+
             Object.entries(cubeAssignments).forEach(([key, textureNameOrArray]) => {
                 if (key.length === 1) {
                     // Whole face
@@ -1691,17 +1754,19 @@ $varName" rows="2"></textarea>
             isEmbedded = window.self !== window.top;
             if (isEmbedded) {
                 parentWindow = window.parent;
-                
+
                 window.addEventListener('message', (event) => {
                     const { type, payload } = event.data;
-                    
+
                     if (type === 'INIT_EDITOR' && payload.config) {
                         loadConfig(payload.config);
                     }
                 });
-                
+
                 parentWindow.postMessage({ type: 'EDITOR_READY' }, '*');
-                
+
+                window.showToast = message => parentWindow.postMessage({ type: 'toast', message }, '*')
+
                 // Trigger auto-import immediately when embedded
                 setTimeout(() => {
                     try {
@@ -1725,7 +1790,7 @@ $varName" rows="2"></textarea>
 
         // Override updateJSON to send updates to parent
         const originalUpdateJSON = updateJSON;
-        updateJSON = function() {
+        updateJSON = function () {
             originalUpdateJSON();
             const config = generateConfig();
             sendToParent('UPDATE_CONFIG', { config });
@@ -1736,7 +1801,7 @@ $varName" rows="2"></textarea>
         }
 
         // Expose method to parent window
-        window.triggerImportFromParent = function() {
+        window.triggerImportFromParent = function () {
             try {
                 const parentConfig = window.parent.document.getElementById('customConfig').value;
                 if (parentConfig.trim()) {
@@ -1755,14 +1820,14 @@ $varName" rows="2"></textarea>
             initDefaultTextures();
             setMode('face');
             updateVarsList();
-            
+
             if (window.parent !== window) {
                 document.getElementById('close-editor-btn').style.display = 'block';
             }
-            
+
 
         });
-        
+
         // Also run on window load for iframe reloads
         window.addEventListener('load', () => {
             if (window.parent !== window) {
@@ -1771,4 +1836,5 @@ $varName" rows="2"></textarea>
         });
     </script>
 </body>
+
 </html>
