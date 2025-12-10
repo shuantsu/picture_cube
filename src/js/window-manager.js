@@ -1,5 +1,3 @@
-
-
 function addIframeOverlays() {
   $('iframe').each(function() {
     var $iframe = $(this);
@@ -40,19 +38,33 @@ window.toggleEditorWindow = function(active) {
     
     win.draggable({
       handle: '#cube-3d-titlebar',
-      start: addIframeOverlays,
-      stop: removeIframeOverlays,
+      start: function() {
+        win.addClass('dragging');
+        addIframeOverlays();
+      },
+      stop: function() {
+        win.removeClass('dragging');
+        removeIframeOverlays();
+      },
     });
     
     win.resizable({
       handles: 'n, e, s, w, ne, se, sw, nw',
       minWidth: 200,
       minHeight: 200,
-      start: addIframeOverlays,
-      stop: removeIframeOverlays,
+      start: function() {
+        win.addClass('resizing');
+        if (window.viewController) window.viewController.cameraRotationEnabled = false;
+        addIframeOverlays();
+      },
+      stop: function() {
+        win.removeClass('resizing');
+        removeIframeOverlays();
+      },
     });
 
     $(document).on('mousedown touchstart',(ev)=>{
+      if ($(ev.target).hasClass('ui-resizable-handle')) return;
       if (ev.target.id === 'cube-3d-wrapper') {
         if (window.viewController) window.viewController.cameraRotationEnabled = true;
         return;

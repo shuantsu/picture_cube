@@ -780,6 +780,7 @@
   z-index: 1002;
   display: none;
   will-change: transform;
+  overflow: visible;
 }
 body.editor-active #cube-3d-window { display: block; }
 .ui-resizable-handle { background: transparent !important; border: none !important; }
@@ -817,6 +818,10 @@ body.editor-active #cube-3d-wrapper {
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
+  pointer-events: none !important;
+}
+body.editor-active #cube-3d-wrapper #cube-3d {
+  pointer-events: auto !important;
 }
 
 /* Rotation Mode Button (Mobile) */

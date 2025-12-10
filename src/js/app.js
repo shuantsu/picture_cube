@@ -1,5 +1,6 @@
 import './bg-color-loader.js';
 import $ from 'jquery';
+import 'jquery-ui-dist/jquery-ui.min.css';
 
 window.$ = window.jQuery = $;
 
